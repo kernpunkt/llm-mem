@@ -846,6 +846,8 @@ export async function runHttp(port: number = 3000): Promise<void> {
  * Command line options:
  * - `--transport=stdio|http` - Choose transport type (default: stdio)
  * - `--port=NUMBER` - HTTP port number (default: 3000, HTTP only)
+ * - `--notestore_path=PATH` - Path for memory files (default: ./memories)
+ * - `--index_path=PATH` - Path for FlexSearch index (default: ./memories/index)
  * 
  * @returns {Promise<void>} Promise that resolves when server starts
  * 
@@ -859,12 +861,25 @@ export async function runHttp(port: number = 3000): Promise<void> {
  * 
  * # HTTP transport on custom port
  * node dist/index.js --transport=http --port=8080
+ * 
+ * # With custom memory paths
+ * node dist/index.js --notestore_path=/path/to/memories --index_path=/path/to/index
  * ```
  */
 export async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const transportType = args.find(arg => arg.startsWith('--transport='))?.split('=')[1] || 'stdio';
   const port = parseInt(args.find(arg => arg.startsWith('--port='))?.split('=')[1] || '3000');
+  
+  // Memory tools configuration
+  const notestorePath = args.find(arg => arg.startsWith('--notestore_path='))?.split('=')[1] || './memories';
+  const indexPath = args.find(arg => arg.startsWith('--index_path='))?.split('=')[1] || './memories/index';
+
+  // Store configuration globally for memory tools
+  (global as any).MEMORY_CONFIG = {
+    notestorePath,
+    indexPath
+  };
 
   switch (transportType) {
     case 'http':
