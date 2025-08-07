@@ -1,0 +1,76 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Environment Variables & Configuration
+
+## Environment Setup
+
+### 📄 Environment Files
+- **[.env.example](mdc:.env.example)** - Template with all required variables
+- **`.env`** - Your actual environment variables (not in git)
+- **[src/index.ts](mdc:src/index.ts)** - Dotenv configuration loaded at line 10
+
+### 🔧 Setup Process
+1. Copy example file: `cp .env.example .env`
+2. Fill in your actual API keys and configuration
+3. Add new variables to both `.env.example` and `.env`
+
+## Environment Variable Patterns
+
+### API Key Management
+```typescript
+const API_KEY = process.env.YOUR_API_KEY || "your-api-key-here";
+
+if (API_KEY === "your-api-key-here") {
+  return {
+    content: [{
+      type: "text", 
+      text: "⚠️ Please set YOUR_API_KEY environment variable"
+    }],
+    isError: false
+  };
+}
+```
+
+### Required vs Optional Variables
+- **Required**: API keys, database URLs, critical configuration
+- **Optional**: Debug flags, optional integrations, feature toggles
+
+## Client Configuration
+
+### Cursor IDE Configuration
+Add to `~/.cursor/mcp.json`:
+```json
+{
+  "mcpServers": {
+    "your-server-name": {
+      "command": "node",
+      "args": ["/absolute/path/to/your-server/dist/index.js"],
+      "env": {
+        "YOUR_API_KEY": "your-actual-api-key-here"
+      }
+    }
+  }
+}
+```
+
+### Alternative: Using pnpm (auto-loads .env)
+```json
+{
+  "mcpServers": {
+    "your-server-name": {
+      "command": "pnpm",
+      "args": ["start"],
+      "cwd": "/absolute/path/to/your-server"
+    }
+  }
+}
+```
+
+## Configuration Validation
+- Validate required environment variables on server startup
+- Provide clear error messages for missing configuration
+- Use fallback values for non-critical settings
+- Document all environment variables in [.env.example](mdc:.env.example)

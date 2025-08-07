@@ -1,0 +1,61 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# MCP Tool Development Patterns
+
+## Tool Implementation Pattern
+All tools in [src/index.ts](mdc:src/index.ts) follow this structure:
+
+```typescript
+server.tool(
+  "tool_name",                    // Unique identifier
+  "Tool description",             // Human-readable description
+  {                              // Zod parameter schema
+    param: z.string().describe("Parameter description")
+  },
+  async ({ param }) => {          // Implementation function
+    try {
+      const result = await yourLogic(param);
+      return {
+        content: [{ type: "text", text: result }],
+        isError: false // MCP 2025-06-18 requirement
+      };
+    } catch (error) {
+      throw new Error(`Tool failed: ${error.message}`);
+    }
+  }
+);
+```
+
+## Example Tool Patterns
+
+### 🔤 String Processing (Echo Tool)
+See lines 48-75 in [src/index.ts](mdc:src/index.ts) for text processing with optional transformation.
+
+### 🧮 Mathematical Operations (Calculate Tool)  
+See lines 95-141 in [src/index.ts](mdc:src/index.ts) for enum validation and error handling.
+
+### 🕐 System Operations (Current Time Tool)
+See lines 161-195 in [src/index.ts](mdc:src/index.ts) for system API integration with multiple formats.
+
+### 🌐 External API Integration (Weather Tool)
+See lines 218-343 in [src/index.ts](mdc:src/index.ts) for comprehensive API patterns:
+- Environment variable handling
+- HTTP requests with timeout
+- Response validation
+- Error recovery patterns
+
+## Best Practices
+1. **Always use Zod schemas** for parameter validation
+2. **Include comprehensive error handling** with try/catch
+3. **Return structured responses** with content array and isError flag
+4. **Provide clear descriptions** for parameters and tools
+5. **Handle edge cases** like division by zero, invalid inputs
+6. **Use environment variables** for API keys and configuration
+7. **Implement timeouts** for external API calls
+8. **Validate API responses** before processing
+
+## Testing Your Tools
+See [tests/index.test.ts](mdc:tests/index.test.ts) lines 780-1400 for comprehensive tool testing patterns covering business logic, error scenarios, and edge cases.

@@ -1,0 +1,121 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# MCP 2025-06-18 Specification Compliance
+
+## MCP Protocol Requirements
+
+### 🔧 Server Configuration
+The template follows MCP 2025-06-18 specification in [src/index.ts](mdc:mcp:src/index.ts) lines 38-47:
+
+```typescript
+const server = new McpServer({
+  name: "your-server-name",
+  version: "1.0.0", 
+  capabilities: {
+    tools: {},      // Core tool execution capability
+    resources: {},  // Resource access capability
+    prompts: {},    // Prompt template capability  
+    logging: {},    // Structured logging capability
+  },
+});
+```
+
+### 📝 Tool Response Structure
+All tools must return responses in this format:
+
+```typescript
+return {
+  content: [{
+    type: "text",
+    text: "Your response text"
+  }],
+  isError: false // Required by MCP 2025-06-18 specification
+};
+```
+
+### 🌐 HTTP Protocol Headers
+For HTTP transport, required headers are set in [src/index.ts](mdc:mcp:src/index.ts) line 413:
+- `MCP-Protocol-Version: 2025-06-18`
+- `Content-Type: text/event-stream` for streaming responses
+- `Cache-Control: no-cache` and `Connection: keep-alive`
+
+## JSON-RPC 2.0 Compliance
+
+### ✅ Request Format
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "tool_name",
+    "arguments": { "param": "value" }
+  }
+}
+```
+
+### ✅ Response Format
+```json
+{
+  "jsonrpc": "2.0", 
+  "id": 1,
+  "result": {
+    "content": [{"type": "text", "text": "Result"}],
+    "isError": false
+  }
+}
+```
+
+### ⚠️ Error Response Format
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32603,
+    "message": "Internal server error"
+  }
+}
+```
+
+## Error Code Standards
+- `-32700`: Parse error (malformed JSON)
+- `-32600`: Invalid Request  
+- `-32601`: Method not found
+- `-32602`: Invalid params
+- `-32603`: Internal error
+- `-32000` to `-32099`: Server error range
+
+## Transport Layer Compliance
+
+### 📡 Stdio Transport
+- Read JSON-RPC from stdin
+- Write responses to stdout  
+- Error logging to stderr only
+- Support graceful shutdown on SIGINT
+
+### 🌐 HTTP Transport  
+- POST requests only for MCP endpoint
+- Server-Sent Events for streaming responses
+- Proper HTTP status codes (405 for unsupported methods)
+- Health check endpoint for monitoring
+
+## Schema Validation
+Use Zod for parameter validation following this pattern:
+```typescript
+{
+  param: z.string().describe("Parameter description"),
+  optional: z.boolean().optional().describe("Optional parameter")
+}
+```
+
+## Best Practices for Compliance
+1. **Always include `isError` field** in tool responses
+2. **Use structured error messages** with proper error codes
+3. **Validate all inputs** with Zod schemas
+4. **Set protocol version headers** for HTTP transport
+5. **Handle method not found** scenarios gracefully
+6. **Follow JSON-RPC 2.0** request/response patterns

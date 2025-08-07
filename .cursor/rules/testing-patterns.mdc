@@ -1,0 +1,87 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Testing Patterns for MCP Tools
+
+## Test Structure Overview
+The template includes **109 comprehensive tests** in [tests/index.test.ts](mdc:tests/index.test.ts) covering all aspects of MCP development.
+
+## Testing Your Custom Tools
+
+### 🔧 Tool Logic Testing Pattern
+```typescript
+it('should test your custom tool', async () => {
+  const yourTool = async ({ param }: { param: string }) => {
+    // Your tool logic here
+    return {
+      content: [{ type: "text", text: `Result: ${param}` }],
+      isError: false
+    };
+  };
+  
+  const result = await yourTool({ param: 'test' });
+  expect(result.content[0].text).toBe('Result: test');
+  expect(result.isError).toBe(false);
+});
+```
+
+### 🌐 API Integration Testing
+See lines 1200-1400 in [tests/index.test.ts](mdc:tests/index.test.ts) for patterns:
+- Mock external API calls
+- Test error scenarios (timeouts, network errors)
+- Validate response transformation
+- Test environment variable handling
+
+### ⚠️ Error Handling Tests
+```typescript
+it('should handle errors gracefully', async () => {
+  const toolWithError = async () => {
+    throw new Error('Something went wrong');
+  };
+  
+  await expect(toolWithError()).rejects.toThrow('Something went wrong');
+});
+```
+
+## Test Categories to Implement
+
+### 1. **Business Logic Tests** (High Priority)
+- Core tool functionality
+- Parameter validation
+- Edge cases and boundary conditions
+- Data transformation logic
+
+### 2. **Integration Tests** (Medium Priority)  
+- External API interactions
+- Database connections
+- File system operations
+- Network requests
+
+### 3. **Error Scenario Tests** (High Priority)
+- Invalid inputs
+- Network failures
+- API errors
+- Timeout handling
+
+### 4. **Configuration Tests** (Medium Priority)
+- Environment variable handling
+- Missing configuration scenarios
+- Default value behavior
+
+## Testing Commands
+- `pnpm test` - Run all tests
+- `pnpm test:watch` - Development mode with auto-reload
+- `pnpm test:coverage` - Generate coverage report
+
+## Best Practices
+1. **Test tool logic separately** from MCP infrastructure
+2. **Mock external dependencies** to ensure fast, reliable tests
+3. **Cover error paths** thoroughly
+4. **Use descriptive test names** that explain the scenario
+5. **Test edge cases** like empty inputs, boundary values
+6. **Validate response structure** matches MCP specification
+
+## Testing Documentation
+For comprehensive testing patterns and examples, see [TESTING.md](mdc:TESTING.md) which includes 315 lines of testing guidance and patterns.

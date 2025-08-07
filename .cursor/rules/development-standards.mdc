@@ -1,0 +1,258 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Development Standards & Best Practices
+
+## 🛠️ Technical Stack
+
+### Core Technologies
+- **Node.js v24+** - Latest LTS with modern ES features
+- **pnpm** - Fast, disk space efficient package manager
+- **H3** - Modern, lightweight HTTP framework (replaces Express)
+- **TypeScript** - Strict type checking enabled
+- **Vitest** - Fast unit testing framework
+- **Zod** - Runtime type validation and schema parsing
+
+### Package Management
+- Use `pnpm` exclusively for dependency management
+- Commands: `pnpm install`, `pnpm build`, `pnpm test`, `pnpm dev`
+- Lock file: `pnpm-lock.yaml` (commit to version control)
+- Scripts defined in [package.json](mdc:package.json)
+
+## 📝 Documentation Standards
+
+### TSDoc Comments
+Use TSDoc for all public functions, classes, and complex logic:
+
+```typescript
+/**
+ * Creates and configures a new MCP server instance with enhanced capabilities.
+ * 
+ * This function sets up the core MCP server with tool definitions following
+ * the MCP 2025-06-18 specification requirements.
+ * 
+ * @returns {McpServer} Configured MCP server instance ready for transport connection
+ * 
+ * @example
+ * ```typescript
+ * const server = createServer();
+ * const transport = new StdioServerTransport();
+ * await server.connect(transport);
+ * ```
+ */
+export function createServer(): McpServer {
+```
+
+### Avoid Redundant Comments
+❌ **Don't do this:**
+```typescript
+// Set the status code to 200
+res.statusCode = 200;
+
+// Loop through the items
+for (const item of items) {
+```
+
+✅ **Do this instead:**
+```typescript
+// Configure successful response with MCP protocol headers
+res.statusCode = 200;
+res.setHeader('MCP-Protocol-Version', '2025-06-18');
+
+// Transform API response data to user-friendly format
+for (const weatherData of apiResponse.data) {
+```
+
+## 🔧 Code Principles & Paradigms
+
+### SOLID Principles
+1. **Single Responsibility** - Each function/class has one reason to change
+2. **Open/Closed** - Open for extension, closed for modification
+3. **Liskov Substitution** - Subtypes must be substitutable for base types
+4. **Interface Segregation** - Many specific interfaces vs one general
+5. **Dependency Inversion** - Depend on abstractions, not concretions
+
+### Additional Core Principles
+- **KISS (Keep It Simple, Stupid)** - Simplest solution that works
+- **DRY (Don't Repeat Yourself)** - Extract common patterns
+- **YAGNI (You Aren't Gonna Need It)** - Don't build unused features
+- **Composition over Inheritance** - Favor object composition
+- **Fail Fast** - Detect problems early with validation
+- **Separation of Concerns** - Distinct sections for distinct purposes
+- **Convention over Configuration** - Sensible defaults
+- **Explicit over Implicit** - Clear, readable code
+
+### Code Organization Patterns
+
+#### Tool Pattern (from [src/index.ts](mdc:src/index.ts))
+```typescript
+// ✅ Single Responsibility: Each tool does one thing well
+server.tool(
+  "tool_name",           // Clear identifier
+  "What it does",        // Explicit description
+  schema,                // Zod validation schema
+  implementation         // Pure business logic
+);
+```
+
+#### Error Handling Pattern
+```typescript
+// ✅ Fail Fast: Validate early, handle gracefully
+try {
+  if (!apiKey) {
+    throw new Error("API key required");
+  }
+  
+  const result = await externalService(apiKey);
+  return formatSuccessResponse(result);
+} catch (error) {
+  return formatErrorResponse(error);
+}
+```
+
+#### Transport Abstraction
+```typescript
+// ✅ Dependency Inversion: Abstract transport concerns
+export async function runStdio(): Promise<void> {
+  const server = createServer();  // Business logic
+  const transport = createTransport();  // Infrastructure
+  await server.connect(transport);
+}
+```
+
+## 📋 Commit Standards
+
+### Conventional Commits
+Follow the [Conventional Commits](mdc:https:/www.conventionalcommits.org) specification:
+
+```bash
+# Feature additions
+feat: add weather API integration with timeout handling
+feat(tools): implement calculate tool with enum validation
+
+# Bug fixes  
+fix: handle division by zero in calculate tool
+fix(http): resolve H3 eventHandler deprecation warnings
+
+# Documentation
+docs: update README with environment setup instructions
+docs(api): add TSDoc comments for tool functions
+
+# Refactoring
+refactor: extract error handling into utility functions
+refactor(server): simplify transport initialization
+
+# Tests
+test: add comprehensive API integration test patterns
+test(tools): cover edge cases for mathematical operations
+
+# Chores
+chore: update dependencies to latest versions
+chore(build): configure TypeScript strict mode
+```
+
+### Commit Message Structure
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation only
+- `style`: Formatting, missing semicolons, etc.
+- `refactor`: Code change that neither fixes bug nor adds feature
+- `test`: Adding missing tests
+- `chore`: Maintenance tasks
+
+## 🏗️ Architecture Patterns
+
+### Factory Pattern (Server Creation)
+```typescript
+// ✅ Encapsulates server configuration complexity
+export function createServer(): McpServer {
+  return new McpServer({
+    name: "server-name",
+    capabilities: enhancedCapabilities()
+  });
+}
+```
+
+### Adapter Pattern (Express to H3)
+```typescript
+// ✅ Bridges incompatible interfaces
+const mockRes = {
+  json: (data: any) => h3Response.json(data),
+  setHeader: (name: string, value: string) => h3Event.setHeader(name, value)
+};
+```
+
+### Strategy Pattern (Transport Selection)
+```typescript
+// ✅ Encapsulates algorithms (transport types)
+switch (transportType) {
+  case 'http': await runHttp(port); break;
+  case 'stdio': await runStdio(); break;
+}
+```
+
+## 🎯 Code Quality Guidelines
+
+### Function Design
+- **Pure functions** where possible (no side effects)
+- **Single purpose** per function
+- **Descriptive names** that explain intent
+- **Early returns** to reduce nesting
+- **Input validation** at function boundaries
+
+### Type Safety
+- Use **strict TypeScript** configuration
+- **Zod schemas** for runtime validation
+- **Explicit return types** for public functions
+- **No `any` types** unless absolutely necessary
+
+### Testing Strategy
+- **Test behavior, not implementation**
+- **Mock external dependencies**
+- **Cover error paths** thoroughly
+- **Descriptive test names** that explain scenarios
+
+## 🚀 Performance Guidelines
+
+### Async/Await Best Practices
+```typescript
+// ✅ Parallel execution when possible
+const [user, settings] = await Promise.all([
+  fetchUser(id),
+  fetchSettings(id)
+]);
+
+// ✅ Timeout for external calls
+const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 30000);
+```
+
+### Memory Management
+- **Clean up resources** (close connections, clear timeouts)
+- **Avoid memory leaks** in event handlers
+- **Use streams** for large data processing
+- **Implement backpressure** for high-volume operations
+
+## 🔍 Code Review Checklist
+
+- [ ] Follows conventional commit format
+- [ ] TSDoc comments for public APIs
+- [ ] No redundant inline comments
+- [ ] Follows SOLID principles
+- [ ] Error handling implemented
+- [ ] Input validation with Zod
+- [ ] Tests cover new functionality
+- [ ] No hardcoded values (use environment variables)
+- [ ] Proper async/await usage
+- [ ] Clean, descriptive variable names

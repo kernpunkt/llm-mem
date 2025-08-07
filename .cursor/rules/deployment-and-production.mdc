@@ -1,0 +1,89 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Deployment & Production Ready MCP Servers
+
+## Pre-Deployment Checklist
+
+### ✅ Code Quality
+- [ ] All tests pass: `pnpm test`
+- [ ] No linting errors: `pnpm lint`
+- [ ] TypeScript compilation successful: `pnpm build`
+- [ ] Environment variables documented in [.env.example](mdc:.env.example)
+
+### ✅ Customization Complete
+- [ ] Updated [package.json](mdc:package.json) metadata (name, description, author)
+- [ ] Replaced example tools in [src/index.ts](mdc:mcp:src/index.ts) with your tools
+- [ ] Updated [LICENSE](mdc:mcp:LICENSE) copyright holder
+- [ ] Customized [README.md](mdc:mcp:README.md) for your server
+
+## Transport Modes
+
+### 📡 Stdio Transport (Production Default)
+- Used by MCP clients like Cursor IDE and Claude Desktop
+- Direct process communication via stdin/stdout
+- Default mode in [src/index.ts](mdc:mcd:src/index.ts) line 578
+
+### 🌐 HTTP Transport (Development/Debugging)
+- Useful for development and testing
+- Provides health endpoint and direct API access
+- H3 framework for lightweight HTTP handling
+- See [src/index.ts](mdc:mcp:src/index.ts) lines 389-573
+
+## Client Integration
+
+### Cursor IDE Setup
+```json
+{
+  "mcpServers": {
+    "your-server-name": {
+      "command": "node",
+      "args": ["/absolute/path/to/dist/index.js"],
+      "env": {
+        "API_KEY": "your-key-here"
+      }
+    }
+  }
+}
+```
+
+### Claude Desktop Setup  
+```json
+{
+  "mcpServers": {
+    "your-server-name": {
+      "command": "node",
+      "args": ["/absolute/path/to/dist/index.js"]
+    }
+  }
+}
+```
+
+## Security Best Practices
+
+### 🔒 Production Security (from [README.md](mdc:mcp:README.md))
+1. **Input Validation**: Always use Zod schemas for parameters
+2. **Error Handling**: Never expose internal errors to clients  
+3. **Environment Variables**: Store sensitive data in environment variables
+4. **Rate Limiting**: Consider rate limiting for HTTP endpoints
+5. **HTTPS**: Use HTTPS in production HTTP deployments
+
+### 🔑 API Key Management
+- Store in environment variables, never in code
+- Use different keys for development/production
+- Implement proper fallbacks for demo modes
+- Document required permissions for each key
+
+## Performance Considerations
+- MCP tools should respond quickly (< 30 seconds)
+- Implement timeouts for external API calls
+- Use AbortController for cancellable requests
+- Monitor memory usage for long-running operations
+
+## Monitoring & Debugging
+- HTTP health endpoint: `GET /health`  
+- Error logging to stderr (doesn't interfere with MCP protocol)
+- Structured logging capability in server configuration
+- Test endpoints using curl for HTTP transport
