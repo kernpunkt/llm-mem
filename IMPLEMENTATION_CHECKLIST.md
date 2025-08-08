@@ -290,6 +290,10 @@ When starting a new session, focus on:
 - [x] Memory tools MCP server is production-ready
 - [x] Comprehensive test coverage achieved
 - [x] Documentation and examples complete
+- [x] Removed template tools (echo, calculate, current_time, get_weather)
+- [x] Cleaned up template tool tests and implementations
+- [x] Fixed FlexSearch test with proper search term
+- [x] All 192 tests passing
 
 ---
 

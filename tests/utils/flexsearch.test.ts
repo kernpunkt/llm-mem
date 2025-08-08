@@ -340,9 +340,13 @@ describe("FlexSearch Integration", () => {
     });
 
     it("should handle search with special characters", async () => {
+      // Clear any existing data first
+      await flexSearchManager.clearIndexes();
+      
+      // Index only one specific memory
       await flexSearchManager.indexMemory(testMemories[0]);
       
-      // Test with a more realistic search term that FlexSearch can handle
+      // Test with a search term that exists in only one memory
       const results = await flexSearchManager.searchMemories("Revenue target");
       expect(results).toHaveLength(1);
     });
