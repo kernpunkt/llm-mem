@@ -4,35 +4,146 @@
 
 This guide explains how to use the Memory Tools MCP server to create documentation memories that will be compatible with the code documentation coverage tool. The coverage tool analyzes your memories to identify which parts of your codebase are documented and which need attention.
 
+## The Importance of Good Documentation
+
+⚠️ **Critical Warning: Coverage ≠ Quality**
+
+While the coverage tool helps identify undocumented areas, **coverage metrics alone do not guarantee good documentation**. The goal is to create documentation that provides genuine value to humans and LLMs, not just to satisfy coverage requirements.
+
+### What Makes Documentation Valuable
+
+**Good documentation provides insights that cannot be easily derived from reading the code:**
+
+✅ **Explains the "Why" Behind the "What"**
+```json
+{
+  "title": "Why we use bidirectional linking in MemoryService",
+  "content": "# Bidirectional Linking Rationale\n\n**Problem:** Traditional one-way links create orphaned references when memories are deleted.\n\n**Solution:** Bidirectional linking ensures referential integrity and enables discovery of related content.\n\n**Trade-offs:**\n- Slightly more complex implementation\n- Better data consistency\n- Improved search and discovery\n\n**Implementation Details:**\nThe LinkService maintains both forward and reverse link maps, automatically updating both when links are created or removed.",
+  "category": "DOC",
+  "tags": ["architecture", "linking", "data-integrity"],
+  "sources": ["src/memory/link-service.ts:1-50"]
+}
+```
+
+✅ **Documents Complex Business Logic and Edge Cases**
+```json
+{
+  "title": "Memory validation edge cases and business rules",
+  "content": "# Memory Validation Business Rules\n\n**Critical Edge Cases:**\n\n1. **Circular References:** Prevent infinite loops in memory linking\n2. **Duplicate Prevention:** Allow same title if different categories\n3. **Content Sanitization:** Strip HTML but preserve markdown formatting\n4. **Size Limits:** 10MB max content size to prevent memory issues\n\n**Business Logic:**\n- Memories without categories default to 'general'\n- Auto-generated IDs use UUID v4 for collision resistance\n- Search indexing happens asynchronously to avoid blocking\n\n**Error Handling:**\n- Invalid JSON content returns 400, not 500\n- Missing required fields provide specific error messages\n- Network timeouts are retried with exponential backoff",
+  "category": "DOC",
+  "tags": ["validation", "business-rules", "edge-cases"],
+  "sources": ["src/memory/memory-service.ts:25-75", "src/memory/types.ts:15-30"]
+}
+```
+
+✅ **Explains Performance Characteristics and Trade-offs**
+```json
+{
+  "title": "FlexSearch performance characteristics and optimization",
+  "content": "# FlexSearch Performance Analysis\n\n**Performance Characteristics:**\n- **Indexing:** O(n) where n = number of tokens\n- **Search:** O(log n) for exact matches, O(n) for fuzzy\n- **Memory:** ~2-3x the original text size\n\n**Optimization Strategies:**\n1. **Tokenization:** Use 'forward' for speed, 'strict' for precision\n2. **Resolution:** Higher values = more memory, better recall\n3. **Depth:** Controls search depth vs performance trade-off\n\n**Real-world Performance:**\n- 10,000 memories: ~50ms search time\n- 100,000 memories: ~200ms search time\n- Index size: ~15MB for 10k memories\n\n**When to Use Each Mode:**\n- **Development:** Use 'tolerant' for quick iteration\n- **Production:** Use 'forward' for balanced performance\n- **High Precision:** Use 'strict' for exact matching",
+  "category": "DOC",
+  "tags": ["performance", "optimization", "flexsearch"],
+  "sources": ["src/utils/flexsearch-config.ts:1-40", "src/memory/search-service.ts:25-60"]
+}
+```
+
+### What Makes Documentation Useless
+
+❌ **Avoid Documentation That Merely Restates the Obvious**
+
+**Bad Example - Just Describes What the Code Does:**
+```json
+{
+  "title": "createMemory function documentation",
+  "content": "# createMemory Function\n\nThis function creates a new memory. It takes a title, content, and category as parameters. It returns a Promise that resolves to the created memory.",
+  "category": "DOC",
+  "tags": ["function", "memory"],
+  "sources": ["src/memory/memory-service.ts:25-35"]
+}
+```
+
+**Good Example - Explains Why and How:**
+```json
+{
+  "title": "createMemory validation and business logic",
+  "content": "# createMemory: Validation and Business Logic\n\n**Purpose:** Creates validated memories with proper error handling and business rule enforcement.\n\n**Key Business Rules:**\n1. **Title Validation:** Must be 1-200 characters, no HTML\n2. **Content Sanitization:** Strips HTML but preserves markdown\n3. **Category Handling:** Defaults to 'general' if not specified\n4. **Duplicate Prevention:** Same title allowed in different categories\n\n**Error Scenarios:**\n- Invalid JSON: Returns 400 with specific field errors\n- Network failures: Retries with exponential backoff\n- Validation errors: Returns structured error messages\n\n**Performance Considerations:**\n- Async validation to avoid blocking\n- Batch processing for multiple memories\n- Indexing happens in background thread",
+  "category": "DOC",
+  "tags": ["validation", "business-logic", "error-handling"],
+  "sources": ["src/memory/memory-service.ts:25-75"]
+}
+```
+
+### Documentation Quality Checklist
+
+Before creating documentation, ask yourself:
+
+1. **Does this explain something not obvious from the code?**
+   - ✅ Explains business rules, edge cases, or design decisions
+   - ❌ Just restates what the function parameters are
+
+2. **Would this help someone understand the system better?**
+   - ✅ Provides context about why certain choices were made
+   - ❌ Just lists method names and parameters
+
+3. **Does this document complex logic or trade-offs?**
+   - ✅ Explains performance characteristics, error handling, or architectural decisions
+   - ❌ Just describes what the code does
+
+4. **Would this be valuable for future maintenance?**
+   - ✅ Documents edge cases, gotchas, or non-obvious behaviors
+   - ❌ Just restates the obvious
+
+### When to Document vs. When to Skip
+
+**Document These:**
+- Architectural decisions and their rationale
+- Complex business logic and edge cases
+- Performance characteristics and trade-offs
+- Error handling strategies
+- Integration patterns and dependencies
+- Security considerations
+- Testing strategies and coverage gaps
+
+**Skip These:**
+- Simple getter/setter methods with obvious purposes
+- Standard CRUD operations without special logic
+- Configuration files that are self-explanatory
+- Boilerplate code with no business logic
+- Comments that just restate what the code does
+
+### Quality Over Quantity
+
+Remember: **One high-quality documentation memory is worth ten trivial ones.** Focus on creating documentation that provides genuine insights and helps both humans and LLMs understand the deeper aspects of your codebase.
+
 ## Memory Categories for Code Documentation
 
 When creating memories for code documentation, use these specific categories:
 
 ### 1. **ADR** - Architecture Decision Records
-Use for high-level architectural decisions and design patterns.
+Use for high-level architectural decisions and design patterns that explain the "why" behind architectural choices.
 
 **Example:**
 ```json
 {
-  "title": "ADR-001: Using TypeScript for type safety",
-  "content": "# ADR-001: TypeScript Adoption\n\n**Date:** 2024-01-15\n\n**Context:** Need to choose between JavaScript and TypeScript for the project.\n\n**Decision:** Use TypeScript for improved type safety and developer experience.\n\n**Consequences:**\n- Better IDE support and autocomplete\n- Catch errors at compile time\n- Slightly more complex build process\n- Need to maintain type definitions",
+  "title": "ADR-001: Memory-based documentation over traditional docs",
+  "content": "# ADR-001: Memory-Based Documentation Architecture\n\n**Date:** 2024-01-15\n\n**Context:** Need to choose between traditional documentation (README, wiki, etc.) and a memory-based system for LLM-friendly documentation.\n\n**Decision:** Use memory-based documentation with structured JSON format and semantic search capabilities.\n\n**Rationale:**\n- **LLM Compatibility:** Memories can be directly ingested by LLMs without parsing\n- **Semantic Search:** FlexSearch enables natural language queries across documentation\n- **Structured Data:** JSON format allows for precise source mapping and coverage analysis\n- **Version Control:** Git-friendly format enables tracking documentation changes\n- **Bidirectional Linking:** Enables discovery of related documentation\n\n**Trade-offs:**\n- **Learning Curve:** Team needs to learn new documentation format\n- **Tooling:** Requires custom tools for coverage analysis and management\n- **Migration:** Existing documentation needs conversion\n- **Search Dependency:** Relies on FlexSearch for effective discovery\n\n**Implementation Strategy:**\n- Start with critical architectural decisions and complex business logic\n- Gradually migrate existing documentation\n- Build tooling for coverage analysis and quality assessment\n- Establish patterns for linking related memories",
   "category": "ADR",
-  "tags": ["architecture", "typescript", "decision"],
-  "sources": ["src/tsconfig.json", "src/package.json:1-20"]
+  "tags": ["architecture", "documentation", "memory-system", "llm-integration"],
+  "sources": ["src/memory/", "src/utils/flexsearch.ts", "src/memory/memory-service.ts"]
 }
 ```
 
-### 2. **DOC** - Documentation about features, classes and functions
-Use for documenting specific code elements, functions, classes, and features.
+### 2. **DOC** - Documentation about features, business logic, edge-cases, classes and functions
+Use for documenting specific code elements, functions, classes or features, business logic, edge cases.
 
 **Example:**
 ```json
 {
-  "title": "MemoryService class documentation",
-  "content": "# MemoryService Class\n\n**Purpose:** Core service for memory operations including CRUD, search, and linking.\n\n**Key Methods:**\n- `createMemory()` - Creates new memories with validation\n- `readMemory()` - Retrieves memories by ID or title\n- `searchMemories()` - Full-text search with filters\n- `linkMemories()` - Creates bidirectional links\n\n**Usage Example:**\n```typescript\nconst memoryService = new MemoryService(config);\nawait memoryService.createMemory({\n  title: 'My Memory',\n  content: '# Content',\n  category: 'work'\n});\n```",
+  "title": "MemoryService validation and error handling patterns",
+  "content": "# MemoryService: Validation and Error Handling Architecture\n\n**Purpose:** Core service for memory operations with comprehensive validation and robust error handling.\n\n**Critical Business Rules:**\n\n**Memory Creation Validation:**\n- **Title Requirements:** 1-200 characters, no HTML tags, must be unique within category\n- **Content Sanitization:** Strips HTML but preserves markdown formatting\n- **Category Handling:** Defaults to 'general' if not specified, validates against allowed categories\n- **Size Limits:** 10MB max content size to prevent memory issues\n\n**Error Handling Strategy:**\n- **Validation Errors:** Return 400 with specific field errors and suggestions\n- **Network Failures:** Implement exponential backoff with max 3 retries\n- **Concurrent Access:** Use optimistic locking to prevent race conditions\n- **Partial Failures:** Rollback changes if any part of the operation fails\n\n**Performance Optimizations:**\n- **Async Validation:** Non-blocking validation to maintain responsiveness\n- **Batch Operations:** Process multiple memories in single transaction\n- **Background Indexing:** Search index updates happen asynchronously\n- **Caching Strategy:** LRU cache for frequently accessed memories\n\n**Edge Cases Handled:**\n- **Circular References:** Detect and prevent infinite loops in memory linking\n- **Duplicate Prevention:** Allow same title across different categories\n- **Content Encoding:** Handle UTF-8, HTML entities, and special characters\n- **Memory Limits:** Graceful degradation when approaching system limits\n\n**Integration Points:**\n- **SearchService:** Automatic indexing of new memories\n- **LinkService:** Bidirectional link management\n- **FileService:** Persistent storage with atomic writes\n- **ValidationService:** Centralized validation logic",
   "category": "DOC",
-  "tags": ["class", "service", "memory", "api"],
-  "sources": ["src/memory/memory-service.ts:1-50", "src/memory/memory-service.ts:25-75"]
+  "tags": ["validation", "error-handling", "business-logic", "performance", "architecture"],
+  "sources": ["src/memory/memory-service.ts:25-75", "src/memory/types.ts:15-30", "src/memory/validation-service.ts"]
 }
 ```
 
@@ -42,11 +153,11 @@ Use for any information that would be valuable for LLMs to remember during devel
 **Example:**
 ```json
 {
-  "title": "Project structure and conventions",
-  "content": "# Project Structure\n\n**Root Structure:**\n- `src/` - Source code\n- `tests/` - Test files\n- `docs/` - Documentation\n- `memories/` - Memory files\n\n**Naming Conventions:**\n- Use kebab-case for file names\n- Use PascalCase for class names\n- Use camelCase for functions and variables\n- Use UPPER_CASE for constants\n\n**Code Style:**\n- 2 spaces for indentation\n- Semicolons required\n- Single quotes for strings\n- Trailing commas in objects",
+  "title": "Memory system development patterns and conventions",
+  "content": "# Memory System Development Patterns\n\n**Core Development Principles:**\n\n**Memory Creation Patterns:**\n- Always validate input before processing\n- Use structured error responses with specific field errors\n- Implement idempotent operations where possible\n- Handle concurrent access with optimistic locking\n\n**Search and Discovery Patterns:**\n- Use semantic search for natural language queries\n- Implement fuzzy matching for typo tolerance\n- Cache frequently accessed search results\n- Provide relevance scoring for search results\n\n**Data Integrity Patterns:**\n- Use bidirectional linking to maintain referential integrity\n- Implement atomic operations for multi-step processes\n- Validate data consistency on read operations\n- Use transactions for complex operations\n\n**Performance Optimization Patterns:**\n- Async operations for non-blocking user experience\n- Background processing for heavy operations\n- LRU caching for frequently accessed data\n- Batch operations for bulk processing\n\n**Error Handling Patterns:**\n- Return structured error responses with actionable messages\n- Implement graceful degradation for non-critical features\n- Use exponential backoff for retry operations\n- Log errors with sufficient context for debugging\n\n**Testing Patterns:**\n- Unit tests for business logic validation\n- Integration tests for service interactions\n- Performance tests for search operations\n- Error scenario testing for edge cases\n\n**Code Organization Patterns:**\n- Separate concerns: validation, business logic, data access\n- Use dependency injection for testability\n- Implement interfaces for service contracts\n- Keep services focused on single responsibilities",
   "category": "CTX",
-  "tags": ["conventions", "structure", "style"],
-  "sources": ["src/", "package.json", "tsconfig.json"]
+  "tags": ["patterns", "conventions", "development", "architecture", "best-practices"],
+  "sources": ["src/memory/", "src/utils/", "tests/"]
 }
 ```
 
