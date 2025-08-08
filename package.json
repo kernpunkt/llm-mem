@@ -1,7 +1,7 @@
 {
-  "name": "mcp-template-server",
+  "name": "memory-tools-mcp",
   "version": "1.0.0",
-  "description": "MCP Server Template - A starting point for building Model Context Protocol servers",
+  "description": "Memory Management MCP Server - Comprehensive memory tools for LLMs with FlexSearch and SQLite",
   "main": "index.js",
   "type": "module",
   "engines": {
@@ -25,10 +25,13 @@
   "keywords": [
     "mcp",
     "model-context-protocol",
-    "template",
-    "server"
+    "memory",
+    "flexsearch",
+    "sqlite",
+    "llm",
+    "ai"
   ],
-  "author": "TODO: Your Name",
+  "author": "Memory Tools MCP Team",
   "license": "MIT",
   "packageManager": "pnpm@10.12.4",
   "devDependencies": {

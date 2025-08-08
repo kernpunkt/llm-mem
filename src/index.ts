@@ -45,7 +45,7 @@ config();
 export function createServer(): McpServer {
   // Enhanced capabilities per MCP 2025-06-18 specification
   const server = new McpServer({
-    name: "mcp-template-server", // TODO: Replace with your server name
+    name: "memory-tools-mcp",
     version: "1.0.0",
     capabilities: {
       tools: {},      // Core tool execution capability
