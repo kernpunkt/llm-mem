@@ -481,6 +481,144 @@ export function createServer(): McpServer {
     }
   );
 
+  // Phase 3 Memory Tools
+  server.tool(
+    "edit_mem",
+    "Updates an existing memory's content, title, tags, category, or sources",
+    {
+      id: z.string().uuid().describe("Memory ID to edit"),
+      title: z.string().optional().describe("New title"),
+      content: z.string().optional().describe("New content in markdown format"),
+      tags: z.array(z.string()).optional().describe("New tags for categorization"),
+      category: z.string().optional().describe("New category for organization"),
+      sources: z.array(z.string()).optional().describe("Updated references/sources for the memory")
+    },
+    async ({ id, title, content, tags, category, sources }) => {
+      try {
+        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        
+        const updates: any = { id };
+        if (title !== undefined) updates.title = title;
+        if (content !== undefined) updates.content = content;
+        if (tags !== undefined) updates.tags = tags;
+        if (category !== undefined) updates.category = category;
+        if (sources !== undefined) updates.sources = sources;
+
+        const updated = await memoryService.updateMemory(updates);
+        
+        return {
+          content: [{ 
+            type: "text", 
+            text: `Memory updated successfully:\nid: ${updated.id}\ntitle: ${updated.title}\nupdated_at: ${updated.updated_at}` 
+          }],
+          isError: false
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`edit_mem failed: ${msg}`);
+      }
+    }
+  );
+
+  server.tool(
+    "search_mem",
+    "Searches through memories using full-text search with optional filters",
+    {
+      query: z.string().min(1).describe("Search terms"),
+      limit: z.number().int().positive().optional().default(10).describe("Maximum number of results"),
+      category: z.string().optional().describe("Filter by category"),
+      tags: z.array(z.string()).optional().describe("Filter by tags")
+    },
+    async ({ query, limit = 10, category, tags }) => {
+      try {
+        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        
+        const searchParams: any = { query, limit };
+        if (category) searchParams.category = category;
+        if (tags) searchParams.tags = tags;
+
+        const results = await memoryService.searchMemories(searchParams);
+        
+        if (results.total === 0) {
+          return {
+            content: [{ type: "text", text: "No memories found matching your search criteria." }],
+            isError: false
+          };
+        }
+
+        const formattedResults = results.results.map((result, index) => {
+          const tagsStr = result.tags.length > 0 ? ` [${result.tags.join(", ")}]` : "";
+          const categoryStr = result.category !== "general" ? ` (${result.category})` : "";
+          return `${index + 1}. **${result.title}**${categoryStr}${tagsStr}\n   Score: ${result.score.toFixed(2)}\n   ${result.snippet}\n   ID: ${result.id}\n`;
+        }).join("\n");
+
+        return {
+          content: [{ 
+            type: "text", 
+            text: `Found ${results.total} memory(ies):\n\n${formattedResults}` 
+          }],
+          isError: false
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`search_mem failed: ${msg}`);
+      }
+    }
+  );
+
+  server.tool(
+    "link_mem",
+    "Creates bidirectional links between two memories",
+    {
+      source_id: z.string().uuid().describe("ID of the source memory"),
+      target_id: z.string().uuid().describe("ID of the target memory to link to"),
+      link_text: z.string().optional().describe("Custom link text (defaults to target title)")
+    },
+    async ({ source_id, target_id, link_text }) => {
+      try {
+        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        
+        const result = await memoryService.linkMemories({ source_id, target_id });
+        
+        return {
+          content: [{ type: "text", text: result.message }],
+          isError: false
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`link_mem failed: ${msg}`);
+      }
+    }
+  );
+
+  server.tool(
+    "unlink_mem",
+    "Removes bidirectional links between two memories",
+    {
+      source_id: z.string().uuid().describe("ID of the source memory"),
+      target_id: z.string().uuid().describe("ID of the target memory to unlink")
+    },
+    async ({ source_id, target_id }) => {
+      try {
+        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        
+        const result = await memoryService.unlinkMemories({ source_id, target_id });
+        
+        return {
+          content: [{ type: "text", text: result.message }],
+          isError: false
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`unlink_mem failed: ${msg}`);
+      }
+    }
+  );
+
   /**
    * TODO: Add your custom tools here
    * 
@@ -818,6 +956,109 @@ export async function runHttp(port: number = 3000): Promise<void> {
                     type: 'object',
                     properties: {}
                   }
+                },
+                {
+                  name: 'edit_mem',
+                  description: 'Updates an existing memory\'s content, title, tags, category, or sources',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {
+                      id: {
+                        type: 'string',
+                        description: 'Memory ID to edit'
+                      },
+                      title: {
+                        type: 'string',
+                        description: 'New title'
+                      },
+                      content: {
+                        type: 'string',
+                        description: 'New content in markdown format'
+                      },
+                      tags: {
+                        type: 'array',
+                        items: { type: 'string' },
+                        description: 'New tags for categorization'
+                      },
+                      category: {
+                        type: 'string',
+                        description: 'New category for organization'
+                      },
+                      sources: {
+                        type: 'array',
+                        items: { type: 'string' },
+                        description: 'Updated references/sources for the memory'
+                      }
+                    },
+                    required: ['id']
+                  }
+                },
+                {
+                  name: 'search_mem',
+                  description: 'Searches through memories using full-text search with optional filters',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {
+                      query: {
+                        type: 'string',
+                        description: 'Search terms'
+                      },
+                      limit: {
+                        type: 'number',
+                        description: 'Maximum number of results'
+                      },
+                      category: {
+                        type: 'string',
+                        description: 'Filter by category'
+                      },
+                      tags: {
+                        type: 'array',
+                        items: { type: 'string' },
+                        description: 'Filter by tags'
+                      }
+                    },
+                    required: ['query']
+                  }
+                },
+                {
+                  name: 'link_mem',
+                  description: 'Creates bidirectional links between two memories',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {
+                      source_id: {
+                        type: 'string',
+                        description: 'ID of the source memory'
+                      },
+                      target_id: {
+                        type: 'string',
+                        description: 'ID of the target memory to link to'
+                      },
+                      link_text: {
+                        type: 'string',
+                        description: 'Custom link text (defaults to target title)'
+                      }
+                    },
+                    required: ['source_id', 'target_id']
+                  }
+                },
+                {
+                  name: 'unlink_mem',
+                  description: 'Removes bidirectional links between two memories',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {
+                      source_id: {
+                        type: 'string',
+                        description: 'ID of the source memory'
+                      },
+                      target_id: {
+                        type: 'string',
+                        description: 'ID of the target memory to unlink'
+                      }
+                    },
+                    required: ['source_id', 'target_id']
+                  }
                 }
               ]
             },
@@ -1034,6 +1275,111 @@ export async function runHttp(port: number = 3000): Promise<void> {
                     isError: true
                   };
                 }
+                break;
+              }
+                
+              case 'edit_mem': {
+                const id = toolArgs.id as string;
+                const title = toolArgs.title as string;
+                const content = toolArgs.content as string;
+                const tags = toolArgs.tags as string[] || [];
+                const category = toolArgs.category as string || 'general';
+                const sources = toolArgs.sources as string[] || [];
+
+                if (!id) {
+                  throw new Error('Missing required parameter: id');
+                }
+
+                const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+                const { MemoryService } = await import('./memory/memory-service.js');
+                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const updated = await memoryService.updateMemory({ id, title, content, tags, category, sources });
+
+                toolResult = {
+                  content: [{ 
+                    type: 'text', 
+                    text: `Memory updated successfully:\nid: ${updated.id}\ntitle: ${updated.title}\nupdated_at: ${updated.updated_at}` 
+                  }],
+                  isError: false
+                };
+                break;
+              }
+
+              case 'search_mem': {
+                const query = toolArgs.query as string;
+                const limit = toolArgs.limit as number || 10;
+                const category = toolArgs.category as string;
+                const tags = toolArgs.tags as string[];
+
+                if (!query) {
+                  throw new Error('Missing required parameter: query');
+                }
+
+                const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+                const { MemoryService } = await import('./memory/memory-service.js');
+                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const results = await memoryService.searchMemories({ query, limit, category, tags });
+
+                if (results.total === 0) {
+                  toolResult = {
+                    content: [{ type: 'text', text: "No memories found matching your search criteria." }],
+                    isError: false
+                  };
+                } else {
+                  const formattedResults = results.results.map((result, index) => {
+                    const tagsStr = result.tags.length > 0 ? ` [${result.tags.join(", ")}]` : "";
+                    const categoryStr = result.category !== "general" ? ` (${result.category})` : "";
+                    return `${index + 1}. **${result.title}**${categoryStr}${tagsStr}\n   Score: ${result.score.toFixed(2)}\n   ${result.snippet}\n   ID: ${result.id}\n`;
+                  }).join("\n");
+                  toolResult = {
+                    content: [{ 
+                      type: 'text', 
+                      text: `Found ${results.total} memory(ies):\n\n${formattedResults}` 
+                    }],
+                    isError: false
+                  };
+                }
+                break;
+              }
+
+              case 'link_mem': {
+                const source_id = toolArgs.source_id as string;
+                const target_id = toolArgs.target_id as string;
+                const link_text = toolArgs.link_text as string;
+
+                if (!source_id || !target_id) {
+                  throw new Error('Missing required parameters: source_id and target_id');
+                }
+
+                const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+                const { MemoryService } = await import('./memory/memory-service.js');
+                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const result = await memoryService.linkMemories({ source_id, target_id, link_text });
+
+                toolResult = {
+                  content: [{ type: 'text', text: result.message }],
+                  isError: false
+                };
+                break;
+              }
+
+              case 'unlink_mem': {
+                const source_id = toolArgs.source_id as string;
+                const target_id = toolArgs.target_id as string;
+
+                if (!source_id || !target_id) {
+                  throw new Error('Missing required parameters: source_id and target_id');
+                }
+
+                const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+                const { MemoryService } = await import('./memory/memory-service.js');
+                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const result = await memoryService.unlinkMemories({ source_id, target_id });
+
+                toolResult = {
+                  content: [{ type: 'text', text: result.message }],
+                  isError: false
+                };
                 break;
               }
                 
