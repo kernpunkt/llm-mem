@@ -66,6 +66,90 @@ node dist/index.js --transport=http --port=3000
 # --index_path=PATH        - Path for FlexSearch index (default: ./memories/index)
 ```
 
+### 🔍 FlexSearch Configuration
+
+The server uses FlexSearch for full-text search with configurable stopwords and search behavior. Configuration is handled via environment variables:
+
+**Basic Configuration:**
+```bash
+# Tokenization method (strict, forward, reverse, full, tolerant)
+FLEXSEARCH_TOKENIZE=forward
+
+# Search precision (1-20, higher = more precise but slower)
+FLEXSEARCH_RESOLUTION=9
+
+# Search depth (1-10, higher = more thorough but slower)
+FLEXSEARCH_DEPTH=3
+
+# Enable suggestions for fuzzy matching
+FLEXSEARCH_SUGGEST=true
+```
+
+**Stopwords Configuration:**
+```bash
+# Default: 148 English stopwords
+# Custom: JSON array of words to filter out
+FLEXSEARCH_STOPWORDS='["the","a","an","and","or","but"]'
+
+# Disable stopwords entirely
+FLEXSEARCH_STOPWORDS='[]'
+```
+
+**Advanced Configuration:**
+```bash
+# Character encoding (exact, normalize, latinbalance, latinadvanced, latinextra, latinsoundex, cjk)
+FLEXSEARCH_CHARSET=normalize
+
+# Language support (en, de, fr)
+FLEXSEARCH_LANGUAGE=en
+
+# Term length limits
+FLEXSEARCH_MIN_LENGTH=2
+FLEXSEARCH_MAX_LENGTH=20
+
+# Context search for better relevance
+FLEXSEARCH_CONTEXT=false
+FLEXSEARCH_CONTEXT_RESOLUTION=5
+FLEXSEARCH_CONTEXT_DEPTH=3
+```
+
+**Example configurations for different use cases:**
+
+**High-precision search (slower but more accurate):**
+```bash
+FLEXSEARCH_TOKENIZE=strict
+FLEXSEARCH_RESOLUTION=15
+FLEXSEARCH_DEPTH=5
+FLEXSEARCH_THRESHOLD=3
+```
+
+**Fast search with fuzzy matching:**
+```bash
+FLEXSEARCH_TOKENIZE=tolerant
+FLEXSEARCH_RESOLUTION=5
+FLEXSEARCH_DEPTH=2
+FLEXSEARCH_THRESHOLD=0
+```
+
+**German language support:**
+```bash
+FLEXSEARCH_LANGUAGE=de
+FLEXSEARCH_CHARSET=latinadvanced
+```
+
+**Chinese/Japanese/Korean support:**
+```bash
+FLEXSEARCH_CHARSET=cjk
+FLEXSEARCH_STOPWORDS='[]'  # Empty array for CJK languages
+```
+
+**Context-aware search:**
+```bash
+FLEXSEARCH_CONTEXT=true
+FLEXSEARCH_CONTEXT_RESOLUTION=7
+FLEXSEARCH_CONTEXT_DEPTH=4
+```
+
 ### Example Usage
 
 **Create a memory:**

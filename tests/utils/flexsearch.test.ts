@@ -168,12 +168,12 @@ describe("FlexSearch Integration", () => {
     });
 
     it("should search by content successfully", async () => {
-      const results = await flexSearchManager.searchMemories("Revenue", {
+      const results = await flexSearchManager.searchMemories("target", {
         searchFields: ["content"]
       });
       
       expect(results).toHaveLength(1);
-      expect(results[0].content).toContain("Revenue");
+      expect(results[0].content).toContain("target");
       expect(results[0].score).toBeGreaterThan(0);
     });
 

@@ -392,6 +392,48 @@ export function createServer(): McpServer {
     }
   );
 
+  server.tool(
+    "get_flexsearch_config",
+    "Returns the current FlexSearch configuration including stopwords and environment settings",
+    {},
+    async () => {
+      try {
+        const { parseFlexSearchConfig } = await import("./utils/flexsearch-config.js");
+        const config = parseFlexSearchConfig();
+        
+        const configInfo = {
+          tokenize: config.tokenize,
+          resolution: config.resolution,
+          depth: config.depth,
+          threshold: config.threshold,
+          limit: config.limit,
+          suggest: config.suggest,
+          charset: config.charset,
+          language: config.language,
+          stopwords: config.stopwords,
+          stopwordsCount: config.stopwords.length,
+          minLength: config.minLength,
+          maxLength: config.maxLength,
+          context: config.context,
+          contextResolution: config.contextResolution,
+          contextDepth: config.contextDepth,
+          contextBidirectional: config.contextBidirectional,
+        };
+        
+        return {
+          content: [{ 
+            type: "text", 
+            text: `FlexSearch Configuration:\n\n${JSON.stringify(configInfo, null, 2)}` 
+          }],
+          isError: false
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`get_flexsearch_config failed: ${msg}`);
+      }
+    }
+  );
+
   /**
    * TODO: Add your custom tools here
    * 
@@ -781,6 +823,14 @@ export async function runHttp(port: number = 3000): Promise<void> {
                     },
                     required: ['date']
                   }
+                },
+                {
+                  name: 'get_flexsearch_config',
+                  description: 'Returns the current FlexSearch configuration including stopwords and environment settings',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {}
+                  }
                 }
               ]
             },
@@ -1058,6 +1108,39 @@ export async function runHttp(port: number = 3000): Promise<void> {
                     isError: false
                   };
                 }
+                break;
+              }
+
+              case 'get_flexsearch_config': {
+                const { parseFlexSearchConfig } = await import('./utils/flexsearch-config.js');
+                const config = parseFlexSearchConfig();
+                
+                const configInfo = {
+                  tokenize: config.tokenize,
+                  resolution: config.resolution,
+                  depth: config.depth,
+                  threshold: config.threshold,
+                  limit: config.limit,
+                  suggest: config.suggest,
+                  charset: config.charset,
+                  language: config.language,
+                  stopwords: config.stopwords,
+                  stopwordsCount: config.stopwords.length,
+                  minLength: config.minLength,
+                  maxLength: config.maxLength,
+                  context: config.context,
+                  contextResolution: config.contextResolution,
+                  contextDepth: config.contextDepth,
+                  contextBidirectional: config.contextBidirectional,
+                };
+                
+                toolResult = {
+                  content: [{ 
+                    type: "text", 
+                    text: `FlexSearch Configuration:\n\n${JSON.stringify(configInfo, null, 2)}` 
+                  }],
+                  isError: false
+                };
                 break;
               }
                 

@@ -325,7 +325,11 @@ When starting a new session, focus on:
 - [x] Fixed HTTP server tool registration (tools were only added to stdio server)
 - [x] Added new tools to HTTP server's hardcoded tool list and implementations
 - [x] Verified tools work in both HTTP and stdio transports
-
----
-
-*This checklist will be updated as we progress through the implementation. Each session should focus on completing specific phases or components.* 
+- [x] Enhanced FlexSearch configuration with stopwords support
+- [x] Added environment variable configuration for FlexSearch
+- [x] Created comprehensive .env.example with all FlexSearch options
+- [x] Added get_flexsearch_config tool for configuration inspection
+- [x] Implemented stopword filtering with 148 default English stopwords
+- [x] Added support for custom stopwords via FLEXSEARCH_STOPWORDS environment variable
+- [x] Added support for all FlexSearch configuration options via environment variables
+- [x] Verified stopword filtering works correctly in search operations 

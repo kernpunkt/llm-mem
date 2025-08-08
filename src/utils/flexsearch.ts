@@ -2,6 +2,7 @@ import { Document } from "flexsearch";
 import Database from "flexsearch/db/sqlite";
 import { promises as fs } from "fs";
 import { join } from "path";
+import { parseFlexSearchConfig, createEncoderConfig, createIndexConfig } from "./flexsearch-config.js";
 
 /**
  * FlexSearch index configuration and management utilities.
@@ -38,38 +39,6 @@ export interface SearchResult {
 }
 
 /**
- * FlexSearch document index configuration for memory search.
- * Optimized for full-text search with metadata filtering.
- */
-export const FLEXSEARCH_CONFIG = {
-  id: "id",
-  index: [
-    "title",
-    "content", 
-    "tags",
-    "category"
-  ],
-  store: [
-    "id",
-    "title",
-    "content",
-    "tags", 
-    "category",
-    "created_at",
-    "updated_at",
-    "last_reviewed",
-    "links",
-    "sources"
-  ],
-  tokenize: "forward" as const,
-  resolution: 9,
-  depth: 3,
-  threshold: 1,
-  limit: 100,
-  suggest: true
-};
-
-/**
  * FlexSearch index manager for memory search operations using SQLite.
  */
 export class FlexSearchManager {
@@ -77,15 +46,44 @@ export class FlexSearchManager {
   private db: Database;
   private indexPath: string;
   private isInitialized: boolean = false;
+  private config: ReturnType<typeof parseFlexSearchConfig>;
 
   constructor(indexPath: string) {
     this.indexPath = indexPath;
+    this.config = parseFlexSearchConfig();
     
     // Create SQLite database instance
     this.db = new Database("memory-store");
     
-    // Initialize FlexSearch document index
-    this.documentIndex = new Document(FLEXSEARCH_CONFIG);
+    // Create FlexSearch configuration with stopwords and environment settings
+    const flexSearchConfig = {
+      id: "id",
+      index: [
+        "title",
+        "content", 
+        "tags",
+        "category"
+      ],
+      store: [
+        "id",
+        "title",
+        "content",
+        "tags", 
+        "category",
+        "created_at",
+        "updated_at",
+        "last_reviewed",
+        "links",
+        "sources"
+      ],
+      // Apply configuration from environment variables
+      ...createIndexConfig(this.config),
+      // Apply encoder configuration
+      encoder: createEncoderConfig(this.config),
+    };
+    
+    // Initialize FlexSearch document index with configuration
+    this.documentIndex = new Document(flexSearchConfig);
   }
 
   /**
@@ -103,6 +101,19 @@ export class FlexSearchManager {
       await this.documentIndex.mount(this.db);
       
       this.isInitialized = true;
+      
+      // Log configuration for debugging
+      console.log("FlexSearch initialized with configuration:", {
+        tokenize: this.config.tokenize,
+        resolution: this.config.resolution,
+        depth: this.config.depth,
+        suggest: this.config.suggest,
+        charset: this.config.charset,
+        stopwordsCount: this.config.stopwords.length,
+        context: this.config.context,
+        minLength: this.config.minLength,
+        maxLength: this.config.maxLength,
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       throw new Error(`Failed to initialize FlexSearch indexes: ${errorMessage}`);
