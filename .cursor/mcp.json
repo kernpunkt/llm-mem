@@ -1,0 +1,9 @@
+{
+    "mcpServers": {
+      "memory-tools": {
+        "command": "node",
+        "args": ["/Users/oliverblum/Devel/llm-mem/dist/index.js --notestore_path=/Users/oliverblum/Devel/llm-mem/docs/md --index_path=/Users/oliverblum/Devel/llm-mem/docs/db"],
+        "env": {}
+      }
+    }
+}
