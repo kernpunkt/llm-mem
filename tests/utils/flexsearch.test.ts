@@ -27,7 +27,8 @@ describe("FlexSearch Integration", () => {
         created_at: "2024-01-15T10:30:00Z",
         updated_at: "2024-01-15T10:30:00Z",
         last_reviewed: "2024-01-15T10:30:00Z",
-        links: []
+        links: [],
+        sources: []
       },
       {
         id: "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
@@ -38,7 +39,8 @@ describe("FlexSearch Integration", () => {
         created_at: "2024-01-16T14:20:00Z",
         updated_at: "2024-01-16T14:20:00Z",
         last_reviewed: "2024-01-16T14:20:00Z",
-        links: []
+        links: [],
+        sources: []
       },
       {
         id: "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
@@ -49,7 +51,8 @@ describe("FlexSearch Integration", () => {
         created_at: "2024-01-17T09:15:00Z",
         updated_at: "2024-01-17T09:15:00Z",
         last_reviewed: "2024-01-17T09:15:00Z",
-        links: []
+        links: [],
+        sources: []
       }
     ];
   });

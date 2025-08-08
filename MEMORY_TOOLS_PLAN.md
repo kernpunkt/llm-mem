@@ -14,6 +14,7 @@ Creates a new memory as both a markdown file and indexed document.
 - `content` (string, required): Content in markdown format
 - `tags` (string[], optional): Tags for categorization
 - `category` (string, optional): Category for organization
+- `sources` (string[], optional): References/sources this memory is based on (may be empty)
 
 **Returns:**
 - Memory ID
@@ -39,7 +40,7 @@ Retrieves a memory by ID or title with optional formatting.
 
 **Returns:**
 - Memory content in requested format
-- Metadata (creation date, tags, category)
+- Metadata (creation date, tags, category, sources)
 
 **Example:**
 ```json
@@ -58,6 +59,7 @@ Modifies an existing memory's content, title, tags, or category.
 - `content` (string, optional): New content
 - `tags` (string[], optional): New tags
 - `category` (string, optional): New category
+- `sources` (string[], optional): Updated sources list
 
 **Returns:**
 - Updated memory ID
@@ -172,6 +174,7 @@ interface Memory {
   last_reviewed: string; // ISO timestamp for review tracking
   file_path: string;    // Path to markdown file
   links: string[];      // Array of linked memory IDs
+  sources: string[];    // References/sources for the memory
 }
 ```
 
@@ -185,6 +188,7 @@ FlexSearch will handle the database storage and indexing. The index will contain
 - Creation date
 - Last reviewed date
 - Links (for relationship tracking)
+- Sources (stored; optional)
 
 ## 📁 File Organization
 
@@ -210,6 +214,7 @@ created_at: 2024-01-15T10:30:00Z
 updated_at: 2024-01-15T10:30:00Z
 last_reviewed: 2024-01-15T10:30:00Z
 links: ["6ba7b810-9dad-11d1-80b4-00c04fd430c8", "6ba7b811-9dad-11d1-80b4-00c04fd430c8"]
+sources: ["https://example.com/q4-meeting-notes", "internal:crm/opportunity-123"]
 ---
 
 # Q4 Goals Discussion
@@ -331,7 +336,7 @@ it('should create new memory with markdown file and FlexSearch index')
 it('should retrieve memory by ID and title')
 
 // Test edit_mem
-it('should update existing memory content and metadata')
+it('should update existing memory content and metadata (including sources)')
 
 // Test search_mem
 it('should find memories by search terms and filters')

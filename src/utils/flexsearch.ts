@@ -18,6 +18,7 @@ export interface MemoryIndexDocument {
   updated_at: string;
   last_reviewed: string;
   links: string[];
+  sources: string[];
   [key: string]: any; // Add index signature for FlexSearch compatibility
 }
 
@@ -31,6 +32,7 @@ export interface SearchResult {
   updated_at: string;
   last_reviewed: string;
   links: string[];
+  sources: string[];
   score: number;
   snippet: string;
 }
@@ -56,7 +58,8 @@ export const FLEXSEARCH_CONFIG = {
     "created_at",
     "updated_at",
     "last_reviewed",
-    "links"
+    "links",
+    "sources"
   ],
   tokenize: "forward" as const,
   resolution: 9,

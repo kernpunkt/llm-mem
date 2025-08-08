@@ -14,6 +14,7 @@ export interface MemoryFrontmatter {
   updated_at: string;
   last_reviewed: string;
   links: string[];
+  sources: string[];
 }
 
 /**
@@ -66,7 +67,8 @@ export function parseFrontmatter(content: string): {
         created_at: frontmatter.created_at ? new Date(frontmatter.created_at).toISOString() : new Date().toISOString(),
         updated_at: frontmatter.updated_at ? new Date(frontmatter.updated_at).toISOString() : new Date().toISOString(),
         last_reviewed: frontmatter.last_reviewed ? new Date(frontmatter.last_reviewed).toISOString() : new Date().toISOString(),
-        links: Array.isArray(frontmatter.links) ? frontmatter.links : []
+        links: Array.isArray(frontmatter.links) ? frontmatter.links : [],
+        sources: Array.isArray(frontmatter.sources) ? frontmatter.sources : []
       },
       content: markdownContent.trim()
     };
@@ -183,6 +185,10 @@ export function validateFrontmatter(frontmatter: any): frontmatter is MemoryFron
     throw new Error("Frontmatter 'links' field must be an array");
   }
 
+  if (!Array.isArray(frontmatter.sources)) {
+    throw new Error("Frontmatter 'sources' field must be an array");
+  }
+
   // Validate date fields
   const dateFields = ["created_at", "updated_at", "last_reviewed"];
   for (const field of dateFields) {
@@ -219,6 +225,7 @@ export function createFrontmatter(
     created_at: now,
     updated_at: now,
     last_reviewed: now,
-    links: []
+    links: [],
+    sources: []
   };
 } 

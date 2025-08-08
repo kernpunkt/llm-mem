@@ -17,7 +17,8 @@ describe("YAML Frontmatter Utilities", () => {
     created_at: "2024-01-15T10:30:00.000Z",
     updated_at: "2024-01-15T10:30:00.000Z",
     last_reviewed: "2024-01-15T10:30:00.000Z",
-    links: []
+    links: [],
+    sources: []
   };
 
   const sampleContent = `# Q4 Goals Discussion
@@ -46,6 +47,7 @@ created_at: 2024-01-15T10:30:00Z
 updated_at: 2024-01-15T10:30:00Z
 last_reviewed: 2024-01-15T10:30:00Z
 links: []
+sources: []
 ---
 
 # Q4 Goals Discussion
@@ -124,13 +126,14 @@ category: test
       );
     });
 
-    it("should handle frontmatter with non-array tags and links", () => {
+    it("should handle frontmatter with non-array tags, links and sources", () => {
       const markdownWithInvalidArrays = `---
 id: 550e8400-e29b-41d4-a716-446655440000
 title: Test Memory
 category: test
 tags: "single-tag"
 links: "single-link"
+sources: "single-source"
 ---
 
 # Test Content`;
@@ -139,6 +142,7 @@ links: "single-link"
       
       expect(result.frontmatter.tags).toEqual([]);
       expect(result.frontmatter.links).toEqual([]);
+      expect(result.frontmatter.sources).toEqual([]);
     });
   });
 
@@ -300,6 +304,13 @@ With special characters: $2M, 100%, & symbols
       const invalidFrontmatter = { ...sampleFrontmatter, links: "not-an-array" };
       expect(() => validateFrontmatter(invalidFrontmatter)).toThrow(
         "Frontmatter 'links' field must be an array"
+      );
+    });
+
+    it("should throw error for non-array sources", () => {
+      const invalidFrontmatter = { ...sampleFrontmatter, sources: "not-an-array" } as any;
+      expect(() => validateFrontmatter(invalidFrontmatter)).toThrow(
+        "Frontmatter 'sources' field must be an array"
       );
     });
 
