@@ -6,6 +6,9 @@ import { createServer as createHttpServer } from "http";
 import { z } from "zod";
 import { MemoryService } from "./memory/memory-service.js";
 import { serializeFrontmatter } from "./utils/yaml.js";
+import { promises as fs } from "fs";
+import { join } from "path";
+import { fileURLToPath } from "url";
 
 // Load environment variables from .env file
 config();
@@ -455,6 +458,29 @@ export function createServer(): McpServer {
     return directions[index];
   }
 
+  server.tool(
+    "get_usage_info",
+    "Returns usage documentation and examples for all memory tools",
+    {},
+    async () => {
+      try {
+        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories" };
+        const usageFilePath = join(cfg.notestorePath, "usage.md");
+        
+        // Read the usage file
+        const usageContent = await fs.readFile(usageFilePath, "utf-8");
+        
+        return {
+          content: [{ type: "text", text: usageContent }],
+          isError: false
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`get_usage_info failed: ${msg}`);
+      }
+    }
+  );
+
   /**
    * TODO: Add your custom tools here
    * 
@@ -482,6 +508,38 @@ export function createServer(): McpServer {
    */
 
   return server;
+}
+
+/**
+ * Ensures the usage.md file exists in the notestore_path.
+ * If it doesn't exist, copies it from the source assets directory.
+ */
+async function ensureUsageFileExists(notestorePath: string): Promise<void> {
+  try {
+    const usageFilePath = join(notestorePath, "usage.md");
+    
+    // Check if usage.md already exists
+    try {
+      await fs.access(usageFilePath);
+      return; // File exists, no need to copy
+    } catch {
+      // File doesn't exist, need to copy it
+    }
+
+    // Ensure notestore directory exists
+    await fs.mkdir(notestorePath, { recursive: true });
+
+    // Get the source assets directory
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = join(__filename, "..");
+    const sourceUsagePath = join(__dirname, "assets", "usage.md");
+
+    // Copy the usage file
+    await fs.copyFile(sourceUsagePath, usageFilePath);
+  } catch (error) {
+    console.error("Failed to ensure usage.md exists:", error);
+    // Don't throw - this is not critical for server operation
+  }
 }
 
 /**
@@ -687,6 +745,79 @@ export async function runHttp(port: number = 3000): Promise<void> {
                     },
                     required: ['location']
                   }
+                },
+                {
+                  name: 'get_current_date',
+                  description: 'Returns the current date/time in the requested format',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {
+                      format: {
+                        type: 'string',
+                        enum: ['iso', 'locale', 'timestamp', 'date_only'],
+                        description: 'Date format (default: iso)'
+                      }
+                    }
+                  }
+                },
+                {
+                  name: 'write_mem',
+                  description: 'Creates a new memory as a markdown file and indexes it',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {
+                      title: {
+                        type: 'string',
+                        description: 'Title of the memory'
+                      },
+                      content: {
+                        type: 'string',
+                        description: 'Content in markdown format'
+                      },
+                      tags: {
+                        type: 'array',
+                        items: { type: 'string' },
+                        description: 'Tags for categorization'
+                      },
+                      category: {
+                        type: 'string',
+                        description: 'Category for organization'
+                      },
+                      sources: {
+                        type: 'array',
+                        items: { type: 'string' },
+                        description: 'References/sources for the memory'
+                      }
+                    },
+                    required: ['title', 'content']
+                  }
+                },
+                {
+                  name: 'read_mem',
+                  description: 'Retrieves a memory by ID or title with optional formatting',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {
+                      identifier: {
+                        type: 'string',
+                        description: 'Memory ID or title'
+                      },
+                      format: {
+                        type: 'string',
+                        enum: ['markdown', 'plain', 'json'],
+                        description: 'Output format'
+                      }
+                    },
+                    required: ['identifier']
+                  }
+                },
+                {
+                  name: 'get_usage_info',
+                  description: 'Returns usage documentation and examples for all memory tools',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {}
+                  }
                 }
               ]
             },
@@ -800,7 +931,113 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 break;
               }
                 
-                             default: {
+              case 'get_current_date': {
+                const format = (toolArgs.format as string) || 'iso';
+                const now = new Date();
+                let timeString: string;
+                
+                switch (format) {
+                  case 'iso': timeString = now.toISOString(); break;
+                  case 'locale': timeString = now.toLocaleString(); break;
+                  case 'timestamp': timeString = now.getTime().toString(); break;
+                  case 'date_only': timeString = now.toISOString().slice(0, 10); break;
+                  default: throw new Error(`Unknown format: ${format}`);
+                }
+                
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+                toolResult = {
+                  content: [{ type: 'text', text: `${timeString} (${tz})` }],
+                  isError: false
+                };
+                break;
+              }
+                
+              case 'write_mem': {
+                const title = toolArgs.title as string;
+                const content = toolArgs.content as string;
+                const tags = toolArgs.tags as string[] || [];
+                const category = toolArgs.category as string || 'general';
+                const sources = toolArgs.sources as string[] || [];
+                
+                if (!title || !content) {
+                  throw new Error('Missing required parameters: title and content');
+                }
+                
+                const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+                const { MemoryService } = await import('./memory/memory-service.js');
+                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const mem = await memoryService.createMemory({ title, content, tags, category, sources });
+                
+                toolResult = {
+                  content: [{ type: 'text', text: `id: ${mem.id}\nfile: ${mem.file_path}\ncreated_at: ${mem.created_at}` }],
+                  isError: false
+                };
+                break;
+              }
+                
+              case 'read_mem': {
+                const identifier = toolArgs.identifier as string;
+                const format = (toolArgs.format as string) || 'markdown';
+                
+                if (!identifier) {
+                  throw new Error('Missing required parameter: identifier');
+                }
+                
+                const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+                const { MemoryService } = await import('./memory/memory-service.js');
+                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const memory = await memoryService.readMemory(uuidPattern.test(identifier) ? { id: identifier } : { title: identifier });
+                
+                if (!memory) {
+                  toolResult = {
+                    content: [{ type: 'text', text: `Memory not found: ${identifier}` }],
+                    isError: true
+                  };
+                } else if (format === 'plain') {
+                  toolResult = { content: [{ type: 'text', text: memory.content }], isError: false };
+                } else if (format === 'json') {
+                  toolResult = { content: [{ type: 'text', text: JSON.stringify(memory, null, 2) }], isError: false };
+                } else {
+                  // markdown format
+                  const { serializeFrontmatter } = await import('./utils/yaml.js');
+                  const frontmatter = {
+                    id: memory.id,
+                    title: memory.title,
+                    tags: memory.tags,
+                    category: memory.category,
+                    created_at: memory.created_at,
+                    updated_at: memory.updated_at,
+                    last_reviewed: memory.last_reviewed,
+                    links: memory.links,
+                    sources: memory.sources,
+                  };
+                  const markdown = serializeFrontmatter(frontmatter as any, memory.content);
+                  toolResult = { content: [{ type: 'text', text: markdown }], isError: false };
+                }
+                break;
+              }
+                
+              case 'get_usage_info': {
+                const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories" };
+                const usageFilePath = join(cfg.notestorePath, "usage.md");
+                
+                try {
+                  const usageContent = await fs.readFile(usageFilePath, "utf-8");
+                  toolResult = {
+                    content: [{ type: 'text', text: usageContent }],
+                    isError: false
+                  };
+                } catch (error) {
+                  toolResult = {
+                    content: [{ type: 'text', text: `Usage file not found at ${usageFilePath}. Please ensure the server has been started to create the usage file.` }],
+                    isError: true
+                  };
+                }
+                break;
+              }
+                
+              default: {
                  const errorResponse = {
                    jsonrpc: '2.0',
                    error: {
@@ -994,6 +1231,9 @@ export async function main(): Promise<void> {
     notestorePath,
     indexPath
   };
+
+  // Ensure usage.md exists in notestore_path
+  await ensureUsageFileExists(notestorePath);
 
   switch (transportType) {
     case 'http':

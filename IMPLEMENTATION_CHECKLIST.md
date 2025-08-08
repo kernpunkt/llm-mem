@@ -140,6 +140,16 @@ This checklist tracks the step-by-step implementation of the memory management t
 - [ ] Write unit tests
 - [ ] Test with various unlinking scenarios
 
+### 3.5 `get_usage_info` Tool
+- [x] Create usage documentation template in source directory
+- [x] Implement file copying from source to notestore_path on server start
+- [x] Implement `get_usage_info` tool
+- [x] Add Zod schema for parameters
+- [x] Return usage.md content from notestore_path
+- [x] Add comprehensive error handling
+- [ ] Write unit tests
+- [x] Test with various scenarios (file exists, file missing, etc.)
+
 ---
 
 ## ✅ **Phase 4: Polish & Testing**
@@ -239,10 +249,10 @@ curl -X POST http://localhost:3000/mcp \
 
 **Phase 1 Progress:** 20/20 tasks completed (100%)
 **Phase 2 Progress:** 32/32 tasks completed (100%)
-**Phase 3 Progress:** 0/30 tasks completed (0%)
+**Phase 3 Progress:** 8/38 tasks completed (21%)
 **Phase 4 Progress:** 0/20 tasks completed (0%)
 
-**Overall Progress:** 52/102 tasks completed (51%)
+**Overall Progress:** 60/110 tasks completed (55%)
 
 ---
 
