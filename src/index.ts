@@ -4,6 +4,8 @@ import { config } from "dotenv";
 import { createApp, createRouter, eventHandler, readBody, toNodeListener } from "h3";
 import { createServer as createHttpServer } from "http";
 import { z } from "zod";
+import { MemoryService } from "./memory/memory-service.js";
+import { serializeFrontmatter } from "./utils/yaml.js";
 
 // Load environment variables from .env file
 config();
@@ -314,6 +316,118 @@ export function createServer(): McpServer {
           const errorMessage = error instanceof Error ? error.message : String(error);
           throw new Error(`Weather tool failed: ${errorMessage}`);
         }
+      }
+    }
+  );
+
+  // Memory Tools - Phase 2
+  server.tool(
+    "get_current_date",
+    "Returns the current date/time in the requested format",
+    {
+      format: z.enum(["iso", "locale", "timestamp", "date_only"]).optional().describe("Date format (default: iso)")
+    },
+    async ({ format = "iso" }) => {
+      try {
+        const now = new Date();
+        let output: string;
+        switch (format) {
+          case "iso":
+            output = now.toISOString();
+            break;
+          case "locale":
+            output = now.toLocaleString();
+            break;
+          case "timestamp":
+            output = now.getTime().toString();
+            break;
+          case "date_only":
+            output = now.toISOString().slice(0, 10);
+            break;
+        }
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+        return {
+          content: [{ type: "text", text: `${output} (${tz})` }],
+          isError: false
+        };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw new Error(`get_current_date failed: ${errorMessage}`);
+      }
+    }
+  );
+
+  server.tool(
+    "write_mem",
+    "Creates a new memory as a markdown file and indexes it",
+    {
+      title: z.string().min(1).describe("Title of the memory"),
+      content: z.string().min(1).describe("Content in markdown format"),
+      tags: z.array(z.string()).optional().describe("Tags for categorization"),
+      category: z.string().optional().describe("Category for organization"),
+      sources: z.array(z.string()).optional().describe("References/sources for the memory")
+    },
+    async ({ title, content, tags = [], category = "general", sources = [] }) => {
+      try {
+        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        const mem = await memoryService.createMemory({ title, content, tags, category, sources });
+        return {
+          content: [{ type: "text", text: `id: ${mem.id}\nfile: ${mem.file_path}\ncreated_at: ${mem.created_at}` }],
+          isError: false
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`write_mem failed: ${msg}`);
+      }
+    }
+  );
+
+  server.tool(
+    "read_mem",
+    "Retrieves a memory by ID or title with optional formatting",
+    {
+      identifier: z.string().min(1).describe("Memory ID or title"),
+      format: z.enum(["markdown", "plain", "json"]).optional().describe("Output format")
+    },
+    async ({ identifier, format = "markdown" }) => {
+      try {
+        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        const memory = await memoryService.readMemory(uuidPattern.test(identifier) ? { id: identifier } : { title: identifier });
+        if (!memory) {
+          return {
+            content: [{ type: "text", text: `Memory not found: ${identifier}` }],
+            isError: true
+          };
+        }
+
+        if (format === "plain") {
+          return { content: [{ type: "text", text: memory.content }], isError: false };
+        }
+
+        if (format === "json") {
+          return { content: [{ type: "text", text: JSON.stringify(memory, null, 2) }], isError: false };
+        }
+
+        // markdown
+        const frontmatter = {
+          id: memory.id,
+          title: memory.title,
+          tags: memory.tags,
+          category: memory.category,
+          created_at: memory.created_at,
+          updated_at: memory.updated_at,
+          last_reviewed: memory.last_reviewed,
+          links: memory.links,
+          sources: memory.sources,
+        };
+        const markdown = serializeFrontmatter(frontmatter as any, memory.content);
+        return { content: [{ type: "text", text: markdown }], isError: false };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`read_mem failed: ${msg}`);
       }
     }
   );
