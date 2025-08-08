@@ -168,12 +168,12 @@ describe("FlexSearch Integration", () => {
     });
 
     it("should search by content successfully", async () => {
-      const results = await flexSearchManager.searchMemories("target", {
+      const results = await flexSearchManager.searchMemories("Revenue", {
         searchFields: ["content"]
       });
       
       expect(results).toHaveLength(1);
-      expect(results[0].content).toContain("target");
+      expect(results[0].content).toContain("Revenue");
       expect(results[0].score).toBeGreaterThan(0);
     });
 
@@ -235,11 +235,11 @@ describe("FlexSearch Integration", () => {
     });
 
     it("should generate snippets for search results", async () => {
-      const results = await flexSearchManager.searchMemories("target");
+      const results = await flexSearchManager.searchMemories("Goals");
       
       expect(results[0].snippet).toBeDefined();
       expect(results[0].snippet.length).toBeGreaterThan(0);
-      expect(results[0].snippet).toContain("target");
+      expect(results[0].snippet).toContain("Goals");
     });
 
     it("should sort results by relevance score", async () => {

@@ -102,5 +102,11 @@ export class FileService {
     await fs.writeFile(filePath, finalMarkdown, "utf-8");
     return finalMarkdown;
   }
+
+  async listAllMemoryFiles(): Promise<string[]> {
+    await this.initialize();
+    const { listMemoryFiles } = await import("../utils/file-system.js");
+    return listMemoryFiles(this.notestorePath);
+  }
 }
 

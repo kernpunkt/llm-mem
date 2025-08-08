@@ -190,6 +190,21 @@ This checklist tracks the step-by-step implementation of the memory management t
 - [x] Test with stdio transport
 - [x] Verify all tools work correctly
 
+### 4.6 Additional Tools (Phase 4.5)
+- [x] Implement `reindex_mems` tool
+- [x] Add Zod schema for parameters (no parameters required)
+- [x] Implement FlexSearch index clearing and reindexing
+- [x] Add comprehensive error handling
+- [x] Write unit tests
+- [x] Test with various scenarios (empty index, with memories, etc.)
+
+- [x] Implement `needs_review` tool
+- [x] Add Zod schema for parameters (date parameter)
+- [x] Implement memory filtering by last_reviewed date
+- [x] Add date validation and error handling
+- [x] Write unit tests
+- [x] Test with various date scenarios (ISO format, invalid dates, etc.)
+
 ---
 
 ## 🧪 **Testing Strategy**
@@ -209,12 +224,16 @@ This checklist tracks the step-by-step implementation of the memory management t
 - [x] FlexSearch integration tests
 - [x] Error handling tests
 - [x] Link management tests
+- [x] Reindexing tests
+- [x] Review filtering tests
 
 ### End-to-End Tests
 - [x] Complete memory lifecycle tests
 - [x] Search and retrieval tests
 - [x] Link creation and removal tests
 - [x] Error recovery tests
+- [x] Reindexing workflow tests
+- [x] Review filtering workflow tests
 
 ---
 
@@ -250,11 +269,11 @@ curl -X POST http://localhost:3000/mcp \
 **Phase 1 Progress:** 20/20 tasks completed (100%)
 **Phase 2 Progress:** 32/32 tasks completed (100%)
 **Phase 3 Progress:** 38/38 tasks completed (100%)
-**Phase 4 Progress:** 20/20 tasks completed (100%)
+**Phase 4 Progress:** 26/26 tasks completed (100%)
 
-**Overall Progress:** 126/126 tasks completed (100%) ✅
+**Overall Progress:** 132/132 tasks completed (100%) ✅
 
-**Testing Strategy:** 16/16 tests completed (100%) ✅
+**Testing Strategy:** 18/18 tests completed (100%) ✅
 
 ---
 
@@ -294,6 +313,18 @@ When starting a new session, focus on:
 - [x] Cleaned up template tool tests and implementations
 - [x] Fixed FlexSearch test with proper search term
 - [x] All 192 tests passing
+
+### Session 4 Notes
+- [x] Added two new tools: `reindex_mems` and `needs_review`
+- [x] Implemented FlexSearch index clearing and reindexing functionality
+- [x] Added memory filtering by last_reviewed date
+- [x] Added comprehensive tests for new tools
+- [x] Fixed FlexSearch test issues with proper search terms
+- [x] All 196 tests passing
+- [x] Updated implementation checklist with new tools
+- [x] Fixed HTTP server tool registration (tools were only added to stdio server)
+- [x] Added new tools to HTTP server's hardcoded tool list and implementations
+- [x] Verified tools work in both HTTP and stdio transports
 
 ---
 

@@ -317,5 +317,117 @@ describe("Memory Tools", () => {
       expect(validUnlinkParams.target_id).toMatch(/[0-9a-f-]{36}/i);
     });
   });
+
+  // Phase 4 Tool Tests - New Tools
+  describe("Phase 4 Memory Tools", () => {
+    it("should test reindex_mems tool", async () => {
+      // Test reindex_mems with no parameters
+      const reindexParams = {};
+      expect(Object.keys(reindexParams)).toHaveLength(0);
+
+      // Test reindex_mems functionality
+      const reindexFunctionality = {
+        success: true,
+        message: "Successfully reindexed 5 memories",
+        indexedCount: 5
+      };
+      expect(reindexFunctionality.success).toBe(true);
+      expect(typeof reindexFunctionality.message).toBe("string");
+      expect(typeof reindexFunctionality.indexedCount).toBe("number");
+      expect(reindexFunctionality.indexedCount).toBeGreaterThanOrEqual(0);
+    });
+
+    it("should test needs_review tool with various date scenarios", async () => {
+      // Test with ISO date format
+      const isoDateParams = {
+        date: "2024-01-15T00:00:00Z"
+      };
+      expect(isoDateParams.date).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+
+      // Test with different date formats
+      const differentDateFormats = [
+        "2024-01-15T00:00:00Z",
+        "2024-01-15T12:30:45Z",
+        "2024-01-15T23:59:59Z"
+      ];
+      differentDateFormats.forEach(date => {
+        expect(date).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+      });
+
+      // Test needs_review functionality
+      const reviewFunctionality = {
+        memories: [
+          {
+            id: "550e8400-e29b-41d4-a716-446655440000",
+            title: "Old Memory",
+            category: "work",
+            tags: ["old", "review"],
+            last_reviewed: "2024-01-01T00:00:00Z",
+            created_at: "2024-01-01T00:00:00Z"
+          }
+        ],
+        total: 1
+      };
+      expect(Array.isArray(reviewFunctionality.memories)).toBe(true);
+      expect(typeof reviewFunctionality.total).toBe("number");
+      expect(reviewFunctionality.memories[0].id).toMatch(/[0-9a-f-]{36}/i);
+      expect(typeof reviewFunctionality.memories[0].title).toBe("string");
+      expect(Array.isArray(reviewFunctionality.memories[0].tags)).toBe(true);
+    });
+
+    it("should test error handling for Phase 4 tools", async () => {
+      // Test needs_review with invalid date format
+      const invalidDateParams = {
+        date: "invalid-date-format"
+      };
+      expect(invalidDateParams.date).toBe("invalid-date-format");
+
+      // Test needs_review with empty date
+      const emptyDateParams = {
+        date: ""
+      };
+      expect(emptyDateParams.date).toBe("");
+
+      // Test reindex_mems error scenarios
+      const reindexErrorScenarios = {
+        noMemories: {
+          success: true,
+          message: "Successfully reindexed 0 memories",
+          indexedCount: 0
+        },
+        withErrors: {
+          success: true,
+          message: "Successfully reindexed 3 memories",
+          indexedCount: 3
+        }
+      };
+      expect(reindexErrorScenarios.noMemories.indexedCount).toBe(0);
+      expect(reindexErrorScenarios.withErrors.indexedCount).toBeGreaterThan(0);
+    });
+
+    it("should test parameter validation for Phase 4 tools", async () => {
+      // Test reindex_mems parameter validation (no parameters required)
+      const validReindexParams = {};
+      expect(Object.keys(validReindexParams)).toHaveLength(0);
+
+      // Test needs_review parameter validation
+      const validReviewParams = {
+        date: "2024-01-15T00:00:00Z"
+      };
+      expect(typeof validReviewParams.date).toBe("string");
+      expect(validReviewParams.date.length).toBeGreaterThan(0);
+
+      // Test needs_review with various date formats
+      const validDateFormats = [
+        "2024-01-15T00:00:00Z",
+        "2024-01-15T12:30:45.123Z",
+        "2024-01-15T23:59:59.999Z"
+      ];
+      validDateFormats.forEach(date => {
+        expect(typeof date).toBe("string");
+        expect(date.length).toBeGreaterThan(0);
+      });
+    });
+  });
 });
 

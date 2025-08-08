@@ -330,6 +330,68 @@ export function createServer(): McpServer {
     }
   );
 
+  server.tool(
+    "reindex_mems",
+    "Clears the FlexSearch indexes and reindexes all documents in notestore_path",
+    {},
+    async () => {
+      try {
+        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        
+        const result = await memoryService.reindexMemories();
+        
+        return {
+          content: [{ type: "text", text: result.message }],
+          isError: false
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`reindex_mems failed: ${msg}`);
+      }
+    }
+  );
+
+  server.tool(
+    "needs_review",
+    "Returns all memories that have a last_reviewed date before the given date",
+    {
+      date: z.string().describe("Cutoff date in ISO format (e.g., '2024-01-15T00:00:00Z')")
+    },
+    async ({ date }) => {
+      try {
+        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        
+        const result = await memoryService.getMemoriesNeedingReview(date);
+        
+        if (result.total === 0) {
+          return {
+            content: [{ type: "text", text: "No memories need review before the specified date." }],
+            isError: false
+          };
+        }
+
+        const formattedResults = result.memories.map((memory, index) => {
+          const tagsStr = memory.tags.length > 0 ? ` [${memory.tags.join(", ")}]` : "";
+          const categoryStr = memory.category !== "general" ? ` (${memory.category})` : "";
+          return `${index + 1}. **${memory.title}**${categoryStr}${tagsStr}\n   Last reviewed: ${memory.last_reviewed}\n   Created: ${memory.created_at}\n   ID: ${memory.id}\n`;
+        }).join("\n");
+
+        return {
+          content: [{ 
+            type: "text", 
+            text: `Found ${result.total} memory(ies) needing review:\n\n${formattedResults}` 
+          }],
+          isError: false
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`needs_review failed: ${msg}`);
+      }
+    }
+  );
+
   /**
    * TODO: Add your custom tools here
    * 
@@ -697,6 +759,28 @@ export async function runHttp(port: number = 3000): Promise<void> {
                     },
                     required: ['source_id', 'target_id']
                   }
+                },
+                {
+                  name: 'reindex_mems',
+                  description: 'Clears the FlexSearch indexes and reindexes all documents in notestore_path',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {}
+                  }
+                },
+                {
+                  name: 'needs_review',
+                  description: 'Returns all memories that have a last_reviewed date before the given date',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {
+                      date: {
+                        type: 'string',
+                        description: 'Cutoff date in ISO format (e.g., \'2024-01-15T00:00:00Z\')'
+                      }
+                    },
+                    required: ['date']
+                  }
                 }
               ]
             },
@@ -927,6 +1011,53 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   content: [{ type: 'text', text: result.message }],
                   isError: false
                 };
+                break;
+              }
+
+              case 'reindex_mems': {
+                const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+                const { MemoryService } = await import('./memory/memory-service.js');
+                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const result = await memoryService.reindexMemories();
+
+                toolResult = {
+                  content: [{ type: 'text', text: result.message }],
+                  isError: false
+                };
+                break;
+              }
+
+              case 'needs_review': {
+                const date = toolArgs.date as string;
+                if (!date) {
+                  throw new Error('Missing required parameter: date');
+                }
+
+                const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+                const { MemoryService } = await import('./memory/memory-service.js');
+                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const result = await memoryService.getMemoriesNeedingReview(date);
+
+                if (result.total === 0) {
+                  toolResult = {
+                    content: [{ type: 'text', text: "No memories need review before the specified date." }],
+                    isError: false
+                  };
+                } else {
+                  const formattedResults = result.memories.map((memory: any, index: number) => {
+                    const tagsStr = memory.tags.length > 0 ? ` [${memory.tags.join(", ")}]` : "";
+                    const categoryStr = memory.category !== "general" ? ` (${memory.category})` : "";
+                    return `${index + 1}. **${memory.title}**${categoryStr}${tagsStr}\n   Last reviewed: ${memory.last_reviewed}\n   Created: ${memory.created_at}\n   ID: ${memory.id}\n`;
+                  }).join("\n");
+
+                  toolResult = {
+                    content: [{ 
+                      type: 'text', 
+                      text: `Found ${result.total} memory(ies) needing review:\n\n${formattedResults}` 
+                    }],
+                    isError: false
+                  };
+                }
                 break;
               }
                 

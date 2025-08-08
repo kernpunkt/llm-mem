@@ -3,6 +3,7 @@ import { FileService } from "./file-service.js";
 import { SearchService } from "./search-service.js";
 import { LinkService } from "./link-service.js";
 import { Memory, MemoryUpdateRequest, MemorySearchRequest, LinkRequest } from "./types.js";
+import { parseMemoryFilePath } from "../utils/file-system.js";
 
 export interface MemoryServiceConfig {
   notestorePath: string;
@@ -257,6 +258,115 @@ export class MemoryService {
       target_id,
       success: true,
       message: `Successfully unlinked memories: "${source.title}" ↔ "${target.title}"`,
+    };
+  }
+
+  async reindexMemories(): Promise<{
+    success: boolean;
+    message: string;
+    indexedCount: number;
+  }> {
+    await this.initialize();
+    
+    // Clear all indexes
+    await this.searchService.clearIndexes();
+    
+    // Get all memory files
+    const memoryFiles = await this.fileService.listAllMemoryFiles();
+    let indexedCount = 0;
+    
+    // Reindex each memory
+    for (const filePath of memoryFiles) {
+      try {
+        const parsed = parseMemoryFilePath(filePath);
+        if (!parsed) continue;
+        
+        const memory = await this.readMemory({ id: parsed.id });
+        if (!memory) continue;
+        
+        await this.searchService.indexMemory({
+          id: memory.id,
+          title: memory.title,
+          content: memory.content,
+          tags: memory.tags,
+          category: memory.category,
+          created_at: memory.created_at,
+          updated_at: memory.updated_at,
+          last_reviewed: memory.last_reviewed,
+          links: memory.links,
+          sources: memory.sources,
+        });
+        
+        indexedCount++;
+      } catch (error) {
+        console.error(`Failed to reindex memory from ${filePath}:`, error);
+      }
+    }
+    
+    return {
+      success: true,
+      message: `Successfully reindexed ${indexedCount} memories`,
+      indexedCount,
+    };
+  }
+
+  async getMemoriesNeedingReview(cutoffDate: string): Promise<{
+    memories: Array<{
+      id: string;
+      title: string;
+      category: string;
+      tags: string[];
+      last_reviewed: string;
+      created_at: string;
+    }>;
+    total: number;
+  }> {
+    await this.initialize();
+    
+    const memoryFiles = await this.fileService.listAllMemoryFiles();
+    const memoriesNeedingReview: Array<{
+      id: string;
+      title: string;
+      category: string;
+      tags: string[];
+      last_reviewed: string;
+      created_at: string;
+    }> = [];
+    
+    const cutoff = new Date(cutoffDate);
+    
+    for (const filePath of memoryFiles) {
+      try {
+        const parsed = parseMemoryFilePath(filePath);
+        if (!parsed) continue;
+        
+        const memory = await this.readMemory({ id: parsed.id });
+        if (!memory) continue;
+        
+        const lastReviewed = new Date(memory.last_reviewed);
+        if (lastReviewed < cutoff) {
+          memoriesNeedingReview.push({
+            id: memory.id,
+            title: memory.title,
+            category: memory.category,
+            tags: memory.tags,
+            last_reviewed: memory.last_reviewed,
+            created_at: memory.created_at,
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to check memory from ${filePath}:`, error);
+      }
+    }
+    
+    // Sort by last_reviewed date (oldest first)
+    memoriesNeedingReview.sort((a, b) => 
+      new Date(a.last_reviewed).getTime() - new Date(b.last_reviewed).getTime()
+    );
+    
+    return {
+      memories: memoriesNeedingReview,
+      total: memoriesNeedingReview.length,
     };
   }
 }

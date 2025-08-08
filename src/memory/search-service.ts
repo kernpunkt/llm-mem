@@ -35,5 +35,10 @@ export class SearchService {
     await this.initialize();
     return this.manager.searchMemories(query, options);
   }
+
+  async clearIndexes(): Promise<void> {
+    await this.initialize();
+    await this.manager.clearIndexes();
+  }
 }
 
