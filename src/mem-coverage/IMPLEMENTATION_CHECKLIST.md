@@ -3,51 +3,51 @@
 ## Project Setup
 
 ### Phase 0: Foundation Setup
-- [ ] **Create mem-coverage directory structure**
-  - [ ] `src/mem-coverage/types.ts` - Coverage-specific type definitions
-  - [ ] `src/mem-coverage/cli.ts` - Main CLI entry point
-  - [ ] `src/mem-coverage/coverage-service.ts` - Core coverage logic
-  - [ ] `src/mem-coverage/source-parser.ts` - Parse memory sources
-  - [ ] `src/mem-coverage/code-scanner.ts` - Analyze code files
-  - [ ] `src/mem-coverage/report-generator.ts` - Generate console reports
-  - [ ] `src/mem-coverage/config-parser.ts` - Parse various config formats
+- [x] **Create mem-coverage directory structure**
+  - [x] `src/mem-coverage/types.ts` - Coverage-specific type definitions
+  - [x] `src/mem-coverage/cli.ts` - Main CLI entry point
+  - [x] `src/mem-coverage/coverage-service.ts` - Core coverage logic
+  - [x] `src/mem-coverage/source-parser.ts` - Parse memory sources
+  - [x] `src/mem-coverage/code-scanner.ts` - Analyze code files
+  - [x] `src/mem-coverage/report-generator.ts` - Generate console reports
+  - [x] `src/mem-coverage/config-parser.ts` - Parse various config formats
   - [ ] `src/mem-coverage/__tests__/` - Test directory
 
-- [ ] **Add CLI script to package.json**
-  - [ ] Add `"mem-coverage": "node dist/mem-coverage/cli.js"` script
-  - [ ] Add `"mem-coverage:dev": "tsx src/mem-coverage/cli.ts"` for development
+- [x] **Add CLI script to package.json**
+  - [x] Add `"mem-coverage": "node dist/mem-coverage/cli.js"` script
+  - [x] Add `"mem-coverage:dev": "tsx src/mem-coverage/cli.ts"` for development
 
-- [ ] **Create basic type definitions**
-  - [ ] Define `CoverageMap` interface
-  - [ ] Define `FileCoverage` interface
-  - [ ] Define `LineRange` interface
-  - [ ] Define `CoverageOptions` interface
-  - [ ] Define `CoverageConfig` interface
+- [x] **Create basic type definitions**
+  - [x] Define `CoverageMap` interface
+  - [x] Define `FileCoverage` interface
+  - [x] Define `LineRange` interface
+  - [x] Define `CoverageOptions` interface
+  - [x] Define `CoverageConfig` interface
 
 ## Phase 1: Core Infrastructure
 
 ### Step 1: Source Parser Implementation
-- [ ] **Create source parser module**
-  - [ ] Implement `parseSourceString()` function
-  - [ ] Handle basic file paths: `"src/index.ts"`
-  - [ ] Handle line ranges: `"src/index.ts:10-50"`
-  - [ ] Handle multiple ranges: `"src/index.ts:10-20,30-40"`
-  - [ ] Add validation for source format
-  - [ ] Add error handling for invalid sources
+- [x] **Create source parser module**
+  - [x] Implement `parseSourceString()` function
+  - [x] Handle basic file paths: `"src/index.ts"`
+  - [x] Handle line ranges: `"src/index.ts:10-50"`
+  - [x] Handle multiple ranges: `"src/index.ts:10-20,30-40"`
+  - [x] Add validation for source format
+  - [x] Add error handling for invalid sources
 
-- [ ] **Test source parser**
-  - [ ] Test basic file path parsing
-  - [ ] Test line range parsing
-  - [ ] Test multiple range parsing
-  - [ ] Test error cases (invalid formats)
-  - [ ] Test edge cases (empty strings, malformed ranges)
+- [x] **Test source parser**
+  - [x] Test basic file path parsing
+  - [x] Test line range parsing
+  - [x] Test multiple range parsing
+  - [x] Test error cases (invalid formats)
+  - [x] Test edge cases (empty strings, malformed ranges)
 
 ### Step 2: Basic Code Scanner
-- [ ] **Create TypeScript/JavaScript scanner**
-  - [ ] Implement file reading and line counting
-  - [ ] Identify code vs comment lines
-  - [ ] Basic function detection (simple regex approach initially)
-  - [ ] Basic class detection
+- [x] **Create TypeScript/JavaScript scanner**
+  - [x] Implement file reading and line counting
+  - [x] Identify code vs comment lines
+  - [x] Basic function detection (simple regex approach initially)
+  - [x] Basic class detection
   - [ ] Export statement detection
 
 - [ ] **Test code scanner**
@@ -58,26 +58,26 @@
   - [ ] Test class detection
 
 ### Step 3: Coverage Service Core
-- [ ] **Implement coverage service**
-  - [ ] Create `CoverageService` class
-  - [ ] Implement `buildCoverageMap()` method
-  - [ ] Implement `analyzeFileCoverage()` method
-  - [ ] Implement basic coverage calculation
-  - [ ] Add memory service integration
+- [x] **Implement coverage service**
+  - [x] Create `CoverageService` class
+  - [x] Implement `buildCoverageMap()` method
+  - [x] Implement `analyzeFileCoverage()` method
+  - [x] Implement basic coverage calculation
+  - [x] Add memory service integration
 
-- [ ] **Test coverage service**
-  - [ ] Test with sample memories
-  - [ ] Test coverage map building
-  - [ ] Test file analysis
-  - [ ] Test coverage calculations
+- [x] **Test coverage service**
+  - [x] Test with sample memories
+  - [x] Test coverage map building
+  - [x] Test file analysis
+  - [x] Test coverage calculations
 
 ### Step 4: Basic Console Report
-- [ ] **Create console report generator**
-  - [ ] Implement `generateConsoleReport()` function
-  - [ ] Display overall coverage percentage
-  - [ ] List covered files with percentages
-  - [ ] List uncovered files
-  - [ ] Show basic statistics
+- [x] **Create console report generator**
+  - [x] Implement `generateConsoleReport()` function
+  - [x] Display overall coverage percentage
+  - [x] List covered files with percentages
+  - [x] List uncovered files
+  - [x] Show basic statistics
 
 - [ ] **Test console report**
   - [ ] Test with sample coverage data
@@ -85,11 +85,13 @@
   - [ ] Test with different coverage scenarios
 
 ### Step 5: CLI Interface
-- [ ] **Implement CLI entry point**
-  - [ ] Create `cli.ts` with argument parsing
-  - [ ] Add basic command line options
-  - [ ] Integrate with coverage service
-  - [ ] Add help/usage information
+- [x] **Implement CLI entry point**
+  - [x] Create `cli.ts` with argument parsing
+  - [x] Add basic command line options
+  - [x] Integrate with coverage service
+  - [x] Add help/usage information
+ - [x] **Threshold behavior**
+   - [x] Exit with non-zero code when coverage falls below `--threshold`
 
 - [ ] **Test CLI**
   - [ ] Test basic command execution

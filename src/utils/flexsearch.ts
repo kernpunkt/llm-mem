@@ -191,7 +191,8 @@ export class FlexSearchManager {
       const {
         limit = 10,
         category,
-        tags = []
+        tags = [],
+        searchFields
       } = options;
 
       // Handle empty query
@@ -199,39 +200,45 @@ export class FlexSearchManager {
         return [];
       }
 
-      // Search the document index
-      const searchResults = await this.documentIndex.search(query, { limit });
-      
-      // Process results
-      const results: SearchResult[] = [];
-      
-      for (const result of searchResults) {
-        if (!result.result) continue;
-        
-        // Get the document data
-        const doc = await this.documentIndex.get(result.result[0]);
-        if (!doc) continue;
-        
-        // Apply category filter
-        if (category && doc.category !== category) {
-          continue;
-        }
-        
-        // Apply tags filter
-        if (tags.length > 0 && !tags.some(tag => doc.tags.includes(tag))) {
-          continue;
-        }
-        
-        const snippet = this.generateSnippet(doc.content, query);
-        
-        results.push({
-          ...doc,
-          score: 1, // Default score since FlexSearch doesn't provide scoring in this version
-          snippet
-        });
+      // Build search options; when fields specified, restrict index
+      const indexOpt = searchFields && searchFields.length > 0 ? searchFields : undefined;
+      const searchOpts: any = { limit, enrich: true };
+      if (indexOpt) {
+        searchOpts.index = indexOpt;
       }
 
-      // Sort by relevance score (highest first)
+      // Perform search with enrichment to access docs and scores
+      const searchOutput: any[] = await (this.documentIndex as any).search(query, searchOpts);
+
+      // searchOutput is an array of { field, result: [{ id, doc, score }] }
+      const byId: Map<string, { doc: MemoryIndexDocument; score: number }> = new Map();
+      for (const bucket of Array.isArray(searchOutput) ? searchOutput : []) {
+        if (!bucket || !Array.isArray(bucket.result)) continue;
+        for (const item of bucket.result) {
+          const doc: MemoryIndexDocument | undefined = (item as any)?.doc;
+          const id: string | undefined = (item as any)?.id ?? (doc as any)?.id;
+          const score: number = typeof (item as any)?.score === "number" ? (item as any).score : 1;
+          if (!doc || !id) continue;
+
+          // Apply category filter
+          if (category && doc.category !== category) continue;
+          // Apply tags filter
+          if (tags.length > 0 && !tags.some(tag => Array.isArray(doc.tags) && doc.tags.includes(tag))) continue;
+
+          const prev = byId.get(id);
+          if (!prev || score > prev.score) {
+            byId.set(id, { doc, score });
+          }
+        }
+      }
+
+      const results: SearchResult[] = Array.from(byId.values()).map(({ doc, score }) => ({
+        ...doc,
+        score,
+        snippet: this.generateSnippet(doc.content, query)
+      }));
+
+      // Sort by score desc
       return results.sort((a, b) => b.score - a.score);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

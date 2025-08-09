@@ -1,0 +1,142 @@
+import { MemoryService } from "../memory/memory-service.js";
+import { ParsedSource, CoverageMap, FileCoverage, CoverageReport, CoverageOptions } from "./types.js";
+import { parseSourceString } from "./source-parser.js";
+import { scanTypescriptOrJavascriptFile, toInitialFileCoverage } from "./code-scanner.js";
+import { promises as fs } from "node:fs";
+
+export class CoverageService {
+  constructor(private readonly memoryService: MemoryService) {}
+
+  async buildCoverageMap(): Promise<Map<string, ParsedSource[]>> {
+    const memories = await this.memoryService.getAllMemories();
+    const coverageMap = new Map<string, ParsedSource[]>();
+    for (const mem of memories) {
+      for (const src of mem.sources || []) {
+        try {
+          const parsed = parseSourceString(src);
+          const list = coverageMap.get(parsed.filePath) || [];
+          list.push(parsed);
+          coverageMap.set(parsed.filePath, list);
+        } catch (error) {
+          // Skip invalid source strings but continue processing
+          continue;
+        }
+      }
+    }
+    return coverageMap;
+  }
+
+  analyzeFileCoverage(filePath: string, sourceEntries: ParsedSource[]): FileCoverage {
+    const totalLines = this.cachedTotals.get(filePath) ?? 0;
+    const fileCoverage = toInitialFileCoverage(filePath, totalLines);
+
+    // Merge all declared covered ranges for this file
+    const coveredRanges = mergeRanges(sourceEntries.flatMap(s => s.ranges));
+    fileCoverage.coveredSections = coveredRanges.map(r => ({ start: r.start, end: r.end, type: "export" }));
+    fileCoverage.coveredLines = coveredRanges.reduce((sum, r) => sum + (r.end - r.start + 1), 0);
+
+    // Compute uncovered as complement within [1..totalLines]
+    fileCoverage.uncoveredSections = invertRanges(coveredRanges, totalLines).map(r => ({ start: r.start, end: r.end, type: "comment" }));
+
+    return fileCoverage;
+  }
+
+  async generateReport(options: CoverageOptions & { includePaths?: string[] } = {}): Promise<CoverageReport> {
+    const coverageMap = await this.buildCoverageMap();
+
+    // Collect all files to analyze: union of keys in coverageMap (Phase 1 focuses on files referenced by sources)
+    const filePaths = Array.from(coverageMap.keys());
+
+    // Pre-scan totals for each file
+    await this.populateTotals(filePaths);
+
+    const files: FileCoverage[] = [];
+    let totalLines = 0;
+    let coveredLines = 0;
+
+    for (const filePath of filePaths) {
+      const entries = coverageMap.get(filePath) || [];
+      const fc = this.analyzeFileCoverage(filePath, entries);
+      files.push(fc);
+      totalLines += fc.totalLines;
+      coveredLines += fc.coveredLines;
+    }
+
+    const coveragePercentage = totalLines === 0 ? 100 : (coveredLines / totalLines) * 100;
+
+    const fileReports = files.map((f) => ({
+      path: f.path,
+      totalLines: f.totalLines,
+      coveredLines: f.coveredLines,
+      coveragePercentage: f.totalLines === 0 ? 100 : (f.coveredLines / f.totalLines) * 100,
+      uncoveredSections: f.uncoveredSections.map(s => ({ start: s.start, end: s.end })),
+    }));
+
+    const undocumentedFiles = fileReports.filter(fr => fr.coveragePercentage === 0).map(fr => fr.path);
+    const lowCoverageFiles = fileReports.filter(fr => fr.coveragePercentage > 0 && fr.coveragePercentage < (options.threshold ?? 80)).map(fr => fr.path);
+
+    return {
+      summary: {
+        totalFiles: files.length,
+        totalLines,
+        coveredLines,
+        coveragePercentage,
+        undocumentedFiles,
+        lowCoverageFiles,
+      },
+      files: fileReports,
+      recommendations: lowCoverageFiles.map((file) => ({ file, message: "Add documentation sources covering uncovered sections", priority: "medium" })),
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  private cachedTotals: Map<string, number> = new Map();
+
+  private async populateTotals(filePaths: string[]): Promise<void> {
+    for (const filePath of filePaths) {
+      try {
+        const content = await fs.readFile(filePath, "utf8");
+        const total = content.split(/\r?\n/).length;
+        this.cachedTotals.set(filePath, total);
+      } catch {
+        this.cachedTotals.set(filePath, 0);
+      }
+    }
+  }
+}
+
+// Utilities
+type Span = { start: number; end: number };
+
+function mergeRanges(ranges: Span[]): Span[] {
+  if (ranges.length === 0) return [];
+  const sorted = [...ranges].sort((a, b) => a.start - b.start || a.end - b.end);
+  const merged: Span[] = [sorted[0]];
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = merged[merged.length - 1];
+    const cur = sorted[i];
+    if (cur.start <= prev.end + 1) {
+      prev.end = Math.max(prev.end, cur.end);
+    } else {
+      merged.push({ ...cur });
+    }
+  }
+  return merged;
+}
+
+function invertRanges(ranges: Span[], total: number): Span[] {
+  if (total <= 0) return [];
+  if (ranges.length === 0) return [{ start: 1, end: total }];
+  const merged = mergeRanges(ranges);
+  const result: Span[] = [];
+  let cursor = 1;
+  for (const r of merged) {
+    if (r.start > cursor) result.push({ start: cursor, end: r.start - 1 });
+    cursor = r.end + 1;
+  }
+  if (cursor <= total) result.push({ start: cursor, end: total });
+  return result;
+}
+
+
+

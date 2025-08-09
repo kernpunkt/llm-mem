@@ -107,6 +107,23 @@ export class MemoryService {
     };
   }
 
+  async getAllMemories(): Promise<Memory[]> {
+    await this.initialize();
+    const files = await this.fileService.listAllMemoryFiles();
+    const memories: Memory[] = [];
+    for (const filePath of files) {
+      try {
+        const parsed = parseMemoryFilePath(filePath);
+        if (!parsed) continue;
+        const mem = await this.readMemory({ id: parsed.id });
+        if (mem) memories.push(mem);
+      } catch (error) {
+        console.error(`Failed to read memory from ${filePath}:`, error);
+      }
+    }
+    return memories;
+  }
+
   async updateMemory(params: MemoryUpdateRequest): Promise<Memory> {
     await this.initialize();
     const { id, ...updates } = params;
