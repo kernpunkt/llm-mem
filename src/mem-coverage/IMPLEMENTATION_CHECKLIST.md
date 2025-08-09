@@ -172,7 +172,7 @@
   - [x] Add threshold configuration options (global and scoped)
   - [x] Show threshold violations (global and scoped)
 
-- [ ] **Test thresholds**
+- [x] **Test thresholds**
   - [x] Test threshold validation
   - [x] Test exit codes
   - [x] Test threshold violations
@@ -216,10 +216,8 @@
 
 
 - [ ] **Test performance**
-  - [ ] Test with large TypeScript projects
   - [ ] Test memory usage
   - [ ] Test processing speed
-  - [ ] Test caching effectiveness
 
 ### Step 14: Documentation and Examples
 - [ ] **Create documentation**
@@ -274,26 +272,11 @@
   - [ ] Ensure TypeScript compilation works
   - [ ] Test built CLI tool
   - [ ] Verify all dependencies are included
-  - [ ] Test in different environments
 
 - [ ] **Package configuration**
   - [ ] Update package.json scripts
   - [ ] Add CLI tool to bin section
-  - [ ] Update README with coverage tool usage
-  - [ ] Add coverage tool to main documentation
-
-### Step 18: Integration Testing
-- [ ] **Test with real projects**
-  - [ ] Test with current memory-tools project
-  - [ ] Test with different project structures
-  - [ ] Test with various memory categories
-  - [ ] Test with different source formats
-
-- [ ] **User acceptance testing**
-  - [ ] Test CLI usability
-  - [ ] Test configuration flexibility
-  - [ ] Test error messages clarity
-  - [ ] Test output readability
+  - [ ] create seperate README with coverage tool usage
 
 ## Success Criteria
 
