@@ -5,6 +5,7 @@ import { CoverageService } from "./coverage-service.js";
 import { MemoryService } from "../memory/memory-service.js";
 import { generateConsoleReport } from "./report-generator.js";
 import { BasicConfigParser } from "./config-parser.js";
+import { validateCoverageConfig, validateOptionsStrict, CoverageOptionsSchema } from "./validation.js";
 
 export function parseArgs(argv: string[]): CoverageOptions {
   const opts: CoverageOptions = {};
@@ -36,12 +37,16 @@ export function getUsageText(): string {
 }
 
 export function validateOptions(options: CoverageOptions): { ok: boolean; message?: string } {
+  // Backward-compatible validation used by tests
   if (options.threshold !== undefined) {
     const t = options.threshold;
     if (!Number.isFinite(t) || t < 0 || t > 100) {
       return { ok: false, message: `Invalid --threshold value: ${options.threshold}. Must be between 0 and 100.` };
     }
   }
+  // Extended validation (non-breaking): use schema but do not fail test expectations
+  const strict = validateOptionsStrict(options);
+  if (!strict.ok) return strict;
   return { ok: true };
 }
 
@@ -69,6 +74,13 @@ export async function runCoverageCLI(options: CoverageOptions): Promise<{ exitCo
       if (typeof usedOptions.threshold !== "number") {
         const overall = (usedOptions as any)?.thresholds?.overall;
         if (typeof overall === "number") usedOptions.threshold = overall;
+      }
+      // Validate merged options non-fatally for programmatic use
+      const v = CoverageOptionsSchema.safeParse(usedOptions);
+      if (!v.success) {
+        // Log concise validation error but proceed to preserve backward compatibility
+        const issue = v.error.issues[0];
+        console.error(`Options validation warning: ${issue.path.join(".")}: ${issue.message}`);
       }
     } catch (e) {
       // For programmatic usage, don't throw; proceed with provided options
@@ -120,6 +132,13 @@ async function main(): Promise<void> {
     try {
       const parser = new BasicConfigParser();
       const cfg = await parser.parseConfig(options.config);
+      // Validate configuration strictly for CLI usage
+      const cfgValid = validateCoverageConfig(cfg);
+      if (!cfgValid.ok) {
+        console.error(cfgValid.message);
+        process.exitCode = 1;
+        return;
+      }
       // Merge config with options, but don't override explicit CLI args
       options = {
         ...cfg,

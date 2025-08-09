@@ -4,6 +4,7 @@ import { parseSourceString } from "./source-parser.js";
 import { scanTypescriptOrJavascriptFile, toInitialFileCoverage } from "./code-scanner.js";
 import { promises as fs } from "node:fs";
 import { createReadStream } from "node:fs";
+import { validateSourceFilePathOrThrow } from "./validation.js";
 
 export class CoverageService {
   constructor(private readonly memoryService: MemoryService) {}
@@ -15,11 +16,13 @@ export class CoverageService {
       for (const src of mem.sources || []) {
         try {
           const parsed = parseSourceString(src);
+          validateSourceFilePathOrThrow(parsed.filePath);
           const list = coverageMap.get(parsed.filePath) || [];
           list.push(parsed);
           coverageMap.set(parsed.filePath, list);
-        } catch {
-          // Skip invalid source strings but continue processing
+        } catch (err) {
+          // Skip invalid source strings or unsafe file paths but continue processing
+          console.error("Skipping invalid source entry:", src, "reason:", (err as Error)?.message ?? String(err));
           continue;
         }
       }

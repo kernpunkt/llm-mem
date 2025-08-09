@@ -1,4 +1,5 @@
 import { ParsedSource, LineSpan } from "./types.js";
+import { validateSourceFilePathOrThrow } from "./validation.js";
 
 const FILE_AND_RANGES_REGEX = /^(?<file>[^:]+?)(?::(?<ranges>.+))?$/;
 
@@ -24,6 +25,9 @@ export function parseSourceString(input: string): ParsedSource {
   if (filePath.length === 0) {
     throw new Error(`Invalid source file path: ${input}`);
   }
+
+  // Exported for Step 12 validation; keep parsing behavior unchanged.
+  // Consumers can call validateSourceFilePathOrThrow(filePath) if desired.
 
   const rangesRaw = match.groups.ranges?.trim();
   if (!rangesRaw) {
