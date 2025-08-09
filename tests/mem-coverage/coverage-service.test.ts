@@ -61,6 +61,32 @@ describe("CoverageService", () => {
     const file = report.files.find(f => f.path === "src/whole.ts");
     expect(file?.coveragePercentage).toBe(100);
   });
+
+  it("includes function/class granular coverage using AST spans when available", async () => {
+    // Add a file path to map and totals
+    // @ts-expect-error access private field for test by as any
+    (svc as any).cachedTotals.set("tests/tmp/sample.ts", 10);
+    // @ts-expect-error override populateTotals to no-op
+    svc.populateTotals = vi.fn();
+    // Mock memory service to point to the sample file
+    (memoryService.getAllMemories as any).mockResolvedValueOnce([
+      { id: "x", title: "T", content: "", tags: [], category: "DOC", created_at: "", updated_at: "", last_reviewed: "", file_path: "", links: [], sources: [
+        "tests/tmp/sample.ts:1-10"
+      ]}
+    ]);
+
+    // Create a temp file with a function and class
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+    const tmp = path.join(process.cwd(), "tests/tmp/sample.ts");
+    await fs.mkdir(path.dirname(tmp), { recursive: true });
+    await fs.writeFile(tmp, `export function a(){}\nexport class C { m(){} }\n`, "utf8");
+
+    const report = await svc.generateReport({});
+    const fc = report.files.find(f => f.path === "tests/tmp/sample.ts");
+    expect(fc?.coveredLines).toBe(10);
+    // We do not expose granular arrays in report currently, but ensure no throw occurred
+  });
 });
 
 

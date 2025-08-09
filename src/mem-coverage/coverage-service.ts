@@ -1,5 +1,5 @@
 import { MemoryService } from "../memory/memory-service.js";
-import { ParsedSource, CoverageMap, FileCoverage, CoverageReport, CoverageOptions } from "./types.js";
+import { ParsedSource, FileCoverage, CoverageReport, CoverageOptions, FunctionCoverage, ClassCoverage } from "./types.js";
 import { parseSourceString } from "./source-parser.js";
 import { scanTypescriptOrJavascriptFile, toInitialFileCoverage } from "./code-scanner.js";
 import { promises as fs } from "node:fs";
@@ -26,7 +26,7 @@ export class CoverageService {
     return coverageMap;
   }
 
-  analyzeFileCoverage(filePath: string, sourceEntries: ParsedSource[]): FileCoverage {
+  async analyzeFileCoverage(filePath: string, sourceEntries: ParsedSource[]): Promise<FileCoverage> {
     const totalLines = this.cachedTotals.get(filePath) ?? 0;
     const fileCoverage = toInitialFileCoverage(filePath, totalLines);
 
@@ -41,6 +41,26 @@ export class CoverageService {
 
     // Compute uncovered as complement within [1..totalLines]
     fileCoverage.uncoveredSections = invertRanges(coveredRanges, totalLines).map(r => ({ start: r.start, end: r.end, type: "comment" }));
+
+    // Granular analysis via AST scan
+    try {
+      const scan = await scanTypescriptOrJavascriptFile(filePath);
+      const functions: FunctionCoverage[] = [];
+      const classes: ClassCoverage[] = [];
+      for (const el of scan.elements) {
+        if (el.type === "function" && el.name) {
+          const isCovered = rangeOverlapsAny({ start: el.start, end: el.end }, coveredRanges);
+          functions.push({ start: el.start, end: el.end, name: el.name, isCovered });
+        } else if (el.type === "class" && el.name) {
+          const isCovered = rangeOverlapsAny({ start: el.start, end: el.end }, coveredRanges);
+          classes.push({ start: el.start, end: el.end, name: el.name, isCovered });
+        }
+      }
+      fileCoverage.functions = functions;
+      fileCoverage.classes = classes;
+    } catch {
+      // Ignore scanning errors; keep granular arrays empty in that case
+    }
 
     return fileCoverage;
   }
@@ -60,7 +80,7 @@ export class CoverageService {
 
     for (const filePath of filePaths) {
       const entries = coverageMap.get(filePath) || [];
-      const fc = this.analyzeFileCoverage(filePath, entries);
+      const fc = await this.analyzeFileCoverage(filePath, entries);
       files.push(fc);
       totalLines += fc.totalLines;
       coveredLines += fc.coveredLines;
@@ -74,6 +94,10 @@ export class CoverageService {
       coveredLines: f.coveredLines,
       coveragePercentage: f.totalLines === 0 ? 100 : (f.coveredLines / f.totalLines) * 100,
       uncoveredSections: f.uncoveredSections.map(s => ({ start: s.start, end: s.end })),
+      functionsTotal: f.functions.length,
+      functionsCovered: f.functions.filter(fn => fn.isCovered).length,
+      classesTotal: f.classes.length,
+      classesCovered: f.classes.filter(cl => cl.isCovered).length,
     }));
 
     const undocumentedFiles = fileReports.filter(fr => fr.coveragePercentage === 0).map(fr => fr.path);

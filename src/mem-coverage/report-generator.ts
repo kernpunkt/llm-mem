@@ -37,6 +37,16 @@ function renderFile(file: FileCoverageReport): string {
   const parts: string[] = [];
   const pct = file.totalLines === 0 ? 100 : (file.coveredLines / file.totalLines) * 100;
   parts.push(`- ${file.path} :: ${pct.toFixed(2)}% (${file.coveredLines}/${file.totalLines})`);
+  if (
+    (typeof file.functionsTotal === "number" && file.functionsTotal > 0) ||
+    (typeof file.classesTotal === "number" && file.classesTotal > 0)
+  ) {
+    const fTot = file.functionsTotal ?? 0;
+    const fCov = file.functionsCovered ?? 0;
+    const cTot = file.classesTotal ?? 0;
+    const cCov = file.classesCovered ?? 0;
+    parts.push(`  Symbols: functions ${fCov}/${fTot}, classes ${cCov}/${cTot}`);
+  }
   if (file.uncoveredSections.length > 0) {
     const segments = file.uncoveredSections.map(s => `${s.start}-${s.end}`).join(", ");
     parts.push(`  Uncovered: ${segments}`);

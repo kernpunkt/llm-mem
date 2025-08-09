@@ -65,6 +65,10 @@ export interface FileCoverageReport {
   coveredLines: number;
   coveragePercentage: number;
   uncoveredSections: LineSpan[];
+  functionsTotal?: number;
+  functionsCovered?: number;
+  classesTotal?: number;
+  classesCovered?: number;
 }
 
 export interface CoverageRecommendation {

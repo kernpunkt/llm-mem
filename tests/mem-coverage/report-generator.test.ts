@@ -14,8 +14,8 @@ describe("report-generator", () => {
         lowCoverageFiles: ["src/a.ts", "src/b.ts"],
       },
       files: [
-        { path: "src/a.ts", totalLines: 50, coveredLines: 10, coveragePercentage: 20, uncoveredSections: [{ start: 11, end: 50 }] },
-        { path: "src/b.ts", totalLines: 50, coveredLines: 50, coveragePercentage: 100, uncoveredSections: [] },
+        { path: "src/a.ts", totalLines: 50, coveredLines: 10, coveragePercentage: 20, uncoveredSections: [{ start: 11, end: 50 }], functionsTotal: 2, functionsCovered: 1, classesTotal: 1, classesCovered: 0 },
+        { path: "src/b.ts", totalLines: 50, coveredLines: 50, coveragePercentage: 100, uncoveredSections: [], functionsTotal: 1, functionsCovered: 1, classesTotal: 0, classesCovered: 0 },
       ],
       recommendations: [
         { file: "src/a.ts", message: "Add docs", priority: "high" }
@@ -30,6 +30,7 @@ describe("report-generator", () => {
     expect(output).toContain("Recommendations:");
     expect(output).toContain("src/a.ts");
     expect(output).toContain("20.00%");
+    expect(output).toContain("Symbols: functions 1/2, classes 0/1");
   });
 
   it("renders an all-covered scenario (100%)", () => {

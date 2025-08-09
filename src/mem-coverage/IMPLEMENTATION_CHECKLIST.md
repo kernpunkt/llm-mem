@@ -134,17 +134,17 @@
   - [x] Test export/import detection
 
 ### Step 8: Granular Coverage Analysis
-- [ ] **Implement function-level coverage**
-  - [ ] Track which functions are documented
+- [x] **Implement function-level coverage**
+  - [x] Track which functions are documented
   - [ ] Calculate function coverage percentages
-  - [ ] Identify undocumented functions
-  - [ ] Show function-level statistics
+  - [x] Identify undocumented functions
+  - [x] Show function-level statistics
 
-- [ ] **Implement class-level coverage**
-  - [ ] Track which classes are documented
+- [x] **Implement class-level coverage**
+  - [x] Track which classes are documented
   - [ ] Calculate class coverage percentages
-  - [ ] Identify undocumented classes
-  - [ ] Show class-level statistics
+  - [x] Identify undocumented classes
+  - [x] Show class-level statistics
 
 - [ ] **Test granular coverage**
   - [ ] Test function coverage analysis
@@ -156,7 +156,7 @@
 - [ ] **Improve console report formatting**
   - [ ] Add color coding for coverage levels
   - [ ] Show detailed file breakdowns
-  - [ ] Display function/class coverage details
+  - [x] Display function/class coverage details
   - [ ] Add progress indicators for large codebases
   - [ ] Show recommendations for improvement
 
