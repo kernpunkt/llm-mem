@@ -110,6 +110,48 @@ export class CoverageService {
     const undocumentedFiles = fileReports.filter(fr => fr.coveragePercentage === 0).map(fr => fr.path);
     const lowCoverageFiles = fileReports.filter(fr => fr.coveragePercentage > 0 && fr.coveragePercentage < (options.threshold ?? 80)).map(fr => fr.path);
 
+    // Scoped coverage (e.g., src vs tests) based on include/exclude patterns or conventional prefixes
+    const scopes: Array<{ name: string; totalLines: number; coveredLines: number; coveragePercentage: number; threshold?: number }> = [];
+    const scopeDefs: Array<{ name: string; match: (p: string) => boolean; threshold?: number }> = [];
+    // If options.include provided, infer scopes by top-level directory names
+    if (Array.isArray(options.include) && options.include.length > 0) {
+      const dirs = new Set<string>();
+      for (const pat of options.include) {
+        const part = pat.split("/")[0];
+        if (part && part !== "**") dirs.add(part);
+      }
+      for (const d of dirs) scopeDefs.push({ name: d, match: (p) => p.startsWith(`${d}/`) });
+    } else {
+      // Default scopes
+      scopeDefs.push({ name: "src", match: (p) => p.startsWith("src/") });
+      scopeDefs.push({ name: "tests", match: (p) => p.startsWith("tests/") });
+    }
+    // Allow thresholds.overall and thresholds[name]
+    const thresholds = (options as any)?.thresholds as Record<string, number> | undefined;
+    for (const def of scopeDefs) {
+      let sTotal = 0;
+      let sCovered = 0;
+      for (const fr of fileReports) {
+        if (def.match(fr.path)) {
+          sTotal += fr.totalLines;
+          sCovered += fr.coveredLines;
+        }
+      }
+      const sPct = sTotal === 0 ? 100 : (sCovered / sTotal) * 100;
+      const sThresh = thresholds && typeof thresholds[def.name] === "number" ? thresholds[def.name] : undefined;
+      scopes.push({ name: def.name, totalLines: sTotal, coveredLines: sCovered, coveragePercentage: sPct, threshold: sThresh });
+    }
+    const scopeThresholdViolations: Array<{ scope: string; actual: number; threshold: number }> = [];
+    for (const s of scopes) {
+      if (typeof s.threshold === "number" && s.coveragePercentage < s.threshold) {
+        scopeThresholdViolations.push({
+          scope: s.name,
+          actual: s.coveragePercentage,
+          threshold: s.threshold
+        });
+      }
+    }
+
     // Aggregate symbol totals
     const functionsTotal = fileReports.reduce((sum, fr) => sum + (fr.functionsTotal ?? 0), 0);
     const functionsCovered = fileReports.reduce((sum, fr) => sum + (fr.functionsCovered ?? 0), 0);
@@ -130,6 +172,8 @@ export class CoverageService {
         classesCovered,
         functionsCoveragePercentage: functionsTotal === 0 ? 100 : (functionsCovered / functionsTotal) * 100,
         classesCoveragePercentage: classesTotal === 0 ? 100 : (classesCovered / classesTotal) * 100,
+        scopes,
+        scopeThresholdViolations,
       },
       files: fileReports,
       recommendations: lowCoverageFiles.map((file) => ({ file, message: "Add documentation sources covering uncovered sections", priority: "medium" })),

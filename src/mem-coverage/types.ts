@@ -64,6 +64,15 @@ export interface CoverageSummary {
   classesCovered?: number;
   functionsCoveragePercentage?: number;
   classesCoveragePercentage?: number;
+  // Optional scoped coverage summary keyed by scope name (e.g., "src")
+  scopes?: Array<{
+    name: string;
+    totalLines: number;
+    coveredLines: number;
+    coveragePercentage: number;
+    threshold?: number;
+  }>;
+  scopeThresholdViolations?: string[];
 }
 
 export interface FileCoverageReport {

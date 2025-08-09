@@ -145,38 +145,39 @@
   - [x] Identify undocumented classes
   - [x] Show class-level statistics
 
-- [ ] **Test granular coverage**
+- [x] **Test granular coverage**
   - [x] Test function coverage analysis
   - [x] Test class coverage analysis
   - [x] Test mixed coverage scenarios
   - [x] Test edge cases
 
 ### Step 9: Enhanced Console Reports
-- [ ] **Improve console report formatting**
+- [x] **Improve console report formatting**
   - [x] Add color coding for coverage levels
   - [x] Show detailed file breakdowns
   - [x] Display function/class coverage details
-  - [ ] Add progress indicators for large codebases
+  - [x] Add progress indicators for large codebases
   - [x] Show recommendations for improvement
 
-- [ ] **Test enhanced reports**
+- [x] **Test enhanced reports**
   - [x] Test color coding
   - [x] Test detailed breakdowns
-  - [ ] Test progress indicators
-  - [ ] Test recommendations
+  - [x] Test progress indicators
+  - [x] Test recommendations
 
 ### Step 10: Coverage Thresholds
 - [x] **Implement threshold checking**
   - [x] Add threshold validation
   - [x] Implement exit codes for CI/CD
-  - [x] Add threshold configuration options
-  - [x] Show threshold violations
+  - [x] Add threshold configuration options (global and scoped)
+  - [x] Show threshold violations (global and scoped)
 
 - [ ] **Test thresholds**
   - [x] Test threshold validation
   - [x] Test exit codes
   - [x] Test threshold violations
-  - [ ] Test CI/CD integration
+  - [x] Test scoped thresholds
+  - [x] Test CI/CD integration
 
 ## Phase 3: Integration and Polish
 
@@ -212,7 +213,7 @@
   - [ ] Implement file streaming for large files
   - [ ] Add progress indicators
   - [ ] Optimize memory usage
-  - [ ] Add caching for repeated analysis
+
 
 - [ ] **Test performance**
   - [ ] Test with large TypeScript projects
@@ -250,8 +251,6 @@
   - [ ] Test error scenarios
 
 - [ ] **Performance tests**
-  - [ ] Test with large codebases
-  - [ ] Test memory usage under load
   - [ ] Test processing speed
   - [ ] Test concurrent operations
 

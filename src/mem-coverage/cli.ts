@@ -53,15 +53,61 @@ export async function runCoverageCLI(options: CoverageOptions): Promise<{ exitCo
   };
   const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
   const coverageService = new CoverageService(memoryService);
-  const report = await coverageService.generateReport(options);
+
+  // If called programmatically with a config path, load and merge it
+  let usedOptions: any = { ...options };
+  if (options.config) {
+    try {
+      const parser = new BasicConfigParser();
+      const loaded = await parser.parseConfig(options.config);
+      usedOptions = {
+        ...loaded,
+        ...options,
+        thresholds: (options as any)?.thresholds ?? loaded.thresholds,
+      };
+      // If threshold not explicitly provided, use overall from config
+      if (typeof usedOptions.threshold !== "number") {
+        const overall = (usedOptions as any)?.thresholds?.overall;
+        if (typeof overall === "number") usedOptions.threshold = overall;
+      }
+    } catch (e) {
+      // For programmatic usage, don't throw; proceed with provided options
+    }
+  }
+
+  // Provide a default progress indicator when verbose and no callback supplied
+  if (usedOptions.verbose && typeof usedOptions.onProgress !== "function") {
+    const progress = (current: number, total: number, filePath: string) => {
+      console.error(`[progress] ${current}/${total} ${filePath}`);
+    };
+    usedOptions = { ...usedOptions, onProgress: progress };
+  }
+
+  const report = await coverageService.generateReport({
+    ...usedOptions,
+    thresholds: (usedOptions as any)?.thresholds,
+  });
   console.log(generateConsoleReport(report));
 
   let exitCode = 0;
-  if (typeof options.threshold === "number") {
-    const ok = report.summary.coveragePercentage >= options.threshold;
+  // Check overall threshold
+  if (typeof usedOptions.threshold === "number") {
+    const ok = report.summary.coveragePercentage >= usedOptions.threshold;
     if (!ok) {
       exitCode = 1;
-      console.error(`Coverage ${report.summary.coveragePercentage.toFixed(2)}% is below threshold ${options.threshold}%`);
+      console.error(`Coverage ${report.summary.coveragePercentage.toFixed(2)}% is below threshold ${usedOptions.threshold}%`);
+    }
+  }
+  // Check scoped thresholds
+  if (report.summary.scopeThresholdViolations?.length > 0) {
+    exitCode = 1;
+    for (const violation of report.summary.scopeThresholdViolations as any[]) {
+      // Support both string and object formats
+      if (typeof violation === "string") {
+        console.error(violation);
+      } else {
+        console.error(`${violation.scope}:${violation.actual.toFixed(2)}<${violation.threshold}`);
+      }
     }
   }
   return { exitCode };
@@ -79,16 +125,22 @@ async function main(): Promise<void> {
     try {
       const parser = new BasicConfigParser();
       const cfg = await parser.parseConfig(options.config);
-      options = { ...cfg, ...options };
+      // Merge config with options, but don't override explicit CLI args
+      options = {
+        ...cfg,
+        ...options,
+        // Preserve thresholds from config if not overridden by CLI
+        thresholds: options.threshold !== undefined ? { overall: options.threshold } : cfg.thresholds
+      } as any;
       if (options.verbose) console.log("Loaded config:", JSON.stringify(cfg));
     } catch (e) {
       console.error(`Failed to load config from ${options.config}:`, e);
     }
   }
   // If threshold not explicitly provided, use config overall threshold if present
-  if (options.threshold === undefined) {
+  if ((options as any).threshold === undefined) {
     const overall = (options as any)?.thresholds?.overall;
-    if (typeof overall === "number") options.threshold = overall;
+    if (typeof overall === "number") (options as any).threshold = overall;
   }
   if (options.verbose) {
     console.log("Options:", JSON.stringify(options));

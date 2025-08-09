@@ -62,6 +62,7 @@ export class FlexSearchManager {
         "title",
         "content", 
         "tags",
+        "tags_index",
         "category"
       ],
       store: [
@@ -132,8 +133,14 @@ export class FlexSearchManager {
     }
 
     try {
+      // Prepare an indexable document: keep original tags for store, add tags_index for searching
+      const tagsIndex = Array.isArray(memory.tags) ? memory.tags.join(" ") : String((memory as any).tags ?? "");
+      const indexable: MemoryIndexDocument & { tags_index: string } = {
+        ...(memory as any),
+        tags_index: tagsIndex
+      };
       // Add to document index (automatically committed to SQLite)
-      await this.documentIndex.add(memory);
+      await this.documentIndex.add(indexable as any);
       
       // Optionally wait for commit to complete
       await this.documentIndex.commit();
@@ -201,7 +208,15 @@ export class FlexSearchManager {
       }
 
       // Build search options; when fields specified, restrict index
-      const indexOpt = searchFields && searchFields.length > 0 ? searchFields : undefined;
+      let indexOpt: string[] | undefined = undefined;
+      if (searchFields && searchFields.length > 0) {
+        const set = new Set<string>();
+        for (const f of searchFields) {
+          set.add(f);
+          if (f === "tags") set.add("tags_index");
+        }
+        indexOpt = Array.from(set);
+      }
       const searchOpts: any = { limit, enrich: true };
       if (indexOpt) {
         searchOpts.index = indexOpt;

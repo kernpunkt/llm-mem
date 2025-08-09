@@ -47,6 +47,18 @@ export function generateConsoleReport(report: CoverageReport): string {
     lines.push(`  Low coverage files (${report.summary.lowCoverageFiles.length}):`);
     for (const f of report.summary.lowCoverageFiles) lines.push(`    - ${f}`);
   }
+  if (Array.isArray(report.summary.scopes) && report.summary.scopes.length > 0) {
+    lines.push(`  Scopes:`);
+    for (const s of report.summary.scopes) {
+      const paint = colorForPct(s.coveragePercentage);
+      const thresholdNote = typeof s.threshold === "number" ? ` (threshold ${s.threshold}%)` : "";
+      lines.push(`    - ${s.name}: ${paint(s.coveragePercentage.toFixed(2) + "%")} (${s.coveredLines}/${s.totalLines})${thresholdNote}`);
+    }
+  }
+  if (Array.isArray(report.summary.scopeThresholdViolations) && report.summary.scopeThresholdViolations.length > 0) {
+    lines.push(`  Scope threshold violations (${report.summary.scopeThresholdViolations.length}):`);
+    for (const v of report.summary.scopeThresholdViolations) lines.push(`    - ${red(v)}`);
+  }
   lines.push("");
   lines.push(`Files:`);
   for (const f of report.files) {
