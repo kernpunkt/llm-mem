@@ -113,8 +113,11 @@ async function main(): Promise<void> {
 }
 
 if (import.meta.url === new URL(import.meta.url).href) {
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
-  main();
+  // call and handle promise
+  main().catch((err) => {
+    console.error("mem-coverage CLI failed:", err);
+    process.exitCode = 1;
+  });
 }
 
 

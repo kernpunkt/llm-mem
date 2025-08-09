@@ -11,7 +11,6 @@
   - [x] `src/mem-coverage/code-scanner.ts` - Analyze code files
   - [x] `src/mem-coverage/report-generator.ts` - Generate console reports
   - [x] `src/mem-coverage/config-parser.ts` - Parse various config formats
-  - [ ] `src/mem-coverage/__tests__/` - Test directory
 
 - [x] **Add CLI script to package.json**
   - [x] Add `"mem-coverage": "node dist/mem-coverage/cli.js"` script

@@ -287,7 +287,7 @@ export function createServer(): McpServer {
       target_id: z.string().uuid().describe("ID of the target memory to link to"),
       link_text: z.string().optional().describe("Custom link text (defaults to target title)")
     },
-    async ({ source_id, target_id, link_text }) => {
+    async ({ source_id, target_id }) => {
       try {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
@@ -950,7 +950,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                     content: [{ type: 'text', text: usageContent }],
                     isError: false
                   };
-                } catch (error) {
+                } catch {
                   toolResult = {
                     content: [{ type: 'text', text: `Usage file not found at ${usageFilePath}. Please ensure the server has been started to create the usage file.` }],
                     isError: true

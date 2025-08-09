@@ -39,7 +39,7 @@ export class MemoryService {
     const tags = params.tags || [];
     const sources = params.sources || [];
 
-    const { filePath, markdown } = await this.fileService.writeMemoryFile({
+    const { filePath } = await this.fileService.writeMemoryFile({
       id,
       title: params.title,
       content: params.content,
@@ -142,7 +142,7 @@ export class MemoryService {
     frontmatterUpdates.updated_at = new Date().toISOString();
 
     // Update the file
-    const updatedMarkdown = await this.fileService.updateMemoryFile(
+    await this.fileService.updateMemoryFile(
       existing.file_path,
       frontmatterUpdates,
       updates.content

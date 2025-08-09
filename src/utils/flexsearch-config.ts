@@ -90,7 +90,7 @@ export function parseFlexSearchConfig(): FlexSearchConfig {
   if (process.env.FLEXSEARCH_STOPWORDS) {
     try {
       config.stopwords = JSON.parse(process.env.FLEXSEARCH_STOPWORDS);
-    } catch (error) {
+    } catch {
       console.warn("Invalid FLEXSEARCH_STOPWORDS JSON, using default stopwords");
     }
   }

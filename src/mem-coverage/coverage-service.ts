@@ -17,7 +17,7 @@ export class CoverageService {
           const list = coverageMap.get(parsed.filePath) || [];
           list.push(parsed);
           coverageMap.set(parsed.filePath, list);
-        } catch (error) {
+        } catch {
           // Skip invalid source strings but continue processing
           continue;
         }
@@ -164,6 +164,13 @@ function invertRanges(ranges: Span[], total: number): Span[] {
   }
   if (cursor <= total) result.push({ start: cursor, end: total });
   return result;
+}
+
+function rangeOverlapsAny(span: Span, ranges: Span[]): boolean {
+  for (const r of ranges) {
+    if (span.start <= r.end && span.end >= r.start) return true;
+  }
+  return false;
 }
 
 

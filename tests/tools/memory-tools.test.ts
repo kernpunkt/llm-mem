@@ -11,7 +11,7 @@ describe("Memory Tools", () => {
   });
 
   it("get_current_date should support iso, locale, timestamp, date_only", async () => {
-    const server = createServer();
+  const _server = createServer();
     // We call the implementation directly by mirroring index.ts logic
     const now = new Date();
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
