@@ -160,4 +160,24 @@ describe("CI/CD integration", () => {
     const { exitCode } = await runCoverageCLI({ config: configPath, threshold: 99 });
     expect(exitCode).toBe(1); // 99% threshold should fail
   });
+
+  it("handles memory service failure gracefully", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    // Force memory service to fail
+    vi.spyOn(MemoryService.prototype, "getAllMemories").mockRejectedValueOnce(new Error("boom"));
+
+    const { exitCode } = await runCoverageCLI({});
+
+    // Should not crash, and should produce an empty report with 0 files
+    expect(exitCode).toBe(0);
+    const logs = logSpy.mock.calls.flat().join("\n");
+    expect(logs).toContain("Documentation Coverage Report");
+    expect(logs).toContain("Files: 0");
+    expect(errSpy).toHaveBeenCalled();
+
+    logSpy.mockRestore();
+    errSpy.mockRestore();
+  });
 });
