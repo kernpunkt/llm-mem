@@ -4,8 +4,9 @@ import { parseSourceString } from "./source-parser.js";
 import { CoverageService } from "./coverage-service.js";
 import { MemoryService } from "../memory/memory-service.js";
 import { generateConsoleReport } from "./report-generator.js";
+import { BasicConfigParser } from "./config-parser.js";
 
-function parseArgs(argv: string[]): CoverageOptions {
+export function parseArgs(argv: string[]): CoverageOptions {
   const opts: CoverageOptions = {};
   for (const arg of argv) {
     if (arg.startsWith("--config=")) opts.config = arg.split("=")[1];
@@ -20,22 +21,69 @@ function parseArgs(argv: string[]): CoverageOptions {
   return opts;
 }
 
+export function getUsageText(): string {
+  return (
+    `Usage: mem-coverage [options]\n\n` +
+    `--config=PATH            Path to config file\n` +
+    `--categories=A,B        Filter by memory categories\n` +
+    `--threshold=NUMBER      Minimum coverage percentage\n` +
+    `--exclude=PAT1,PAT2     File patterns to exclude\n` +
+    `--include=PAT1,PAT2     File patterns to include\n` +
+    `--memoryStorePath=PATH  Path to memory store\n` +
+    `--indexPath=PATH        Path to search index\n` +
+    `--verbose               Verbose output`
+  );
+}
+
+export function validateOptions(options: CoverageOptions): { ok: boolean; message?: string } {
+  if (options.threshold !== undefined) {
+    const t = options.threshold;
+    if (!Number.isFinite(t) || t < 0 || t > 100) {
+      return { ok: false, message: `Invalid --threshold value: ${options.threshold}. Must be between 0 and 100.` };
+    }
+  }
+  return { ok: true };
+}
+
+export async function runCoverageCLI(options: CoverageOptions): Promise<{ exitCode: number }> {
+  // Generate a basic report
+  const cfg = {
+    notestorePath: options.memoryStorePath || (global as any).MEMORY_CONFIG?.notestorePath || "./memories",
+    indexPath: options.indexPath || (global as any).MEMORY_CONFIG?.indexPath || "./memories/index",
+  };
+  const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+  const coverageService = new CoverageService(memoryService);
+  const report = await coverageService.generateReport(options);
+  console.log(generateConsoleReport(report));
+
+  let exitCode = 0;
+  if (typeof options.threshold === "number") {
+    const ok = report.summary.coveragePercentage >= options.threshold;
+    if (!ok) {
+      exitCode = 1;
+    }
+  }
+  return { exitCode };
+}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   if (args.includes("--help") || args.includes("-h")) {
-    console.log(`Usage: mem-coverage [options]\n\n` +
-      `--config=PATH            Path to config file\n` +
-      `--categories=A,B        Filter by memory categories\n` +
-      `--threshold=NUMBER      Minimum coverage percentage\n` +
-      `--exclude=PAT1,PAT2     File patterns to exclude\n` +
-      `--include=PAT1,PAT2     File patterns to include\n` +
-      `--memoryStorePath=PATH  Path to memory store\n` +
-      `--indexPath=PATH        Path to search index\n` +
-      `--verbose               Verbose output`);
+    console.log(getUsageText());
     process.exit(0);
   }
 
-  const options = parseArgs(args);
+  let options = parseArgs(args);
+  if (options.config) {
+    try {
+      const parser = new BasicConfigParser();
+      const cfg = await parser.parseConfig(options.config);
+      options = { ...cfg, ...options };
+      if (options.verbose) console.log("Loaded config:", JSON.stringify(cfg));
+    } catch (e) {
+      console.error(`Failed to load config from ${options.config}:`, e);
+    }
+  }
   if (options.verbose) {
     console.log("Options:", JSON.stringify(options));
   }
@@ -48,22 +96,20 @@ async function main(): Promise<void> {
     console.log("Parsed sample:", parsed);
   }
 
-  // Generate a basic report
-  const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-  const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
-  const coverageService = new CoverageService(memoryService);
-  const report = await coverageService.generateReport(options);
-  console.log(generateConsoleReport(report));
-
-  if (typeof options.threshold === "number") {
-    const ok = report.summary.coveragePercentage >= options.threshold;
-    if (!ok) {
-      process.exitCode = 1;
-    }
+  const validation = validateOptions(options);
+  if (!validation.ok) {
+    console.error(validation.message);
+    process.exitCode = 1;
+    return;
   }
+
+  const { exitCode } = await runCoverageCLI(options);
+  if (exitCode !== 0) process.exitCode = exitCode;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
-main();
+if (import.meta.url === new URL(import.meta.url).href) {
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  main();
+}
 
 

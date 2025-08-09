@@ -17,11 +17,18 @@ export class BasicConfigParser implements ConfigParser {
   }
 
   async parseConfig(filePath: string): Promise<CoverageConfig> {
-    // Minimal placeholder for Phase 1; full parsing will come later
+    // Basic implementation: JSON for .coverage.json, dynamic import otherwise
     const type = this.detectConfigType(filePath);
-    const mod = await import(filePath);
-    const raw = mod?.default ?? mod;
-    return this.normalizeConfig(raw, type);
+    if (type === "coverage") {
+      const fs = await import("node:fs/promises");
+      const rawText = await fs.readFile(filePath, "utf8");
+      const json = JSON.parse(rawText);
+      return this.normalizeConfig(json, type);
+    } else {
+      const mod = await import(filePath);
+      const raw = (mod as any)?.default ?? mod;
+      return this.normalizeConfig(raw, type);
+    }
   }
 
   normalizeConfig(config: unknown, _type: DetectedConfigType): CoverageConfig {

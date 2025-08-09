@@ -4,10 +4,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { scanTypescriptOrJavascriptFile } from "../../src/mem-coverage/code-scanner.js";
 
-describe("code-scanner", () => {
-  it("detects functions, classes, and comments with basic heuristics", async () => {
-    const tmp = join(tmpdir(), `scanner_${Date.now()}.ts`);
-    const content = `// header comment\n\nexport function foo() {\n  // inner comment\n  return 1;\n}\n\nexport const bar = () => 2;\n\nexport class Baz {\n  method() { return 3; }\n}\n\nexport { foo as FooAlias };\n`;
+describe("code-scanner (JS)", () => {
+  it("detects functions, classes, exports, comments in .js files", async () => {
+    const tmp = join(tmpdir(), `scanner_${Date.now()}.js`);
+    const content = `// js header\n\nexport function foo() { return 1 }\n\nexport const bar = () => 2\n\nexport class Baz { method() { return 3 } }\n\n/* block comment */\n`;
     await fs.writeFile(tmp, content, "utf8");
 
     const result = await scanTypescriptOrJavascriptFile(tmp);

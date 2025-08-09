@@ -18,20 +18,28 @@ export async function scanTypescriptOrJavascriptFile(filePath: string): Promise<
   const functionRegex = /(export\s+)?(async\s+)?function\s+([A-Za-z0-9_]+)/;
   const constArrowFnRegex = /(export\s+)?(const|let|var)\s+([A-Za-z0-9_]+)\s*=\s*(async\s+)?\([^)]*\)\s*=>/;
   const classRegex = /(export\s+)?class\s+([A-Za-z0-9_]+)/;
+  const exportRegex = /^\s*export\s+/;
 
   // Very rough: mark lines containing definitions as single-line ranges for now
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+
+    if (exportRegex.test(line)) {
+      elements.push({ start: i + 1, end: i + 1, type: "export" });
+    }
     if (functionRegex.test(line)) {
       const name = (line.match(functionRegex)?.[3]) || "anonymous";
       elements.push({ start: i + 1, end: i + 1, type: "function", name });
-    } else if (constArrowFnRegex.test(line)) {
+    }
+    if (constArrowFnRegex.test(line)) {
       const name = (line.match(constArrowFnRegex)?.[3]) || "anonymous";
       elements.push({ start: i + 1, end: i + 1, type: "function", name });
-    } else if (classRegex.test(line)) {
+    }
+    if (classRegex.test(line)) {
       const name = (line.match(classRegex)?.[2]) || "AnonymousClass";
       elements.push({ start: i + 1, end: i + 1, type: "class", name });
-    } else if (/^\s*\/\//.test(line) || /^\s*\*/.test(line) || /^\s*\/.*/.test(line)) {
+    }
+    if (/^\s*\/\//.test(line) || /^\s*\*/.test(line) || /^\s*\/.*/.test(line)) {
       elements.push({ start: i + 1, end: i + 1, type: "comment" });
     }
   }

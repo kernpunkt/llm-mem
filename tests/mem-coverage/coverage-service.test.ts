@@ -46,6 +46,21 @@ describe("CoverageService", () => {
     expect(report.summary.coveredLines).toBe(10 + 11 + 1); // 1-10 (10 lines), 20-30 (11), 5-5 (1)
     expect(report.files.find(f => f.path === "src/index.ts")?.coveragePercentage).toBeCloseTo(((21)/40)*100, 5);
   });
+
+  it("treats file-only sources as full coverage for that file", async () => {
+    (memoryService.getAllMemories as any).mockResolvedValueOnce([
+      { id: "1", title: "A", content: "", tags: [], category: "DOC", created_at: "", updated_at: "", last_reviewed: "", file_path: "", links: [], sources: [
+        "src/whole.ts"
+      ] }
+    ]);
+    // @ts-expect-error access private field for test by as any
+    (svc as any).cachedTotals.set("src/whole.ts", 25);
+    // @ts-expect-error override private method
+    svc.populateTotals = vi.fn();
+    const report = await svc.generateReport({});
+    const file = report.files.find(f => f.path === "src/whole.ts");
+    expect(file?.coveragePercentage).toBe(100);
+  });
 });
 
 

@@ -31,7 +31,11 @@ export class CoverageService {
     const fileCoverage = toInitialFileCoverage(filePath, totalLines);
 
     // Merge all declared covered ranges for this file
-    const coveredRanges = mergeRanges(sourceEntries.flatMap(s => s.ranges));
+    let coveredRanges = mergeRanges(sourceEntries.flatMap(s => s.ranges));
+    // If any entry specifies file-only (no ranges), treat as full file coverage
+    if (sourceEntries.some(s => s.ranges.length === 0) && totalLines > 0) {
+      coveredRanges = [{ start: 1, end: totalLines }];
+    }
     fileCoverage.coveredSections = coveredRanges.map(r => ({ start: r.start, end: r.end, type: "export" }));
     fileCoverage.coveredLines = coveredRanges.reduce((sum, r) => sum + (r.end - r.start + 1), 0);
 

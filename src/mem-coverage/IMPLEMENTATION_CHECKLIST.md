@@ -48,14 +48,15 @@
   - [x] Identify code vs comment lines
   - [x] Basic function detection (simple regex approach initially)
   - [x] Basic class detection
-  - [ ] Export statement detection
+  - [x] Export statement detection
 
 - [ ] **Test code scanner**
-  - [ ] Test with simple TypeScript files
-  - [ ] Test with JavaScript files
-  - [ ] Test comment detection
-  - [ ] Test function detection
-  - [ ] Test class detection
+  - [x] Test with simple TypeScript files
+  - [x] Test with JavaScript files
+  - [x] Test comment detection
+  - [x] Test function detection
+  - [x] Test class detection
+  - [x] Test export detection
 
 ### Step 3: Coverage Service Core
 - [x] **Implement coverage service**
@@ -80,9 +81,9 @@
   - [x] Show basic statistics
 
 - [ ] **Test console report**
-  - [ ] Test with sample coverage data
-  - [ ] Test formatting and output
-  - [ ] Test with different coverage scenarios
+  - [x] Test with sample coverage data
+  - [x] Test formatting and output
+  - [x] Test with different coverage scenarios
 
 ### Step 5: CLI Interface
 - [x] **Implement CLI entry point**
@@ -94,23 +95,23 @@
    - [x] Exit with non-zero code when coverage falls below `--threshold`
 
 - [ ] **Test CLI**
-  - [ ] Test basic command execution
-  - [ ] Test argument parsing
-  - [ ] Test help output
-  - [ ] Test error handling
+  - [x] Test basic command execution
+  - [x] Test argument parsing
+  - [x] Test help output
+  - [x] Test error handling
 
 ## Phase 2: Advanced Features
 
 ### Step 6: Configuration Parser
 - [ ] **Implement config parser**
-  - [ ] Create `ConfigParser` class
-  - [ ] Implement custom coverage config parsing
+  - [x] Create `ConfigParser` class
+  - [x] Implement custom coverage config parsing
   - [ ] Add Vitest config integration
   - [ ] Add Jest config integration
-  - [ ] Implement config type detection
+  - [x] Implement config type detection
 
 - [ ] **Test config parser**
-  - [ ] Test custom coverage config
+  - [x] Test custom coverage config
   - [ ] Test Vitest config parsing
   - [ ] Test Jest config parsing
   - [ ] Test config type detection
