@@ -72,7 +72,7 @@ export interface CoverageSummary {
     coveragePercentage: number;
     threshold?: number;
   }>;
-  scopeThresholdViolations?: string[];
+  scopeThresholdViolations?: Array<{ scope: string; actual: number; threshold: number }>;
 }
 
 export interface FileCoverageReport {

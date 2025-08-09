@@ -57,7 +57,14 @@ export function generateConsoleReport(report: CoverageReport): string {
   }
   if (Array.isArray(report.summary.scopeThresholdViolations) && report.summary.scopeThresholdViolations.length > 0) {
     lines.push(`  Scope threshold violations (${report.summary.scopeThresholdViolations.length}):`);
-    for (const v of report.summary.scopeThresholdViolations) lines.push(`    - ${red(v)}`);
+    for (const v of report.summary.scopeThresholdViolations as any[]) {
+      if (typeof v === "string") {
+        lines.push(`    - ${red(v)}`);
+      } else if (v && typeof v === "object") {
+        const msg = `${v.scope}:${(v.actual as number).toFixed ? (v.actual as number).toFixed(2) : v.actual}<${v.threshold}`;
+        lines.push(`    - ${red(msg)}`);
+      }
+    }
   }
   lines.push("");
   lines.push(`Files:`);

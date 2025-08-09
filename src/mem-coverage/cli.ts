@@ -99,15 +99,10 @@ export async function runCoverageCLI(options: CoverageOptions): Promise<{ exitCo
     }
   }
   // Check scoped thresholds
-  if (report.summary.scopeThresholdViolations?.length > 0) {
+  if (report.summary.scopeThresholdViolations && report.summary.scopeThresholdViolations.length > 0) {
     exitCode = 1;
-    for (const violation of report.summary.scopeThresholdViolations as any[]) {
-      // Support both string and object formats
-      if (typeof violation === "string") {
-        console.error(violation);
-      } else {
-        console.error(`${violation.scope}:${violation.actual.toFixed(2)}<${violation.threshold}`);
-      }
+    for (const violation of report.summary.scopeThresholdViolations) {
+      console.error(`${violation.scope}:${violation.actual.toFixed(2)}<${violation.threshold}`);
     }
   }
   return { exitCode };
