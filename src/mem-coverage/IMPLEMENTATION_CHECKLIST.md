@@ -153,15 +153,15 @@
 
 ### Step 9: Enhanced Console Reports
 - [ ] **Improve console report formatting**
-  - [ ] Add color coding for coverage levels
-  - [ ] Show detailed file breakdowns
+  - [x] Add color coding for coverage levels
+  - [x] Show detailed file breakdowns
   - [x] Display function/class coverage details
   - [ ] Add progress indicators for large codebases
   - [x] Show recommendations for improvement
 
 - [ ] **Test enhanced reports**
-  - [ ] Test color coding
-  - [ ] Test detailed breakdowns
+  - [x] Test color coding
+  - [x] Test detailed breakdowns
   - [ ] Test progress indicators
   - [ ] Test recommendations
 

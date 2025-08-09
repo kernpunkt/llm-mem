@@ -76,6 +76,9 @@ export interface FileCoverageReport {
   functionsCovered?: number;
   classesTotal?: number;
   classesCovered?: number;
+  // Optional detailed symbol lists for enhanced reports
+  functionsDetails?: { name: string; isCovered: boolean }[];
+  classesDetails?: { name: string; isCovered: boolean }[];
 }
 
 export interface CoverageRecommendation {
@@ -93,6 +96,8 @@ export interface CoverageOptions {
   verbose?: boolean;
   memoryStorePath?: string;
   indexPath?: string;
+  // Optional progress callback used by generator
+  onProgress?: (current: number, total: number, filePath: string) => void;
 }
 
 export interface CoverageConfig {

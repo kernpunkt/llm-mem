@@ -78,12 +78,17 @@ export class CoverageService {
     let totalLines = 0;
     let coveredLines = 0;
 
-    for (const filePath of filePaths) {
+    for (let i = 0; i < filePaths.length; i++) {
+      const filePath = filePaths[i];
       const entries = coverageMap.get(filePath) || [];
       const fc = await this.analyzeFileCoverage(filePath, entries);
       files.push(fc);
       totalLines += fc.totalLines;
       coveredLines += fc.coveredLines;
+      // Emit progress if requested
+      if (typeof options.onProgress === "function") {
+        try { options.onProgress(i + 1, filePaths.length, filePath); } catch {}
+      }
     }
 
     const coveragePercentage = totalLines === 0 ? 100 : (coveredLines / totalLines) * 100;
@@ -98,6 +103,8 @@ export class CoverageService {
       functionsCovered: f.functions.filter(fn => fn.isCovered).length,
       classesTotal: f.classes.length,
       classesCovered: f.classes.filter(cl => cl.isCovered).length,
+      functionsDetails: f.functions.map(fn => ({ name: fn.name, isCovered: fn.isCovered })),
+      classesDetails: f.classes.map(cl => ({ name: cl.name, isCovered: cl.isCovered })),
     }));
 
     const undocumentedFiles = fileReports.filter(fr => fr.coveragePercentage === 0).map(fr => fr.path);
