@@ -26,7 +26,7 @@ export interface FileCoverage {
   classes: ClassCoverage[];
 }
 
-export type CodeElementType = "function" | "class" | "method" | "export" | "comment";
+export type CodeElementType = "function" | "class" | "method" | "export" | "import" | "interface" | "comment";
 
 export interface LineRange extends LineSpan {
   type: CodeElementType;

@@ -84,6 +84,11 @@ async function main(): Promise<void> {
       console.error(`Failed to load config from ${options.config}:`, e);
     }
   }
+  // If threshold not explicitly provided, use config overall threshold if present
+  if (options.threshold === undefined) {
+    const overall = (options as any)?.thresholds?.overall;
+    if (typeof overall === "number") options.threshold = overall;
+  }
   if (options.verbose) {
     console.log("Options:", JSON.stringify(options));
   }

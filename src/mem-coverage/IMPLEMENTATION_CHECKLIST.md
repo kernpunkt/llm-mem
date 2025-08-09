@@ -80,7 +80,7 @@
   - [x] List uncovered files
   - [x] Show basic statistics
 
-- [ ] **Test console report**
+- [x] **Test console report**
   - [x] Test with sample coverage data
   - [x] Test formatting and output
   - [x] Test with different coverage scenarios
@@ -94,7 +94,7 @@
  - [x] **Threshold behavior**
    - [x] Exit with non-zero code when coverage falls below `--threshold`
 
-- [ ] **Test CLI**
+- [x] **Test CLI**
   - [x] Test basic command execution
   - [x] Test argument parsing
   - [x] Test help output
@@ -103,35 +103,35 @@
 ## Phase 2: Advanced Features
 
 ### Step 6: Configuration Parser
-- [ ] **Implement config parser**
+- [x] **Implement config parser**
   - [x] Create `ConfigParser` class
   - [x] Implement custom coverage config parsing
-  - [ ] Add Vitest config integration
-  - [ ] Add Jest config integration
+  - [x] Add Vitest config integration
+  - [x] Add Jest config integration
   - [x] Implement config type detection
 
-- [ ] **Test config parser**
+- [x] **Test config parser**
   - [x] Test custom coverage config
-  - [ ] Test Vitest config parsing
-  - [ ] Test Jest config parsing
-  - [ ] Test config type detection
+  - [x] Test Vitest config parsing
+  - [x] Test Jest config parsing
+  - [x] Test config type detection
   - [ ] Test error handling for invalid configs
 
 ### Step 7: Enhanced Code Scanner
-- [ ] **Improve TypeScript/JavaScript parsing**
-  - [ ] Implement AST-based parsing (using TypeScript compiler API)
-  - [ ] Accurate function detection
-  - [ ] Accurate class and interface detection
-  - [ ] Method detection within classes
-  - [ ] Export detection
-  - [ ] Import detection
+- [x] **Improve TypeScript/JavaScript parsing**
+  - [x] Implement AST-based parsing (using TypeScript compiler API)
+  - [x] Accurate function detection
+  - [x] Accurate class and interface detection
+  - [x] Method detection within classes
+  - [x] Export detection
+  - [x] Import detection
 
-- [ ] **Test enhanced scanner**
-  - [ ] Test with complex TypeScript files
-  - [ ] Test nested function detection
-  - [ ] Test class method detection
-  - [ ] Test interface detection
-  - [ ] Test export/import detection
+- [x] **Test enhanced scanner**
+  - [x] Test with complex TypeScript files
+  - [x] Test nested function detection
+  - [x] Test class method detection
+  - [x] Test interface detection
+  - [x] Test export/import detection
 
 ### Step 8: Granular Coverage Analysis
 - [ ] **Implement function-level coverage**

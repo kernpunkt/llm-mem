@@ -7,7 +7,7 @@ import { scanTypescriptOrJavascriptFile } from "../../src/mem-coverage/code-scan
 describe("code-scanner (JS)", () => {
   it("detects functions, classes, exports, comments in .js files", async () => {
     const tmp = join(tmpdir(), `scanner_${Date.now()}.js`);
-    const content = `// js header\n\nexport function foo() { return 1 }\n\nexport const bar = () => 2\n\nexport class Baz { method() { return 3 } }\n\n/* block comment */\n`;
+    const content = `// js header\n\nimport fs from 'fs'\n\nexport function foo() { return 1 }\n\nexport const bar = () => 2\n\nexport class Baz { method() { return 3 } }\n\n/* block comment */\n`;
     await fs.writeFile(tmp, content, "utf8");
 
     const result = await scanTypescriptOrJavascriptFile(tmp);
@@ -17,6 +17,7 @@ describe("code-scanner (JS)", () => {
     expect(types).toContain("class");
     expect(types).toContain("comment");
     expect(types).toContain("export");
+    expect(types).toContain("import");
   });
 });
 
