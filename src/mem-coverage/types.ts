@@ -57,6 +57,13 @@ export interface CoverageSummary {
   coveragePercentage: number;
   undocumentedFiles: string[];
   lowCoverageFiles: string[];
+  // Optional aggregated symbol coverage (Phase 2 granular stats)
+  functionsTotal?: number;
+  functionsCovered?: number;
+  classesTotal?: number;
+  classesCovered?: number;
+  functionsCoveragePercentage?: number;
+  classesCoveragePercentage?: number;
 }
 
 export interface FileCoverageReport {

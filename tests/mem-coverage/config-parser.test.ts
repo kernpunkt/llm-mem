@@ -45,6 +45,14 @@ describe("config-parser", () => {
     expect(parsed.exclude).toContain('src/**/*.test.ts');
     expect(parsed.thresholds?.overall).toBe(85);
   });
+
+  it("handles invalid JSON config gracefully with default normalization", async () => {
+    const parser = new BasicConfigParser();
+    const file = join(tmpdir(), `bad_${Date.now()}.coverage.json`);
+    // Write malformed JSON
+    await fs.writeFile(file, "{ invalid json", "utf8");
+    await expect(parser.parseConfig(file)).rejects.toBeTruthy();
+  });
 });
 
 

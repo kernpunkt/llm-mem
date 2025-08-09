@@ -103,6 +103,12 @@ export class CoverageService {
     const undocumentedFiles = fileReports.filter(fr => fr.coveragePercentage === 0).map(fr => fr.path);
     const lowCoverageFiles = fileReports.filter(fr => fr.coveragePercentage > 0 && fr.coveragePercentage < (options.threshold ?? 80)).map(fr => fr.path);
 
+    // Aggregate symbol totals
+    const functionsTotal = fileReports.reduce((sum, fr) => sum + (fr.functionsTotal ?? 0), 0);
+    const functionsCovered = fileReports.reduce((sum, fr) => sum + (fr.functionsCovered ?? 0), 0);
+    const classesTotal = fileReports.reduce((sum, fr) => sum + (fr.classesTotal ?? 0), 0);
+    const classesCovered = fileReports.reduce((sum, fr) => sum + (fr.classesCovered ?? 0), 0);
+
     return {
       summary: {
         totalFiles: files.length,
@@ -111,6 +117,12 @@ export class CoverageService {
         coveragePercentage,
         undocumentedFiles,
         lowCoverageFiles,
+        functionsTotal,
+        functionsCovered,
+        classesTotal,
+        classesCovered,
+        functionsCoveragePercentage: functionsTotal === 0 ? 100 : (functionsCovered / functionsTotal) * 100,
+        classesCoveragePercentage: classesTotal === 0 ? 100 : (classesCovered / classesTotal) * 100,
       },
       files: fileReports,
       recommendations: lowCoverageFiles.map((file) => ({ file, message: "Add documentation sources covering uncovered sections", priority: "medium" })),

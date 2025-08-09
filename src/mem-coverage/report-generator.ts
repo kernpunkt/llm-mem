@@ -10,6 +10,18 @@ export function generateConsoleReport(report: CoverageReport): string {
   lines.push(`  Lines: ${report.summary.totalLines}`);
   lines.push(`  Covered: ${report.summary.coveredLines}`);
   lines.push(`  Coverage: ${report.summary.coveragePercentage.toFixed(2)}%`);
+  if (typeof report.summary.functionsTotal === "number") {
+    const fTot = report.summary.functionsTotal ?? 0;
+    const fCov = report.summary.functionsCovered ?? 0;
+    const fPct = report.summary.functionsCoveragePercentage ?? (fTot === 0 ? 100 : (fCov / fTot) * 100);
+    lines.push(`  Functions: ${fCov}/${fTot} (${fPct.toFixed(2)}%)`);
+  }
+  if (typeof report.summary.classesTotal === "number") {
+    const cTot = report.summary.classesTotal ?? 0;
+    const cCov = report.summary.classesCovered ?? 0;
+    const cPct = report.summary.classesCoveragePercentage ?? (cTot === 0 ? 100 : (cCov / cTot) * 100);
+    lines.push(`  Classes: ${cCov}/${cTot} (${cPct.toFixed(2)}%)`);
+  }
   if (report.summary.undocumentedFiles.length > 0) {
     lines.push(`  Undocumented files (${report.summary.undocumentedFiles.length}):`);
     for (const f of report.summary.undocumentedFiles) lines.push(`    - ${f}`);

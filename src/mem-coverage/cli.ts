@@ -61,6 +61,7 @@ export async function runCoverageCLI(options: CoverageOptions): Promise<{ exitCo
     const ok = report.summary.coveragePercentage >= options.threshold;
     if (!ok) {
       exitCode = 1;
+      console.error(`Coverage ${report.summary.coveragePercentage.toFixed(2)}% is below threshold ${options.threshold}%`);
     }
   }
   return { exitCode };
