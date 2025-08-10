@@ -16,6 +16,17 @@ function colorForPct(pct: number): (s: string) => string {
 export function generateConsoleReport(report: CoverageReport): string {
   const lines: string[] = [];
   
+  // Calculate maximum filename length for consistent column width
+  const maxFileNameLength = Math.max(
+    ...report.files.map(file => {
+      const dir = file.path.split("/")[0] || ".";
+      return file.path.replace(dir + "/", "").length;
+    })
+  );
+  
+  // Ensure minimum width for readability
+  const fileNameColumnWidth = Math.max(maxFileNameLength, 16);
+  
   // Header
   lines.push(bold("Documentation Coverage Report"));
   lines.push(`Generated: ${report.generatedAt}`);
@@ -29,17 +40,18 @@ export function generateConsoleReport(report: CoverageReport): string {
   lines.push(`  Files: ${report.summary.totalFiles} | Functions: ${report.summary.functionsCovered}/${report.summary.functionsTotal} | Classes: ${report.summary.classesCovered}/${report.summary.classesTotal}`);
   lines.push("");
   
-  // Coverage table header
+  // Coverage table header with dynamic width
+  const headerSeparator = "-".repeat(fileNameColumnWidth + 2) + "|---------|----------|---------|---------|-------------------";
   lines.push(" % Coverage report");
-  lines.push("-------------------|---------|----------|---------|---------|-------------------");
-  lines.push("File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s ");
-  lines.push("-------------------|---------|----------|---------|---------|-------------------");
+  lines.push(headerSeparator);
+  lines.push(`File${" ".repeat(fileNameColumnWidth - 4)} | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s `);
+  lines.push(headerSeparator);
   
   // Overall summary row
   const overallFuncPct = (report.summary.functionsTotal ?? 0) === 0 ? 100 : ((report.summary.functionsCovered ?? 0) / (report.summary.functionsTotal ?? 0)) * 100;
   const overallClassPct = (report.summary.classesTotal ?? 0) === 0 ? 100 : ((report.summary.classesCovered ?? 0) / (report.summary.classesTotal ?? 0)) * 100;
   
-  lines.push(`All files          | ${summaryColor(summaryPct.toFixed(2).padStart(7))} | ${summaryColor(summaryPct.toFixed(2).padStart(9))} | ${summaryColor(overallFuncPct.toFixed(2).padStart(7))} | ${summaryColor(summaryPct.toFixed(2).padStart(7))} |                   `);
+  lines.push(`All files${" ".repeat(fileNameColumnWidth - 9)} | ${summaryColor(summaryPct.toFixed(2).padStart(7))} | ${summaryColor(summaryPct.toFixed(2).padStart(9))} | ${summaryColor(overallFuncPct.toFixed(2).padStart(7))} | ${summaryColor(summaryPct.toFixed(2).padStart(7))} |                   `);
   
   // Group files by directory
   const fileGroups = groupFilesByDirectory(report.files);
@@ -53,7 +65,7 @@ export function generateConsoleReport(report: CoverageReport): string {
     const dirFuncPct = dirStats.functionsTotal === 0 ? 100 : (dirStats.functionsCovered / dirStats.functionsTotal) * 100;
     const dirClassPct = dirStats.classesTotal === 0 ? 100 : (dirStats.classesCovered / dirStats.classesTotal) * 100;
     
-    lines.push(` ${dir.padEnd(16)} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(7))} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(9))} | ${summaryColor(dirFuncPct.toFixed(2).padStart(7))} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(7))} |                   `);
+    lines.push(` ${dir.padEnd(fileNameColumnWidth)} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(7))} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(9))} | ${summaryColor(dirFuncPct.toFixed(2).padStart(7))} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(7))} |                   `);
     
     // Individual files in directory
     for (const file of files) {
@@ -61,14 +73,14 @@ export function generateConsoleReport(report: CoverageReport): string {
       const fileFuncPct = (file.functionsTotal ?? 0) === 0 ? 100 : ((file.functionsCovered ?? 0) / (file.functionsTotal ?? 0)) * 100;
       const fileClassPct = (file.classesTotal ?? 0) === 0 ? 100 : ((file.classesCovered ?? 0) / (file.classesTotal ?? 0)) * 100;
       
-      const fileName = file.path.replace(dir + "/", "").padEnd(16);
+      const fileName = file.path.replace(dir + "/", "").padEnd(fileNameColumnWidth);
       const uncoveredLines = formatUncoveredLines(file.uncoveredSections);
       
       lines.push(`  ${fileName} | ${colorForPct(filePct)(filePct.toFixed(2).padStart(7))} | ${colorForPct(filePct)(filePct.toFixed(2).padStart(9))} | ${colorForPct(fileFuncPct)(fileFuncPct.toFixed(2).padStart(7))} | ${colorForPct(filePct)(filePct.toFixed(2).padStart(7))} | ${uncoveredLines.padEnd(18)}`);
     }
   }
   
-  lines.push("-------------------|---------|----------|---------|---------|-------------------");
+  lines.push(headerSeparator);
   lines.push("");
   
   // Key metrics
