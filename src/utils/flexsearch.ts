@@ -60,10 +60,6 @@ export class FlexSearchManager {
     // FlexSearch will create it in the current working directory
     this.db = new Database("memory-store");
     
-    // Log the database path for debugging
-    console.log(`FlexSearch database will be created as: memory-store in current directory`);
-    console.log(`Index path configured as: ${indexPath}`);
-    
     // Create FlexSearch configuration with stopwords and environment settings
     const flexSearchConfig = {
       id: "id",
@@ -103,6 +99,10 @@ export class FlexSearchManager {
    */
   async initialize(): Promise<void> {
     try {
+      // Log the database path for debugging (use stderr to avoid interfering with MCP protocol)
+      console.error(`FlexSearch database will be created as: memory-store in current directory`);
+      console.error(`Index path configured as: ${this.indexPath}`);
+      
       // Ensure index directory exists
       await fs.mkdir(this.indexPath, { recursive: true });
       
@@ -118,8 +118,8 @@ export class FlexSearchManager {
       
       this.isInitialized = true;
       
-      // Log configuration for debugging
-      console.log("FlexSearch initialized with configuration:", {
+      // Log configuration for debugging (use stderr to avoid interfering with MCP protocol)
+      console.error("FlexSearch initialized with configuration:", {
         indexPath: this.indexPath,
         databasePath: join(this.indexPath, "memory-store.sqlite"),
         tokenize: this.config.tokenize,

@@ -10,8 +10,8 @@ import { promises as fs } from "fs";
 import { join } from "path";
 import { fileURLToPath } from "url";
 
-// Load environment variables from .env file
-config();
+// Load environment variables from .env file (quiet mode to avoid stdout interference)
+config({ quiet: true });
 
 /**
  * MCP Server Template
@@ -522,8 +522,8 @@ export async function runStdio(): Promise<void> {
 
   // Graceful shutdown handling
   process.on('SIGINT', async () => {
-    console.log('Shutting down STDIO server...');
-    console.log('Server shutdown complete');
+    console.error('Shutting down STDIO server...');
+    console.error('Server shutdown complete');
     process.exit(0);
   });
 }
