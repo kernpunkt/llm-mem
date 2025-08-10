@@ -3,7 +3,6 @@ import { describe, it, expect, vi } from "vitest";
 // Mock coverage-service to control file list and invoke progress
 vi.mock("../../src/mem-coverage/coverage-service.js", () => {
   class MockCoverageService {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     constructor(_ms: unknown) {}
     async generateReport(options: { onProgress?: (c: number, t: number, f: string) => void }) {
       const files = ["a.ts", "b.ts", "c.ts"];

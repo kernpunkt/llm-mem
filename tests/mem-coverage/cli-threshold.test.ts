@@ -3,7 +3,6 @@ import { describe, it, expect, vi } from "vitest";
 // Mock the coverage-service BEFORE importing the CLI
 vi.mock("../../src/mem-coverage/coverage-service.js", () => {
   class MockCoverageService {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     constructor(_ms: unknown) {}
     async generateReport() {
       return {

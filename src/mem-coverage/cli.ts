@@ -82,7 +82,7 @@ export async function runCoverageCLI(options: CoverageOptions): Promise<{ exitCo
         const issue = v.error.issues[0];
         console.error(`Options validation warning: ${issue.path.join(".")}: ${issue.message}`);
       }
-    } catch (e) {
+    } catch (_e) {
       // For programmatic usage, don't throw; proceed with provided options
     }
   }
@@ -147,9 +147,9 @@ async function main(): Promise<void> {
         thresholds: options.threshold !== undefined ? { overall: options.threshold } : cfg.thresholds
       } as any;
       if (options.verbose) console.log("Loaded config:", JSON.stringify(cfg));
-    } catch (e) {
-      console.error(`Failed to load config from ${options.config}:`, e);
-    }
+                    } catch (_e) {
+                  console.error(`Failed to load config from ${options.config}:`, _e);
+                }
   }
   // If threshold not explicitly provided, use config overall threshold if present
   if ((options as any).threshold === undefined) {

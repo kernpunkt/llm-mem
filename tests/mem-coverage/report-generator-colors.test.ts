@@ -39,8 +39,8 @@ describe("report-generator colors and breakdowns", () => {
       generatedAt: new Date().toISOString(),
     };
     const out = generateConsoleReport(report);
-    // Check ANSI sequences exist
-    expect(out).toMatch(/\u001b\[/);
+    // Check ANSI sequences exist (using string search to avoid regex control character issues)
+    expect(out).toContain("\x1b[");
     // Check symbol breakdown lines
     expect(out).toContain("Functions: foo✓, bar✗");
     expect(out).toContain("Classes: Baz✗");

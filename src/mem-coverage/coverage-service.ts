@@ -119,7 +119,11 @@ export class CoverageService {
       coveredLines += fc.coveredLines;
       // Emit progress if requested
       if (typeof options.onProgress === "function") {
-        try { options.onProgress(i + 1, filePaths.length, filePath); } catch {}
+        try { 
+          options.onProgress(i + 1, filePaths.length, filePath); 
+        } catch (_e) {
+          // Ignore progress callback errors
+        }
       }
     }
 
@@ -280,14 +284,15 @@ async function countLinesStream(filePath: string): Promise<number> {
       let lines = 0;
       let endedWithNewline = false;
       const stream = createReadStream(filePath, { encoding: "utf8" });
-      stream.on("data", (chunk: string) => {
+      stream.on("data", (chunk: string | Buffer) => {
+        const chunkStr = chunk.toString();
         let idx = -1;
         let lastIdx = 0;
-        while ((idx = chunk.indexOf("\n", lastIdx)) !== -1) {
+        while ((idx = chunkStr.indexOf("\n", lastIdx)) !== -1) {
           lines++;
           lastIdx = idx + 1;
         }
-        endedWithNewline = chunk.endsWith("\n");
+        endedWithNewline = chunkStr.endsWith("\n");
       });
       stream.on("end", () => {
         // If file is not empty and does not end with a newline, count the last line

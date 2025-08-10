@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { promises as fs } from "node:fs";
 import { join } from "node:path";
-import { tmpdir } from "node:os";
+// Note: tmpdir is available but not used in this test file
 import { CoverageService } from "../../src/mem-coverage/coverage-service.js";
 import { MemoryService } from "../../src/memory/memory-service.js";
 

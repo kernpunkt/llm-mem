@@ -1,5 +1,6 @@
 import { ParsedSource, LineSpan } from "./types.js";
-import { validateSourceFilePathOrThrow } from "./validation.js";
+// Note: validateSourceFilePathOrThrow is available for consumers who want to validate file paths
+// import { validateSourceFilePathOrThrow } from "./validation.js";
 
 const FILE_AND_RANGES_REGEX = /^(?<file>[^:]+?)(?::(?<ranges>.+))?$/;
 
