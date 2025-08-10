@@ -142,7 +142,29 @@ Removes links between two memories.
 }
 ```
 
-### 7. **`get_current_date`** - Get Current Date
+### 7. **`list_mems`** - List All Memories
+Returns a JSON array of all memories in the notestore_path as Memory objects.
+
+**Parameters:**
+- `category` (string, optional): Filter memories by category
+- `tags` (string[], optional): Filter memories by tags (any tag match)
+- `limit` (number, optional): Maximum number of memories to return (default: 100)
+
+**Returns:**
+- Array of Memory objects with full metadata
+- Total count of memories
+- Filtered results if category or tags specified
+
+**Example:**
+```json
+{
+  "category": "work",
+  "tags": ["meeting"],
+  "limit": 50
+}
+```
+
+### 8. **`get_current_date`** - Get Current Date
 Returns the current date and time for LLMs that need temporal context.
 
 **Parameters:**
@@ -347,6 +369,9 @@ it('should create bidirectional links between memories')
 // Test unlink_mem
 it('should remove links between memories')
 
+// Test list_mem
+it('should list all memories with optional filtering')
+
 // Test get_current_date
 it('should return current date in requested format')
 ```
@@ -396,8 +421,8 @@ it('should return current date in requested format')
 ## 🎯 Future Enhancements
 
 ### Potential Additions
-1. **Memory Categories**: Hierarchical organization
-2. **Memory Relationships**: Link related memories
+1. **Memory Categories**: Hierarchical organization ✅
+2. **Memory Relationships**: Link related memories ✅
 3. **Memory Templates**: Predefined formats
 4. **Memory Export**: Multiple formats (JSON, CSV, PDF)
 5. **Memory Analytics**: Usage statistics
@@ -475,6 +500,26 @@ curl -X POST http://localhost:3000/mcp \
   }'
 ```
 
+### List All Memories
+```bash
+# List all memories with optional filtering
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "tools/call",
+    "params": {
+      "name": "list_mems",
+      "arguments": {
+        "category": "work",
+        "tags": ["meeting"],
+        "limit": 25
+      }
+    }
+  }'
+```
+
 ### Get Current Date
 ```bash
 # Get current date for LLM context
@@ -482,7 +527,7 @@ curl -X POST http://localhost:3000/mcp \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
-    "id": 4,
+    "id": 5,
     "method": "tools/call",
     "params": {
       "name": "get_current_date",

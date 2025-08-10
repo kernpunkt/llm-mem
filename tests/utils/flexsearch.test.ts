@@ -9,8 +9,12 @@ describe("FlexSearch Integration", () => {
   let testMemories: MemoryIndexDocument[];
 
   beforeEach(async () => {
-    // Create temporary test directory
-    testIndexPath = join(process.cwd(), "test-index.json");
+    // Create temporary test directory with unique ID to avoid conflicts
+    const testId = Math.random().toString(36).substring(7);
+    testIndexPath = join(process.cwd(), `flexsearch-test-index-${testId}.json`);
+    
+    // Ensure clean path
+    await fs.rm(testIndexPath, { force: true }).catch(() => {});
     
     // Initialize FlexSearch manager
     flexSearchManager = new FlexSearchManager(testIndexPath);
@@ -277,14 +281,20 @@ describe("FlexSearch Integration", () => {
     });
 
     it("should handle corrupted index file gracefully", async () => {
-      // Create corrupted index file
-      await fs.writeFile(testIndexPath, "invalid json content");
-      
-      // Should initialize with empty indexes
+      // First initialize to create the directory structure
       const manager = new FlexSearchManager(testIndexPath);
-      await expect(manager.initialize()).resolves.not.toThrow();
+      await manager.initialize();
       
-      const size = await manager.getIndexSize();
+      // Corrupt the SQLite database file by writing invalid content
+      const dbPath = join(testIndexPath, "memory-store.sqlite");
+      await fs.writeFile(dbPath, "invalid sqlite content");
+      
+      // Create a new manager instance and try to initialize with corrupted database
+      const newManager = new FlexSearchManager(testIndexPath);
+      await expect(newManager.initialize()).resolves.not.toThrow();
+      
+      // Should handle corruption gracefully and start with empty indexes
+      const size = await newManager.getIndexSize();
       expect(size).toBe(0);
     });
   });
@@ -327,7 +337,8 @@ describe("FlexSearch Integration", () => {
         created_at: "2024-01-15T10:30:00Z",
         updated_at: "2024-01-15T10:30:00Z",
         last_reviewed: "2024-01-15T10:30:00Z",
-        links: []
+        links: [],
+        sources: []
       };
       
       // Should not throw for invalid data, but may not index properly

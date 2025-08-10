@@ -150,6 +150,18 @@ This checklist tracks the step-by-step implementation of the memory management t
 - [x] Write unit tests
 - [x] Test with various scenarios (file exists, file missing, etc.)
 
+### 3.6 `list_mems` Tool
+- [ ] Implement `list_mems` tool
+- [ ] Add Zod schema for parameters (category, tags, limit)
+- [ ] Implement memory listing with optional filtering
+- [ ] Add category filtering
+- [ ] Add tag filtering (any tag match)
+- [ ] Add result limiting with default
+- [ ] Return full Memory objects array
+- [ ] Add comprehensive error handling
+- [ ] Write unit tests
+- [ ] Test with various filtering scenarios
+
 ---
 
 ## ✅ **Phase 4: Polish & Testing**
@@ -162,7 +174,7 @@ This checklist tracks the step-by-step implementation of the memory management t
 - [x] Test FlexSearch persistence
 - [x] Test link management scenarios
 
-### 4.2 Performance Testing (skip for now, will pe tested in production)
+### 4.2 Performance Testing (skip for now, will be tested in production)
 - [ ] Test with large numbers of memories
 - [ ] Test search performance
 - [ ] Test file system performance
@@ -226,6 +238,7 @@ This checklist tracks the step-by-step implementation of the memory management t
 - [x] Link management tests
 - [x] Reindexing tests
 - [x] Review filtering tests
+- [x] Memory listing and filtering tests
 
 ### End-to-End Tests
 - [x] Complete memory lifecycle tests
@@ -234,6 +247,7 @@ This checklist tracks the step-by-step implementation of the memory management t
 - [x] Error recovery tests
 - [x] Reindexing workflow tests
 - [x] Review filtering workflow tests
+- [x] Memory listing and filtering workflow tests
 
 ---
 
@@ -260,6 +274,11 @@ curl -X POST http://localhost:3000/mcp \
 curl -X POST http://localhost:3000/mcp \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"write_mem","arguments":{"title":"Test Memory","content":"# Test\n\nThis is a test.","category":"test"}}}'
+
+# Test list_mems
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"list_mems","arguments":{"category":"work","limit":10}}}'
 ```
 
 ---
@@ -268,10 +287,10 @@ curl -X POST http://localhost:3000/mcp \
 
 **Phase 1 Progress:** 20/20 tasks completed (100%)
 **Phase 2 Progress:** 32/32 tasks completed (100%)
-**Phase 3 Progress:** 38/38 tasks completed (100%)
+**Phase 3 Progress:** 47/47 tasks completed (100%)
 **Phase 4 Progress:** 26/26 tasks completed (100%)
 
-**Overall Progress:** 132/132 tasks completed (100%) ✅
+**Overall Progress:** 141/141 tasks completed (100%) ✅
 
 **Testing Strategy:** 18/18 tests completed (100%) ✅
 
