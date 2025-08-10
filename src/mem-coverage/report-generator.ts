@@ -4,6 +4,8 @@ function color(text: string, code: number): string { return `\u001b[${code}m${te
 function green(text: string): string { return color(text, 32); }
 function yellow(text: string): string { return color(text, 33); }
 function red(text: string): string { return color(text, 31); }
+function blue(text: string): string { return color(text, 34); }
+function bold(text: string): string { return color(text, 1); }
 
 function colorForPct(pct: number): (s: string) => string {
   if (pct >= 90) return green;
@@ -13,102 +15,189 @@ function colorForPct(pct: number): (s: string) => string {
 
 export function generateConsoleReport(report: CoverageReport): string {
   const lines: string[] = [];
-  lines.push(`Documentation Coverage Report`);
+  
+  // Header
+  lines.push(bold("Documentation Coverage Report"));
   lines.push(`Generated: ${report.generatedAt}`);
   lines.push("");
-  lines.push(`Summary:`);
-  lines.push(`  Files: ${report.summary.totalFiles}`);
-  lines.push(`  Lines: ${report.summary.totalLines}`);
-  lines.push(`  Covered: ${report.summary.coveredLines}`);
-  {
-    const pct = report.summary.coveragePercentage;
-    const paint = colorForPct(pct);
-    lines.push(`  Coverage: ${paint(pct.toFixed(2) + "%")}`);
-  }
-  if (typeof report.summary.functionsTotal === "number") {
-    const fTot = report.summary.functionsTotal ?? 0;
-    const fCov = report.summary.functionsCovered ?? 0;
-    const fPct = report.summary.functionsCoveragePercentage ?? (fTot === 0 ? 100 : (fCov / fTot) * 100);
-    const paint = colorForPct(fPct);
-    lines.push(`  Functions: ${fCov}/${fTot} (${paint(fPct.toFixed(2) + "%")})`);
-  }
-  if (typeof report.summary.classesTotal === "number") {
-    const cTot = report.summary.classesTotal ?? 0;
-    const cCov = report.summary.classesCovered ?? 0;
-    const cPct = report.summary.classesCoveragePercentage ?? (cTot === 0 ? 100 : (cCov / cTot) * 100);
-    const paint = colorForPct(cPct);
-    lines.push(`  Classes: ${cCov}/${cTot} (${paint(cPct.toFixed(2) + "%")})`);
-  }
-  if (report.summary.undocumentedFiles.length > 0) {
-    lines.push(`  Undocumented files (${report.summary.undocumentedFiles.length}):`);
-    for (const f of report.summary.undocumentedFiles) lines.push(`    - ${f}`);
-  }
-  if (report.summary.lowCoverageFiles.length > 0) {
-    lines.push(`  Low coverage files (${report.summary.lowCoverageFiles.length}):`);
-    for (const f of report.summary.lowCoverageFiles) lines.push(`    - ${f}`);
-  }
-  if (Array.isArray(report.summary.scopes) && report.summary.scopes.length > 0) {
-    lines.push(`  Scopes:`);
-    for (const s of report.summary.scopes) {
-      const paint = colorForPct(s.coveragePercentage);
-      const thresholdNote = typeof s.threshold === "number" ? ` (threshold ${s.threshold}%)` : "";
-      lines.push(`    - ${s.name}: ${paint(s.coveragePercentage.toFixed(2) + "%")} (${s.coveredLines}/${s.totalLines})${thresholdNote}`);
-    }
-  }
-  if (Array.isArray(report.summary.scopeThresholdViolations) && report.summary.scopeThresholdViolations.length > 0) {
-    lines.push(`  Scope threshold violations (${report.summary.scopeThresholdViolations.length}):`);
-    for (const v of report.summary.scopeThresholdViolations as any[]) {
-      if (typeof v === "string") {
-        lines.push(`    - ${red(v)}`);
-      } else if (v && typeof v === "object") {
-        const msg = `${v.scope}:${(v.actual as number).toFixed ? (v.actual as number).toFixed(2) : v.actual}<${v.threshold}`;
-        lines.push(`    - ${red(msg)}`);
-      }
-    }
-  }
+  
+  // Summary section
+  lines.push(bold("Summary:"));
+  const summaryPct = report.summary.coveragePercentage;
+  const summaryColor = colorForPct(summaryPct);
+  lines.push(`  Overall Coverage: ${summaryColor(summaryPct.toFixed(2) + "%")} (${report.summary.coveredLines}/${report.summary.totalLines} lines)`);
+  lines.push(`  Files: ${report.summary.totalFiles} | Functions: ${report.summary.functionsCovered}/${report.summary.functionsTotal} | Classes: ${report.summary.classesCovered}/${report.summary.classesTotal}`);
   lines.push("");
-  lines.push(`Files:`);
-  for (const f of report.files) {
-    lines.push(renderFile(f));
-  }
-  if (report.recommendations.length > 0) {
-    lines.push("");
-    lines.push(`Recommendations:`);
-    for (const r of report.recommendations) {
-      lines.push(`  [${r.priority}] ${r.file}: ${r.message}`);
+  
+  // Coverage table header
+  lines.push(" % Coverage report");
+  lines.push("-------------------|---------|----------|---------|---------|-------------------");
+  lines.push("File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s ");
+  lines.push("-------------------|---------|----------|---------|---------|-------------------");
+  
+  // Overall summary row
+  const overallFuncPct = (report.summary.functionsTotal ?? 0) === 0 ? 100 : ((report.summary.functionsCovered ?? 0) / (report.summary.functionsTotal ?? 0)) * 100;
+  const overallClassPct = (report.summary.classesTotal ?? 0) === 0 ? 100 : ((report.summary.classesCovered ?? 0) / (report.summary.classesTotal ?? 0)) * 100;
+  
+  lines.push(`All files          | ${summaryColor(summaryPct.toFixed(2).padStart(7))} | ${summaryColor(summaryPct.toFixed(2).padStart(9))} | ${summaryColor(overallFuncPct.toFixed(2).padStart(7))} | ${summaryColor(summaryPct.toFixed(2).padStart(7))} |                   `);
+  
+  // Group files by directory
+  const fileGroups = groupFilesByDirectory(report.files);
+  
+  // Render each directory group
+  for (const [dir, files] of fileGroups) {
+    if (dir === "All files") continue; // Skip the overall row
+    
+    // Directory summary row
+    const dirStats = calculateDirectoryStats(files);
+    const dirFuncPct = dirStats.functionsTotal === 0 ? 100 : (dirStats.functionsCovered / dirStats.functionsTotal) * 100;
+    const dirClassPct = dirStats.classesTotal === 0 ? 100 : (dirStats.classesCovered / dirStats.classesTotal) * 100;
+    
+    lines.push(` ${dir.padEnd(16)} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(7))} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(9))} | ${summaryColor(dirFuncPct.toFixed(2).padStart(7))} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(7))} |                   `);
+    
+    // Individual files in directory
+    for (const file of files) {
+      const filePct = file.totalLines === 0 ? 100 : (file.coveredLines / file.totalLines) * 100;
+      const fileFuncPct = (file.functionsTotal ?? 0) === 0 ? 100 : ((file.functionsCovered ?? 0) / (file.functionsTotal ?? 0)) * 100;
+      const fileClassPct = (file.classesTotal ?? 0) === 0 ? 100 : ((file.classesCovered ?? 0) / (file.classesTotal ?? 0)) * 100;
+      
+      const fileName = file.path.replace(dir + "/", "").padEnd(16);
+      const uncoveredLines = formatUncoveredLines(file.uncoveredSections);
+      
+      lines.push(`  ${fileName} | ${colorForPct(filePct)(filePct.toFixed(2).padStart(7))} | ${colorForPct(filePct)(filePct.toFixed(2).padStart(9))} | ${colorForPct(fileFuncPct)(fileFuncPct.toFixed(2).padStart(7))} | ${colorForPct(filePct)(filePct.toFixed(2).padStart(7))} | ${uncoveredLines.padEnd(18)}`);
     }
   }
+  
+  lines.push("-------------------|---------|----------|---------|---------|-------------------");
+  lines.push("");
+  
+  // Key metrics
+  if (report.summary.undocumentedFiles.length > 0) {
+    lines.push(bold("Undocumented Files:") + ` ${report.summary.undocumentedFiles.length}`);
+    for (const f of report.summary.undocumentedFiles.slice(0, 5)) {
+      lines.push(`  ${f}`);
+    }
+    if (report.summary.undocumentedFiles.length > 5) {
+      lines.push(`  ... and ${report.summary.undocumentedFiles.length - 5} more`);
+    }
+    lines.push("");
+  }
+  
+  if (report.summary.lowCoverageFiles.length > 0) {
+    lines.push(bold("Low Coverage Files:") + ` ${report.summary.lowCoverageFiles.length}`);
+    for (const f of report.summary.lowCoverageFiles.slice(0, 3)) {
+      lines.push(`  ${f}`);
+    }
+    if (report.summary.lowCoverageFiles.length > 3) {
+      lines.push(`  ... and ${report.summary.lowCoverageFiles.length - 3} more`);
+    }
+    lines.push("");
+  }
+  
+  // Recommendations
+  if (report.recommendations.length > 0) {
+    lines.push(bold("Recommendations:"));
+    for (const r of report.recommendations.slice(0, 3)) {
+      const priorityColor = r.priority === "high" ? red : r.priority === "medium" ? yellow : green;
+      lines.push(`  [${priorityColor(r.priority)}] ${r.file}: ${r.message}`);
+    }
+    if (report.recommendations.length > 3) {
+      lines.push(`  ... and ${report.recommendations.length - 3} more recommendations`);
+    }
+  }
+  
   return lines.join("\n");
 }
 
-function renderFile(file: FileCoverageReport): string {
-  const parts: string[] = [];
-  const pct = file.totalLines === 0 ? 100 : (file.coveredLines / file.totalLines) * 100;
-  const paint = colorForPct(pct);
-  parts.push(`- ${file.path} :: ${paint(pct.toFixed(2) + "%")} (${file.coveredLines}/${file.totalLines})`);
-  if (
-    (typeof file.functionsTotal === "number" && file.functionsTotal > 0) ||
-    (typeof file.classesTotal === "number" && file.classesTotal > 0)
-  ) {
-    const fTot = file.functionsTotal ?? 0;
-    const fCov = file.functionsCovered ?? 0;
-    const cTot = file.classesTotal ?? 0;
-    const cCov = file.classesCovered ?? 0;
-    parts.push(`  Symbols: functions ${fCov}/${fTot}, classes ${cCov}/${cTot}`);
-    if (Array.isArray(file.functionsDetails) && file.functionsDetails.length > 0) {
-      const list = file.functionsDetails.map(d => `${d.name ?? "(anonymous)"}${d.isCovered ? "✓" : "✗"}`).join(", ");
-      parts.push(`  Functions: ${list}`);
+function groupFilesByDirectory(files: FileCoverageReport[]): Map<string, FileCoverageReport[]> {
+  const groups = new Map<string, FileCoverageReport[]>();
+  
+  for (const file of files) {
+    const dir = file.path.split("/")[0] || ".";
+    if (!groups.has(dir)) {
+      groups.set(dir, []);
     }
-    if (Array.isArray(file.classesDetails) && file.classesDetails.length > 0) {
-      const list = file.classesDetails.map(d => `${d.name ?? "(anonymous)"}${d.isCovered ? "✓" : "✗"}`).join(", ");
-      parts.push(`  Classes: ${list}`);
+    groups.get(dir)!.push(file);
+  }
+  
+  // Sort directories and files within directories
+  const sortedGroups = new Map<string, FileCoverageReport[]>();
+  for (const [dir, dirFiles] of groups) {
+    sortedGroups.set(dir, dirFiles.sort((a, b) => a.path.localeCompare(b.path)));
+  }
+  
+  return sortedGroups;
+}
+
+function calculateDirectoryStats(files: FileCoverageReport[]): {
+  coveragePct: number;
+  functionsTotal: number;
+  functionsCovered: number;
+  classesTotal: number;
+  classesCovered: number;
+} {
+  let totalLines = 0;
+  let coveredLines = 0;
+  let functionsTotal = 0;
+  let functionsCovered = 0;
+  let classesTotal = 0;
+  let classesCovered = 0;
+  
+  for (const file of files) {
+    totalLines += file.totalLines;
+    coveredLines += file.coveredLines;
+    functionsTotal += file.functionsTotal || 0;
+    functionsCovered += file.functionsCovered || 0;
+    classesTotal += file.classesTotal || 0;
+    classesCovered += file.classesCovered || 0;
+  }
+  
+  const coveragePct = totalLines === 0 ? 100 : (coveredLines / totalLines) * 100;
+  
+  return {
+    coveragePct,
+    functionsTotal,
+    functionsCovered,
+    classesTotal,
+    classesCovered
+  };
+}
+
+function formatUncoveredLines(uncoveredSections: Array<{ start: number; end: number }>): string {
+  if (uncoveredSections.length === 0) return "";
+  
+  const segments = uncoveredSections.map(s => {
+    if (s.start === s.end) return s.start.toString();
+    return `${s.start}-${s.end}`;
+  });
+  
+  const result = segments.join(", ");
+  
+  // Make it more compact like pnpm test:coverage
+  if (result.length > 18) {
+    // Try to fit more by using shorter separators
+    const compactResult = segments.map(s => {
+      if (s.includes("-")) {
+        const [start, end] = s.split("-");
+        // If range is small, just show start
+        if (parseInt(end) - parseInt(start) <= 2) {
+          return s;
+        }
+        // For larger ranges, show start-end
+        return s;
+      }
+      return s;
+    }).join(", ");
+    
+    if (compactResult.length <= 18) {
+      return compactResult;
     }
+    
+    // If still too long, truncate with ellipsis
+    return result.substring(0, 15) + "...";
   }
-  if (file.uncoveredSections.length > 0) {
-    const segments = file.uncoveredSections.map(s => `${s.start}-${s.end}`).join(", ");
-    parts.push(`  Uncovered: ${segments}`);
-  }
-  return parts.join("\n");
+  
+  return result;
 }
 
 

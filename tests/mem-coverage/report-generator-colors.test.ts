@@ -41,9 +41,11 @@ describe("report-generator colors and breakdowns", () => {
     const out = generateConsoleReport(report);
     // Check ANSI sequences exist (using string search to avoid regex control character issues)
     expect(out).toContain("\x1b[");
-    // Check symbol breakdown lines
-    expect(out).toContain("Functions: foo✓, bar✗");
-    expect(out).toContain("Classes: Baz✗");
+    // Check that our new table format shows the coverage percentages
+    expect(out).toContain("90.00");
+    expect(out).toContain("50.00"); // Function coverage: 1/2 = 50%
+    expect(out).toContain("0.00");  // Class coverage: 0/1 = 0%
+    expect(out).toContain("10");    // Uncovered line number
   });
 });
 

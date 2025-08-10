@@ -26,11 +26,13 @@ describe("report-generator", () => {
     const output = generateConsoleReport(report);
     expect(output).toContain("Documentation Coverage Report");
     expect(output).toContain("Summary:");
-    expect(output).toContain("Files:");
+    expect(output).toContain("60.00%");
+    expect(output).toContain("60/100");
+    expect(output).toContain("Files: 2");
     expect(output).toContain("Recommendations:");
     expect(output).toContain("src/a.ts");
-    expect(output).toContain("20.00%");
-    expect(output).toContain("Symbols: functions 1/2, classes 0/1");
+    expect(output).toContain("20.00");
+    expect(output).toContain("11-50");
   });
 
   it("renders an all-covered scenario (100%)", () => {
@@ -51,7 +53,7 @@ describe("report-generator", () => {
     };
     const output = generateConsoleReport(report);
     expect(output).toContain("100.00%");
-    expect(output).toContain("src/all.ts");
+    expect(output).toContain("all.ts");
   });
 
   it("renders a none-covered scenario (0%)", () => {
@@ -72,8 +74,8 @@ describe("report-generator", () => {
     };
     const output = generateConsoleReport(report);
     expect(output).toContain("0.00%");
-    expect(output).toContain("src/none.ts");
-    expect(output).toContain("Uncovered: 1-10");
+    expect(output).toContain("none.ts");
+    expect(output).toContain("1-10");
   });
 });
 
