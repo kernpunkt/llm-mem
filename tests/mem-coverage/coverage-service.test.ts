@@ -40,7 +40,7 @@ describe("CoverageService", () => {
     // @ts-expect-error override private method
     svc.populateTotals = vi.fn();
 
-    const report = await svc.generateReport({ threshold: 80 });
+    const report = await svc.generateReport({ threshold: 80, scanSourceFiles: false });
     expect(report.summary.totalFiles).toBe(2);
     expect(report.summary.totalLines).toBe(50);
     expect(report.summary.coveredLines).toBe(10 + 11 + 1); // 1-10 (10 lines), 20-30 (11), 5-5 (1)
@@ -57,7 +57,7 @@ describe("CoverageService", () => {
     (svc as any).cachedTotals.set("src/whole.ts", 25);
     // @ts-expect-error override private method
     svc.populateTotals = vi.fn();
-    const report = await svc.generateReport({});
+    const report = await svc.generateReport({ scanSourceFiles: false });
     const file = report.files.find(f => f.path === "src/whole.ts");
     expect(file?.coveragePercentage).toBe(100);
   });
@@ -82,7 +82,7 @@ describe("CoverageService", () => {
     await fs.mkdir(path.dirname(tmp), { recursive: true });
     await fs.writeFile(tmp, `export function a(){}\nexport class C { m(){} }\n`, "utf8");
 
-    const report = await svc.generateReport({});
+    const report = await svc.generateReport({ scanSourceFiles: false });
     const fc = report.files.find(f => f.path === "tests/tmp/sample.ts");
     expect(fc?.coveredLines).toBe(10);
     // We do not expose granular arrays in report currently, but ensure no throw occurred

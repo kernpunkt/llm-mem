@@ -6,6 +6,7 @@ import { MemoryService } from "../memory/memory-service.js";
 import { generateConsoleReport } from "./report-generator.js";
 import { BasicConfigParser } from "./config-parser.js";
 import { validateCoverageConfig, validateOptionsStrict, CoverageOptionsSchema } from "./validation.js";
+import { FileScanner } from "./file-scanner.js";
 
 export function parseArgs(argv: string[]): CoverageOptions {
   const opts: CoverageOptions = {};
@@ -18,6 +19,9 @@ export function parseArgs(argv: string[]): CoverageOptions {
     else if (arg === "--verbose") opts.verbose = true;
     else if (arg.startsWith("--memoryStorePath=")) opts.memoryStorePath = arg.split("=")[1];
     else if (arg.startsWith("--indexPath=")) opts.indexPath = arg.split("=")[1];
+    else if (arg.startsWith("--root-dir=")) opts.rootDir = arg.split("=")[1];
+    else if (arg === "--no-scan") opts.scanSourceFiles = false;
+    else if (arg === "--dry-run") opts.dryRun = true;
   }
   return opts;
 }
@@ -30,6 +34,9 @@ export function getUsageText(): string {
     `--threshold=NUMBER      Minimum coverage percentage\n` +
     `--exclude=PAT1,PAT2     File patterns to exclude\n` +
     `--include=PAT1,PAT2     File patterns to include\n` +
+    `--root-dir=PATH         Root directory for filesystem scanning\n` +
+    `--no-scan               Disable filesystem scanning (memory-only mode)\n` +
+    `--dry-run               Show what files would be scanned without processing\n` +
     `--memoryStorePath=PATH  Path to memory store\n` +
     `--indexPath=PATH        Path to search index\n` +
     `--verbose               Verbose output`
@@ -84,6 +91,35 @@ export async function runCoverageCLI(options: CoverageOptions): Promise<{ exitCo
       }
     } catch (_e) {
       // For programmatic usage, don't throw; proceed with provided options
+    }
+  }
+
+  // Handle dry-run mode
+  if (usedOptions.dryRun) {
+    try {
+      const fileScanner = new FileScanner();
+      const dryRunResult = await fileScanner.dryRunScan({
+        include: usedOptions.include || ["src/**/*.ts", "src/**/*.js"],
+        exclude: usedOptions.exclude || ["node_modules/**", "dist/**"],
+        rootDir: usedOptions.rootDir || process.cwd()
+      });
+      
+      console.log("=== DRY RUN SCAN RESULTS ===");
+      console.log(`Total source files found: ${dryRunResult.totalFiles}`);
+      console.log(`Estimated total lines: ${dryRunResult.estimatedLines.toLocaleString()}`);
+      console.log("\nSource files to be analyzed:");
+      dryRunResult.sourceFiles.forEach(file => console.log(`  ${file}`));
+      
+      if (dryRunResult.excludedFiles.length > 0) {
+        console.log("\nFiles excluded by patterns:");
+        dryRunResult.excludedFiles.forEach(file => console.log(`  ${file}`));
+      }
+      
+      console.log("\nRun without --dry-run to generate actual coverage report.");
+      return { exitCode: 0 };
+    } catch (error) {
+      console.error("Dry run failed:", error);
+      return { exitCode: 1 };
     }
   }
 

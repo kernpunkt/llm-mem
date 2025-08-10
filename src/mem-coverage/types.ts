@@ -105,6 +105,10 @@ export interface CoverageOptions {
   verbose?: boolean;
   memoryStorePath?: string;
   indexPath?: string;
+  // Filesystem scanning options
+  rootDir?: string;
+  scanSourceFiles?: boolean;
+  dryRun?: boolean;
   // Optional progress callback used by generator
   onProgress?: (current: number, total: number, filePath: string) => void;
 }
@@ -119,6 +123,9 @@ export interface CoverageConfig {
   categories?: string[];
   memoryStorePath?: string;
   indexPath?: string;
+  // Filesystem scanning options
+  rootDir?: string;
+  scanSourceFiles?: boolean;
 }
 
 /**

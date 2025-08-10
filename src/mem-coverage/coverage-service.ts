@@ -5,6 +5,7 @@ import { scanTypescriptOrJavascriptFile, toInitialFileCoverage } from "./code-sc
 import { promises as fs } from "node:fs";
 import { createReadStream } from "node:fs";
 import { validateSourceFilePathOrThrow } from "./validation.js";
+import { FileScanner } from "./file-scanner.js";
 
 export class CoverageService {
   constructor(private readonly memoryService: MemoryService) {}
@@ -34,19 +35,27 @@ export class CoverageService {
     const totalLines = this.cachedTotals.get(filePath) ?? 0;
     const fileCoverage = toInitialFileCoverage(filePath, totalLines);
 
-    // Merge all declared covered ranges for this file
-    let coveredRanges = mergeRanges(sourceEntries.flatMap(s => s.ranges));
-    // If any entry specifies file-only (no ranges), treat as full file coverage
-    if (sourceEntries.some(s => s.ranges.length === 0) && totalLines > 0) {
-      coveredRanges = [{ start: 1, end: totalLines }];
+    // Always perform AST scan to detect functions and classes, regardless of documentation status
+    let coveredRanges: Span[] = [];
+    if (sourceEntries.length > 0) {
+      // Merge all declared covered ranges for this file
+      coveredRanges = mergeRanges(sourceEntries.flatMap(s => s.ranges));
+      // If any entry specifies file-only (no ranges), treat as full file coverage
+      if (sourceEntries.some(s => s.ranges.length === 0) && totalLines > 0) {
+        coveredRanges = [{ start: 1, end: totalLines }];
+      }
+      fileCoverage.coveredSections = coveredRanges.map(r => ({ start: r.start, end: r.end, type: "export" }));
+      fileCoverage.coveredLines = coveredRanges.reduce((sum, r) => sum + (r.end - r.start + 1), 0);
+    } else {
+      // File has no documentation - set coverage to 0
+      fileCoverage.coveredSections = [];
+      fileCoverage.coveredLines = 0;
     }
-    fileCoverage.coveredSections = coveredRanges.map(r => ({ start: r.start, end: r.end, type: "export" }));
-    fileCoverage.coveredLines = coveredRanges.reduce((sum, r) => sum + (r.end - r.start + 1), 0);
 
-    // Compute uncovered as complement within [1..totalLines]
+    // Compute uncovered sections
     fileCoverage.uncoveredSections = invertRanges(coveredRanges, totalLines).map(r => ({ start: r.start, end: r.end, type: "comment" }));
 
-    // Granular analysis via AST scan
+    // Granular analysis via AST scan - ALWAYS performed
     try {
       const scan = await scanTypescriptOrJavascriptFile(filePath);
       const functions: FunctionCoverage[] = [];
@@ -100,8 +109,26 @@ export class CoverageService {
       };
     }
 
-    // Collect all files to analyze: union of keys in coverageMap (Phase 1 focuses on files referenced by sources)
-    const filePaths = Array.from(coverageMap.keys());
+    // Phase 2: Filesystem scanning to find ALL source files
+    let allSourceFiles: string[] = [];
+    if (options.scanSourceFiles !== false) { // Default to true for backward compatibility
+      try {
+        const fileScanner = new FileScanner();
+        allSourceFiles = await fileScanner.scanSourceFiles({
+          include: options.include || ["src/**/*.ts", "src/**/*.js"],
+          exclude: options.exclude || ["node_modules/**", "dist/**"],
+          rootDir: options.rootDir || process.cwd()
+        });
+      } catch (error) {
+        console.error("Filesystem scanning failed, falling back to memory-only mode:", error);
+        // Continue with memory-only mode
+      }
+    }
+
+    // Merge filesystem scan with memory store to get complete picture
+    const documentedFiles = Array.from(coverageMap.keys());
+    const allFilesToAnalyze = new Set([...allSourceFiles, ...documentedFiles]);
+    const filePaths = Array.from(allFilesToAnalyze);
 
     // Pre-scan totals for each file
     await this.populateTotals(filePaths);
@@ -113,10 +140,22 @@ export class CoverageService {
     for (let i = 0; i < filePaths.length; i++) {
       const filePath = filePaths[i];
       const entries = coverageMap.get(filePath) || [];
-      const fc = await this.analyzeFileCoverage(filePath, entries);
-      files.push(fc);
-      totalLines += fc.totalLines;
-      coveredLines += fc.coveredLines;
+      
+      // Handle files with no documentation (0% coverage)
+      if (entries.length === 0) {
+        // File exists but has no documentation - analyze as uncovered
+        const fc = await this.analyzeFileCoverage(filePath, []);
+        files.push(fc);
+        totalLines += fc.totalLines;
+        coveredLines += 0; // No covered lines for undocumented files
+      } else {
+        // File has documentation - analyze normally
+        const fc = await this.analyzeFileCoverage(filePath, entries);
+        files.push(fc);
+        totalLines += fc.totalLines;
+        coveredLines += fc.coveredLines;
+      }
+      
       // Emit progress if requested
       if (typeof options.onProgress === "function") {
         try { 
@@ -194,6 +233,31 @@ export class CoverageService {
     const classesTotal = fileReports.reduce((sum, fr) => sum + (fr.classesTotal ?? 0), 0);
     const classesCovered = fileReports.reduce((sum, fr) => sum + (fr.classesCovered ?? 0), 0);
 
+    // Calculate function and class coverage percentages with proper logic
+    // 
+    // The logic handles these scenarios:
+    // 1. No functions/classes detected AND no files covered → 0% (nothing working)
+    // 2. No functions/classes detected BUT some files covered → 100% (nothing to cover)
+    // 3. Functions/classes exist → calculate actual percentage
+    //
+    // This prevents the misleading "100% function coverage" when the project
+    // has 0% overall coverage and no functions detected.
+    const functionsCoveragePercentage = (() => {
+      if (functionsTotal === 0) {
+        // No functions detected - check if this is because no files are covered
+        return coveredLines === 0 ? 0 : 100;
+      }
+      return (functionsCovered / functionsTotal) * 100;
+    })();
+
+    const classesCoveragePercentage = (() => {
+      if (classesTotal === 0) {
+        // No classes detected - check if this is because no files are covered
+        return coveredLines === 0 ? 0 : 100;
+      }
+      return (classesCovered / classesTotal) * 100;
+    })();
+
     return {
       summary: {
         totalFiles: files.length,
@@ -206,8 +270,8 @@ export class CoverageService {
         functionsCovered,
         classesTotal,
         classesCovered,
-        functionsCoveragePercentage: functionsTotal === 0 ? 100 : (functionsCovered / functionsTotal) * 100,
-        classesCoveragePercentage: classesTotal === 0 ? 100 : (classesCovered / classesTotal) * 100,
+        functionsCoveragePercentage,
+        classesCoveragePercentage,
         scopes,
         scopeThresholdViolations,
       },
