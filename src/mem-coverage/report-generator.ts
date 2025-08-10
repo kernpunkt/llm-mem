@@ -17,7 +17,13 @@ export function generateConsoleReport(report: CoverageReport): string {
   const lines: string[] = [];
   
   // Calculate maximum filename length for consistent column width
+  // We need to consider: "All files", directory names, and individual filenames
   const maxFileNameLength = Math.max(
+    9, // "All files" length
+    ...report.files.map(file => {
+      const dir = file.path.split("/")[0] || ".";
+      return dir.length + 1; // Directory name + leading space
+    }),
     ...report.files.map(file => {
       const dir = file.path.split("/")[0] || ".";
       return file.path.replace(dir + "/", "").length;
@@ -65,7 +71,7 @@ export function generateConsoleReport(report: CoverageReport): string {
     const dirFuncPct = dirStats.functionsTotal === 0 ? 100 : (dirStats.functionsCovered / dirStats.functionsTotal) * 100;
     const dirClassPct = dirStats.classesTotal === 0 ? 100 : (dirStats.classesCovered / dirStats.classesTotal) * 100;
     
-    lines.push(` ${dir.padEnd(fileNameColumnWidth)} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(7))} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(9))} | ${summaryColor(dirFuncPct.toFixed(2).padStart(7))} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(7))} |                   `);
+    lines.push(` ${dir}${" ".repeat(fileNameColumnWidth - dir.length - 1)} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(7))} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(9))} | ${summaryColor(dirFuncPct.toFixed(2).padStart(7))} | ${summaryColor(dirStats.coveragePct.toFixed(2).padStart(7))} |                   `);
     
     // Individual files in directory
     for (const file of files) {
