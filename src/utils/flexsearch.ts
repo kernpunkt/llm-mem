@@ -47,13 +47,22 @@ export class FlexSearchManager {
   private indexPath: string;
   private isInitialized: boolean = false;
   private config: ReturnType<typeof parseFlexSearchConfig>;
+  private originalCwd: string;
 
   constructor(indexPath: string) {
     this.indexPath = indexPath;
     this.config = parseFlexSearchConfig();
     
-    // Create SQLite database instance
+    // Store the current working directory
+    this.originalCwd = process.cwd();
+    
+    // Create SQLite database instance with just the name
+    // FlexSearch will create it in the current working directory
     this.db = new Database("memory-store");
+    
+    // Log the database path for debugging
+    console.log(`FlexSearch database will be created as: memory-store in current directory`);
+    console.log(`Index path configured as: ${indexPath}`);
     
     // Create FlexSearch configuration with stopwords and environment settings
     const flexSearchConfig = {
@@ -95,16 +104,24 @@ export class FlexSearchManager {
   async initialize(): Promise<void> {
     try {
       // Ensure index directory exists
-      const indexDir = join(this.indexPath, "..");
-      await fs.mkdir(indexDir, { recursive: true });
+      await fs.mkdir(this.indexPath, { recursive: true });
+      
+      // Change to the index directory before mounting the database
+      // This ensures the SQLite file is created in the right location
+      process.chdir(this.indexPath);
       
       // Mount the database to the index
       await this.documentIndex.mount(this.db);
+      
+      // Restore the original working directory
+      process.chdir(this.originalCwd);
       
       this.isInitialized = true;
       
       // Log configuration for debugging
       console.log("FlexSearch initialized with configuration:", {
+        indexPath: this.indexPath,
+        databasePath: join(this.indexPath, "memory-store.sqlite"),
         tokenize: this.config.tokenize,
         resolution: this.config.resolution,
         depth: this.config.depth,
