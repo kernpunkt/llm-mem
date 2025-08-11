@@ -49,37 +49,33 @@ The `@llm-mem/mcp` server transforms how AI assistants work with long-term memor
 
 ```bash
 # From GitHub (recommended)
-npm install -g github:yourusername/llm-mem#main --workspace=packages/mcp
+pnpm install --save-dev github:kernpunkt/llm-mem#main
 
-# From local development
-git clone https://github.com/yourusername/llm-mem.git
-cd llm-mem
-pnpm install
-pnpm build:mcp
-npm install -g packages/mcp
+# Then use the MCP server
+node node_modules/llm-mem/packages/mcp/dist/index.js --help
 ```
 
 ### 2. Start the Server
 
 ```bash
 # Production mode (stdio transport)
-pnpm start:mcp:stdio
+node node_modules/llm-mem/packages/mcp/dist/index.js start:stdio
 
 # Development mode (HTTP transport)
-pnpm start:mcp:http
+node node_modules/llm-mem/packages/mcp/dist/index.js start:http
 
 # Custom port
-pnpm start:mcp:http --port=3001
+node node_modules/llm-mem/packages/mcp/dist/index.js start:http --port=3001
 ```
 
 ### 3. Basic Usage
 
 ```bash
 # Create your first memory
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"write_mem","arguments":{"title":"Getting Started","content":"This is my first memory using the MCP server.","category":"DOC","tags":["tutorial","first"]}}}' | node dist/index.js --transport=stdio
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"write_mem","arguments":{"title":"Getting Started","content":"This is my first memory using the MCP server.","category":"DOC","tags":["tutorial","first"]}}}' | node node_modules/llm-mem/packages/mcp/dist/index.js --transport=stdio
 
 # Search for memories
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_mem","arguments":{"query":"getting started"}}}' | node dist/index.js --transport=stdio
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_mem","arguments":{"query":"getting started"}}}' | node node_modules/llm-mem/packages/mcp/dist/index.js --transport=stdio
 ```
 
 ## 🔧 Configuration
@@ -124,7 +120,7 @@ Add to `~/.cursor/mcp.json`:
   "mcpServers": {
     "llm-mem": {
       "command": "node",
-      "args": ["/absolute/path/to/packages/mcp/dist/index.js"],
+      "args": ["/absolute/path/to/node_modules/llm-mem/packages/mcp/dist/index.js"],
       "env": {
         "MEMORY_STORE_PATH": "./memories",
         "INDEX_PATH": "./memories/index"
@@ -143,7 +139,7 @@ Add to your Claude Desktop MCP configuration:
   "mcpServers": {
     "llm-mem": {
       "command": "node",
-      "args": ["/absolute/path/to/packages/mcp/dist/index.js"]
+      "args": ["/absolute/path/to/node_modules/llm-mem/packages/mcp/dist/index.js"]
     }
   }
 }
@@ -338,13 +334,13 @@ DEBUG=* node dist/index.js --transport=stdio
 
 ```bash
 # 1. Create project documentation
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"write_mem","arguments":{"title":"Project Overview","content":"This project implements a memory management system for AI assistants.","category":"DOC","tags":["project","overview"]}}}' | node dist/index.js --transport=stdio
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"write_mem","arguments":{"title":"Project Overview","content":"This project implements a memory management system for AI assistants.","category":"DOC","tags":["project","overview"]}}}' | node node_modules/llm-mem/packages/mcp/dist/index.js --transport=stdio
 
 # 2. Add technical decisions
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"write_mem","arguments":{"title":"Use SQLite for Storage","content":"We chose SQLite for its reliability and zero-configuration setup.","category":"ADR","tags":["architecture","storage","sqlite"]}}}' | node dist/index.js --transport=stdio
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"write_mem","arguments":{"title":"Use SQLite for Storage","content":"We chose SQLite for its reliability and zero-configuration setup.","category":"ADR","tags":["architecture","storage","sqlite"]}}}' | node node_modules/llm-mem/packages/mcp/dist/index.js --transport=stdio
 
 # 3. Search for information
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_mem","arguments":{"query":"storage architecture"}}}' | node dist/index.js --transport=stdio
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_mem","arguments":{"query":"storage architecture"}}}' | node node_modules/llm-mem/packages/mcp/dist/index.js --transport=stdio
 ```
 
 ## 🤝 Contributing
@@ -366,6 +362,6 @@ This project is licensed under the MIT License - see the [LICENSE](../../LICENSE
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/llm-mem/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/llm-mem/discussions)
-- **Documentation**: [Project Wiki](https://github.com/yourusername/llm-mem/wiki)
+- **Issues**: [GitHub Issues](https://github.com/kernpunkt/llm-mem/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/kernpunkt/llm-mem/issues)
+- **Documentation**: [Project Wiki](https://github.com/kernpunkt/llm-mem/wiki)
