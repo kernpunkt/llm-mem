@@ -393,6 +393,111 @@ export function createServer(): McpServer {
   );
 
   server.tool(
+    "list_mems",
+    "Returns a JSON array of all memories with optional filtering by category, tags, and limit",
+    {
+      category: z.string().optional().describe("Filter memories by category"),
+      tags: z.array(z.string()).optional().describe("Filter memories by tags (any tag match)"),
+      limit: z.number().int().positive().optional().default(100).describe("Maximum number of memories to return")
+    },
+    async ({ category, tags, limit = 100 }) => {
+      try {
+        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        
+        const searchParams: any = { limit };
+        if (category) searchParams.category = category;
+        if (tags) searchParams.tags = tags;
+
+        const results = await memoryService.listMemories(searchParams);
+        
+        if (results.total === 0) {
+          return {
+            content: [{ type: "text", text: "No memories found matching your filter criteria." }],
+            isError: false
+          };
+        }
+
+        const formattedResults = results.memories.map((memory: any, index: number) => {
+          const tagsStr = memory.tags.length > 0 ? ` [${memory.tags.join(", ")}]` : "";
+          const categoryStr = memory.category !== "general" ? ` (${memory.category})` : "";
+          const sourcesStr = memory.sources.length > 0 ? `\n   Sources: ${memory.sources.join(", ")}` : "";
+          const linksStr = memory.links.length > 0 ? `\n   Links: ${memory.links.length} linked memories` : "";
+          return `${index + 1}. **${memory.title}**${categoryStr}${tagsStr}${sourcesStr}${linksStr}\n   Created: ${memory.created_at}\n   Updated: ${memory.updated_at}\n   Last reviewed: ${memory.last_reviewed}\n   ID: ${memory.id}\n`;
+        }).join("\n");
+
+        return {
+          content: [{ 
+            type: "text", 
+            text: `Found ${results.total} memory(ies):\n\n${formattedResults}` 
+          }],
+          isError: false
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`list_mems failed: ${msg}`);
+      }
+    }
+  );
+
+  server.tool(
+    "get_mem_stats",
+    "Returns comprehensive statistics about the memory store including counts, averages, and analysis of memory health",
+    {},
+    async () => {
+      try {
+        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        
+        const stats = await memoryService.getMemoryStatistics();
+        
+        const formattedStats = `Memory Store Statistics:
+
+📊 **Overview**
+- Total Memories: ${stats.total_memories}
+- Average Time Since Last Verification: ${stats.average_time_since_verification}
+- Average Links per Memory: ${stats.average_links_per_memory}
+- Average Tags per Memory: ${stats.average_tags_per_memory}
+- Average Memory Length: ${stats.average_memory_length_words} words
+
+🔗 **Link Analysis**
+- Orphaned Memories (no links): ${stats.orphaned_memories.length}
+- Memories with Few Links: ${stats.memories_with_few_links.length}
+- Broken Links: ${stats.broken_links.length}
+- Unidirectional Links: ${stats.unidirectional_links.length}
+
+📁 **Category Distribution**
+${Object.entries(stats.categories).map(([cat, count]) => `  - ${cat}: ${count}`).join('\n')}
+
+🏷️ **Tag Usage**
+${Object.entries(stats.tags).map(([tag, count]) => `  - ${tag}: ${count} uses`).join('\n')}
+
+📝 **Content Analysis**
+- Shortest Memories (10%): ${stats.shortest_memories.length}
+- Longest Memories (10%): ${stats.longest_memories.length}
+
+⚠️ **Memories Needing Attention**
+- Without Sources: ${stats.memories_without_sources.length}
+- Needing Verification: ${stats.memories_needing_verification.length}
+
+💡 **Recommendations**
+${stats.recommendations.join('\n')}`;
+
+        return {
+          content: [{ 
+            type: "text", 
+            text: formattedStats 
+          }],
+          isError: false
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`get_mem_stats failed: ${msg}`);
+      }
+    }
+  );
+
+  server.tool(
     "get_flexsearch_config",
     "Returns the current FlexSearch configuration including stopwords and environment settings",
     {},
@@ -825,6 +930,36 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }
                 },
                 {
+                  name: 'list_mems',
+                  description: 'Returns a JSON array of all memories with optional filtering by category, tags, and limit',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {
+                      category: {
+                        type: 'string',
+                        description: 'Filter memories by category'
+                      },
+                      tags: {
+                        type: 'array',
+                        items: { type: 'string' },
+                        description: 'Filter memories by tags (any tag match)'
+                      },
+                      limit: {
+                        type: 'number',
+                        description: 'Maximum number of memories to return'
+                      }
+                    }
+                  }
+                },
+                {
+                  name: 'get_mem_stats',
+                  description: 'Returns comprehensive statistics about the memory store including counts, averages, and analysis of memory health',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {}
+                  }
+                },
+                {
                   name: 'get_flexsearch_config',
                   description: 'Returns the current FlexSearch configuration including stopwords and environment settings',
                   inputSchema: {
@@ -1108,6 +1243,88 @@ export async function runHttp(port: number = 3000): Promise<void> {
                     isError: false
                   };
                 }
+                break;
+              }
+
+              case 'list_mems': {
+                const category = toolArgs.category as string;
+                const tags = toolArgs.tags as string[];
+                const limit = toolArgs.limit as number || 100;
+
+                const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+                const { MemoryService } = await import('./memory/memory-service.js');
+                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const results = await memoryService.listMemories({ limit, category, tags });
+
+                if (results.total === 0) {
+                  toolResult = {
+                    content: [{ type: 'text', text: "No memories found matching your filter criteria." }],
+                    isError: false
+                  };
+                } else {
+                  const formattedResults = results.memories.map((memory: any, index: number) => {
+                    const tagsStr = memory.tags.length > 0 ? ` [${memory.tags.join(", ")}]` : "";
+                    const categoryStr = memory.category !== "general" ? ` (${memory.category})` : "";
+                    const sourcesStr = memory.sources.length > 0 ? `\n   Sources: ${memory.sources.join(", ")}` : "";
+                    const linksStr = memory.links.length > 0 ? `\n   Links: ${memory.links.length} linked memories` : "";
+                    return `${index + 1}. **${memory.title}**${categoryStr}${tagsStr}${sourcesStr}${linksStr}\n   Created: ${memory.created_at}\n   Updated: ${memory.updated_at}\n   Last reviewed: ${memory.last_reviewed}\n   ID: ${memory.id}\n`;
+                  }).join("\n");
+                  toolResult = {
+                    content: [{ 
+                      type: 'text', 
+                      text: `Found ${results.total} memory(ies):\n\n${formattedResults}` 
+                    }],
+                    isError: false
+                  };
+                }
+                break;
+              }
+
+              case 'get_mem_stats': {
+                const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+                const { MemoryService } = await import('./memory/memory-service.js');
+                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const stats = await memoryService.getMemoryStatistics();
+
+                const formattedStats = `Memory Store Statistics:
+
+📊 **Overview**
+- Total Memories: ${stats.total_memories}
+- Average Time Since Last Verification: ${stats.average_time_since_verification}
+- Average Links per Memory: ${stats.average_links_per_memory}
+- Average Tags per Memory: ${stats.average_tags_per_memory}
+- Average Memory Length: ${stats.average_memory_length_words} words
+
+🔗 **Link Analysis**
+- Orphaned Memories (no links): ${stats.orphaned_memories.length}
+- Memories with Few Links: ${stats.memories_with_few_links.length}
+- Broken Links: ${stats.broken_links.length}
+- Unidirectional Links: ${stats.unidirectional_links.length}
+
+📁 **Category Distribution**
+${Object.entries(stats.categories).map(([cat, count]) => `  - ${cat}: ${count}`).join('\n')}
+
+🏷️ **Tag Usage**
+${Object.entries(stats.tags).map(([tag, count]) => `  - ${tag}: ${count} uses`).join('\n')}
+
+📝 **Content Analysis**
+- Shortest Memories (10%): ${stats.shortest_memories.length}
+- Longest Memories (10%): ${stats.longest_memories.length}
+
+⚠️ **Memories Needing Attention**
+- Without Sources: ${stats.memories_without_sources.length}
+- Needing Verification: ${stats.memories_needing_verification.length}
+
+💡 **Recommendations**
+${stats.recommendations.join('\n')}`;
+
+                toolResult = {
+                  content: [{ 
+                    type: 'text', 
+                    text: formattedStats 
+                  }],
+                  isError: false
+                };
                 break;
               }
 
