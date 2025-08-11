@@ -21,7 +21,7 @@ This project is organized as a monorepo with three main packages:
 
 ```bash
 # Clone the repository
-git clone https://github.com/kernpunkt/llm-mem.git
+git clone git@github.com:kernpunkt/llm-mem.git
 cd llm-mem
 
 # Install dependencies
@@ -60,10 +60,10 @@ You can install the entire monorepo into any Node.js project to use the CLI and 
 
 ```bash
 # Install the entire monorepo (recommended)
-pnpm install --save-dev github:kernpunkt/llm-mem#main
+pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
 
 # Or using SSH if you have access to the repository
-pnpm install --save-dev git+ssh://git@github.com/kernpunkt/llm-mem.git#main
+pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
 ```
 
 **Note**: After installation, you'll need to build the package manually. The package will be downloaded but not built automatically to ensure reliable installation.
@@ -85,7 +85,7 @@ If you encounter issues:
 4. **Build after installation** - the package needs to be built manually after installation
 
 **Installation process**:
-1. Install the package: `pnpm install --save-dev github:kernpunkt/llm-mem#main`
+1. Install the package: `pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main`
 2. Build the package: `cd node_modules/llm-mem && pnpm install && pnpm build`
 3. Rebuild sqlite3 with npm(!): `cd node_modules/llm-mem/packages/shared && npm rebuild sqlite3`
 4. Use the tools: `node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --help`
@@ -259,10 +259,10 @@ Users can install the entire monorepo directly from GitHub:
 
 ```bash
 # Install as a development dependency
-pnpm install --save-dev github:kernpunkt/llm-mem#main
+pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
 
 # Or using SSH if you have access
-pnpm install --save-dev git+ssh://git@github.com/kernpunkt/llm-mem.git#main
+pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
 ```
 
 **Features**:
@@ -276,7 +276,7 @@ For local development and testing:
 
 ```bash
 # Clone the repository
-git clone https://github.com/kernpunkt/llm-mem.git
+git clone git@github.com:kernpunkt/llm-mem.git
 cd llm-mem
 
 # Install dependencies and build

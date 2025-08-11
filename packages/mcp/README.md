@@ -49,7 +49,7 @@ The `@llm-mem/mcp` server transforms how AI assistants work with long-term memor
 
 ```bash
 # From GitHub (recommended)
-pnpm install --save-dev github:kernpunkt/llm-mem#main
+pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
 
 # Then use the MCP server
 node node_modules/llm-mem/packages/mcp/dist/index.js --help
@@ -92,23 +92,6 @@ Options:
   --indexPath=PATH          Search index location (default: ./memories/index)
 ```
 
-### Environment Variables
-
-Create a `.env` file in your project:
-
-```bash
-# Server configuration
-MCP_HTTP_PORT=3001
-MCP_HTTP_HOST=localhost
-
-# Memory store paths
-MEMORY_STORE_PATH=./my-memories
-INDEX_PATH=./my-memories/search-index
-
-# External service API keys (if needed)
-YOUR_API_KEY=your-key-here
-```
-
 ## 🔌 MCP Client Integration
 
 ### Cursor IDE Configuration
@@ -120,11 +103,11 @@ Add to `~/.cursor/mcp.json`:
   "mcpServers": {
     "llm-mem": {
       "command": "node",
-      "args": ["/absolute/path/to/node_modules/llm-mem/packages/mcp/dist/index.js"],
-      "env": {
-        "MEMORY_STORE_PATH": "./memories",
-        "INDEX_PATH": "./memories/index"
-      }
+      "args": [
+        "./node_modules/llm-mem/packages/mcp/dist/index.js",
+        "--memoryStorePath=./memories",
+        "--indexPath=./memories/index"
+      ],
     }
   }
 }

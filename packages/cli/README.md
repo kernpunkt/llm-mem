@@ -7,7 +7,7 @@ Memory coverage analysis CLI tool for LLM memory management.
 ### From GitHub (Recommended)
 ```bash
 # Install the entire monorepo
-pnpm install --save-dev github:kernpunkt/llm-mem#main
+pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
 
 # Then use the CLI tool
 node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --help
@@ -15,7 +15,7 @@ node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --help
 
 ### From Local Development
 ```bash
-git clone https://github.com/kernpunkt/llm-mem.git
+git clone git@github.com:kernpunkt/llm-mem.git
 cd llm-mem
 pnpm install
 pnpm build:cli

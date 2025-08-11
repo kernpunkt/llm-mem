@@ -8,7 +8,7 @@ This CLI tool requires the **@llm-mem/mcp** server to be running for proper func
 
 ### Setup Requirements
 
-1. **Install the MCP Server**: Install the entire monorepo using `pnpm install --save-dev github:kernpunkt/llm-mem#main`
+1. **Install the MCP Server**: Install the entire monorepo using `pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main`
 2. **Memory Store**: A memory store must be populated with documentation using the MCP server
 3. **Search Index**: The MCP server must have indexed the memories for search functionality
 
@@ -37,7 +37,7 @@ See `usage.md` in this package for detailed examples of how to:
 Install the entire monorepo:
 
 ```bash
-pnpm install --save-dev github:kernpunkt/llm-mem#main
+pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
 ```
 
 ## Usage
