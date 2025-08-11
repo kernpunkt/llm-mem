@@ -1,3 +1,2 @@
-onlyBuiltDependencies:
-  - esbuild
-  - sqlite3
+packages:
+  - 'packages/*'
