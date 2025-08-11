@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { promises as fs } from "node:fs";
 import { join } from "node:path";
-import { runCoverageCLI } from "../src/cli.js";
+import { runCoverageCLI } from "../src/mem-coverage.js";
 import { MemoryService, FileService } from "@llm-mem/shared";
 
 describe("CI/CD integration", () => {

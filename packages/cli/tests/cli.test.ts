@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { runCoverageCLI, parseArgs, getUsageText, validateOptions } from "../src/cli.js";
+import { runCoverageCLI, parseArgs, getUsageText, validateOptions } from "../src/mem-coverage.js";
 
 describe("coverage CLI", () => {
   it("runs with default options and returns exitCode 0 without threshold", async () => {

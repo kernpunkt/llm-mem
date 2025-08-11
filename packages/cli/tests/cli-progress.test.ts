@@ -27,7 +27,7 @@ vi.mock("../src/coverage-service.js", () => {
 
 describe("CLI progress", () => {
   it("emits progress lines in verbose mode when no onProgress provided", async () => {
-    const { runCoverageCLI } = await import("../src/cli.js");
+    const { runCoverageCLI } = await import("../src/mem-coverage.js");
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     const { exitCode } = await runCoverageCLI({ verbose: true, memoryStorePath: "./memories", indexPath: "./memories/index" });

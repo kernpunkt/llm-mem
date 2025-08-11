@@ -2,6 +2,36 @@
 
 Documentation coverage analysis for code, powered by the Memory System. Generates console reports highlighting undocumented files and sections with scoped thresholds.
 
+## ⚠️ Important: MCP Server Integration Required
+
+This CLI tool requires the **@llm-mem/mcp** server to be running for proper functionality. The CLI analyzes code coverage against memories stored and indexed by the MCP server.
+
+### Setup Requirements
+
+1. **Install the MCP Server**: The `@llm-mem/mcp` package must be available and configured
+2. **Memory Store**: A memory store must be populated with documentation using the MCP server
+3. **Search Index**: The MCP server must have indexed the memories for search functionality
+
+### Documentation with MCP Server
+
+To create the documentation that this CLI tool analyzes, you must use the **@llm-mem/mcp** server to:
+
+- **Store Memories**: Create and store documentation as memories in the memory store
+- **Index Content**: Build searchable indexes of your documentation
+- **Manage Categories**: Organize memories by type (DOC, ADR, CTX)
+
+The CLI tool then analyzes your code against these stored memories to determine coverage.
+
+### Usage Documentation
+
+See `usage.md` in this package for detailed examples of how to:
+- Set up the memory store
+- Create documentation memories
+- Configure the MCP server
+- Run coverage analysis
+
+> **Note**: The `usage.md` file is included in this package distribution, so you'll have access to it after installation.
+
 ## Installation
 
 Build the project:

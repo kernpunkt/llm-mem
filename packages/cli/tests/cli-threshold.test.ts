@@ -25,7 +25,7 @@ vi.mock("../src/coverage-service.js", () => {
 
 describe("coverage CLI threshold", () => {
   it("exits with code 1 and prints message when below threshold", async () => {
-    const { runCoverageCLI } = await import("../src/cli.js");
+    const { runCoverageCLI } = await import("../src/mem-coverage.js");
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const { exitCode } = await runCoverageCLI({ threshold: 80, memoryStorePath: "./memories", indexPath: "./memories/index" });
