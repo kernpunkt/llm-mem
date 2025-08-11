@@ -1,0 +1,142 @@
+/**
+ * Coverage Tool - Core Types
+ *
+ * Shared type definitions for the documentation coverage tool.
+ */
+
+export interface LineSpan {
+  start: number;
+  end: number;
+}
+
+export interface CoverageMap {
+  files: Map<string, FileCoverage>;
+  totalLines: number;
+  coveredLines: number;
+  coveragePercentage: number;
+}
+
+export interface FileCoverage {
+  path: string;
+  totalLines: number;
+  coveredLines: number;
+  uncoveredSections: LineRange[];
+  coveredSections: LineRange[];
+  functions: FunctionCoverage[];
+  classes: ClassCoverage[];
+}
+
+export type CodeElementType = "function" | "class" | "method" | "export" | "import" | "interface" | "comment";
+
+export interface LineRange extends LineSpan {
+  type: CodeElementType;
+  name?: string;
+}
+
+export interface FunctionCoverage extends LineSpan {
+  name: string;
+  isCovered: boolean;
+}
+
+export interface ClassCoverage extends LineSpan {
+  name: string;
+  isCovered: boolean;
+}
+
+export interface CoverageReport {
+  summary: CoverageSummary;
+  files: FileCoverageReport[];
+  recommendations: CoverageRecommendation[];
+  generatedAt: string;
+}
+
+export interface CoverageSummary {
+  totalFiles: number;
+  totalLines: number;
+  coveredLines: number;
+  coveragePercentage: number;
+  undocumentedFiles: string[];
+  lowCoverageFiles: string[];
+  // Optional aggregated symbol coverage (Phase 2 granular stats)
+  functionsTotal?: number;
+  functionsCovered?: number;
+  classesTotal?: number;
+  classesCovered?: number;
+  functionsCoveragePercentage?: number;
+  classesCoveragePercentage?: number;
+  // Optional scoped coverage summary keyed by scope name (e.g., "src")
+  scopes?: Array<{
+    name: string;
+    totalLines: number;
+    coveredLines: number;
+    coveragePercentage: number;
+    threshold?: number;
+  }>;
+  scopeThresholdViolations?: Array<{ scope: string; actual: number; threshold: number }>;
+}
+
+export interface FileCoverageReport {
+  path: string;
+  totalLines: number;
+  coveredLines: number;
+  coveragePercentage: number;
+  uncoveredSections: LineSpan[];
+  functionsTotal?: number;
+  functionsCovered?: number;
+  classesTotal?: number;
+  classesCovered?: number;
+  // Optional detailed symbol lists for enhanced reports
+  functionsDetails?: { name: string; isCovered: boolean }[];
+  classesDetails?: { name: string; isCovered: boolean }[];
+}
+
+export interface CoverageRecommendation {
+  file: string;
+  message: string;
+  priority: "high" | "medium" | "low";
+}
+
+export interface CoverageOptions {
+  config?: string;
+  categories?: string[];
+  threshold?: number;
+  exclude?: string[];
+  include?: string[];
+  verbose?: boolean;
+  memoryStorePath?: string;
+  indexPath?: string;
+  // Filesystem scanning options
+  rootDir?: string;
+  scanSourceFiles?: boolean;
+  dryRun?: boolean;
+  // Optional progress callback used by generator
+  onProgress?: (current: number, total: number, filePath: string) => void;
+}
+
+export interface CoverageConfig {
+  thresholds?: {
+    overall?: number;
+    [scope: string]: number | undefined; // e.g., src, tests
+  };
+  exclude?: string[];
+  include?: string[];
+  categories?: string[];
+  memoryStorePath?: string;
+  indexPath?: string;
+  // Filesystem scanning options
+  rootDir?: string;
+  scanSourceFiles?: boolean;
+}
+
+/**
+ * Parsed representation of a memory source string such as:
+ *   "src/index.ts"
+ *   "src/index.ts:10-50"
+ *   "src/index.ts:10-20,30-40"
+ */
+export interface ParsedSource {
+  filePath: string;
+  ranges: LineSpan[]; // empty => implies full file coverage
+}
+
+

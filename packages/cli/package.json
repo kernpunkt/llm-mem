@@ -1,0 +1,39 @@
+{
+  "name": "@llm-mem/cli",
+  "version": "1.0.0",
+  "description": "Memory coverage analysis CLI tool",
+  "main": "dist/mem-coverage.js",
+  "type": "module",
+  "bin": {
+    "mem-coverage": "dist/mem-coverage.js"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "usage.md"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "build": "tsc && cp src/README.md src/usage.md dist/",
+    "dev": "tsx src/mem-coverage.ts",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "start": "node dist/mem-coverage.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@llm-mem/shared": "workspace:*",
+    "glob": "^11.0.3",
+    "zod": "^3.25.76",
+    "minimatch": "^9.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.12",
+    "@vitest/coverage-v8": "3.2.4",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

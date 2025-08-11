@@ -1,0 +1,37 @@
+{
+  "name": "@llm-mem/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities and types for LLM Memory tools",
+  "main": "dist/index.js",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "flexsearch": "^0.8.205",
+    "glob": "^11.0.3",
+    "js-yaml": "^4.1.0",
+    "sqlite3": "5.1.7",
+    "uuid": "^11.1.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^24.0.12",
+    "@types/uuid": "^10.0.0",
+    "@vitest/coverage-v8": "3.2.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

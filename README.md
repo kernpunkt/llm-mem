@@ -1,174 +1,221 @@
-# 🔧 MCP Server Template
+# LLM Memory Management Tools
 
-Production-ready template with example tools including API integration, dual transport support, and modern stack (H3, Vitest, TypeScript).
+A comprehensive suite of tools for managing and analyzing LLM memory systems, built with a modular architecture.
 
----
+## 🏗️ Project Structure
 
-## ⚡ Quick Start
+This project is organized as a monorepo with three main packages:
 
-```bash
-# 1. Use this template on GitHub, then clone
-git clone https://github.com/yourusername/your-mcp-server
-cd your-mcp-server
+- **`@llm-mem/shared`** - Core utilities, memory services, and types
+- **`@llm-mem/cli`** - Command-line interface for memory coverage analysis
+- **`@llm-mem/mcp`** - MCP server for LLM integration
 
-# 2. Install and build
-pnpm i(nstall) && pnpm build
+## 🚀 Quick Start
 
-# 3. Test it works
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | pnpm start
-```
+### Prerequisites
 
-**✅ If you see tool definitions, you're ready!**
+- Node.js 24+ 
+- pnpm 10.12.4+
 
-### Essential Customization
+### Installation
 
 ```bash
-# Replace template placeholders
-sed -i '' 's/mcp-template-server/your-server-name/g' package.json src/index.ts
-sed -i '' 's/TODO: Your Name/Your Actual Name/g' package.json LICENSE
+# Clone the repository
+git clone https://github.com/yourusername/llm-mem.git
+cd llm-mem
 
-# Rebuild
+# Install dependencies
+pnpm install
+
+# Build all packages
 pnpm build
 ```
 
----
+### Using the CLI
+
+```bash
+# Run memory coverage analysis
+pnpm start:cli --help
+
+# Or install globally
+npm install -g packages/cli
+mem-coverage --help
+```
+
+### Using the MCP Server
+
+```bash
+# Start MCP server (stdio transport)
+pnpm start:mcp:stdio
+
+# Start MCP server (HTTP transport for development)
+pnpm start:mcp:http
+```
+
+## 📦 Package Details
+
+### @llm-mem/shared
+Core utilities and services used by both CLI and MCP packages.
+
+```bash
+pnpm build:shared
+pnpm test:shared
+```
+
+### @llm-mem/cli  
+Memory coverage analysis command-line tool.
+
+```bash
+pnpm build:cli
+pnpm test:cli
+pnpm start:cli
+```
+
+### @llm-mem/mcp
+MCP server for LLM integration with memory tools.
+
+```bash
+pnpm build:mcp
+pnpm test:mcp
+pnpm start:mcp:stdio
+```
 
 ## 🛠️ Development
 
-### Daily Commands
+### Available Scripts
+
 ```bash
-pnpm dev              # Development with hot-reload
-pnpm start            # Run server (stdio mode)
-pnpm start:http       # Run HTTP server for debugging
-pnpm test             # Run tests
-pnpm build            # Build for production
+# Build all packages
+pnpm build
+
+# Build specific package
+pnpm build:shared
+pnpm build:cli
+pnpm build:mcp
+
+# Development mode (watch for changes)
+pnpm dev
+
+# Run tests
+pnpm test
+
+# Linting
+pnpm lint
+pnpm lint:fix
+
+# Type checking
+pnpm typecheck
+
+# Clean build artifacts
+pnpm clean
 ```
 
-### Example Tools Included
+### Development Workflow
 
-**📝 Basic Tools:**
-- `echo` - String processing with optional formatting
-- `calculate` - Mathematical operations (add, subtract, multiply, divide)
-- `current_time` - System time in various formats
+1. **Shared Package**: Update core utilities and services
+2. **CLI Package**: Modify CLI behavior and add new commands
+3. **MCP Package**: Enhance MCP server capabilities
+4. **Testing**: Run tests across all packages
+5. **Build**: Compile all packages for distribution
 
-**🌐 API Integration Example:**
-- `get_weather` - External API calls with comprehensive error handling
+## 📚 Documentation
 
-### Environment Configuration
+- [CLI Documentation](packages/cli/README.md)
+- [MCP Server Documentation](packages/mcp/README.md)
+- [Shared Package Documentation](packages/shared/README.md)
+- [Testing Guide](TESTING.md)
 
-Create a `.env` file in your project root:
+## 🔧 Configuration
+
+### Environment Variables
+
+Create a `.env` file in the root directory:
+
 ```bash
-# Copy the example and add your keys
-cp .env.example .env
+# API keys for external services
+YOUR_API_KEY=your-key-here
 
-# Or create manually:
-echo "OPENWEATHER_API_KEY=your-actual-api-key-here" > .env
+# MCP server configuration
+MCP_HTTP_PORT=3001
+MCP_HTTP_HOST=localhost
 ```
 
-**Getting your OpenWeatherMap API key:**
-1. Visit https://openweathermap.org/api
-2. Sign up for a free account
-3. Verify your email
-4. Copy your API key from the dashboard
-5. Wait a few minutes for activation
+### Coverage Configuration
 
-**Testing the weather tool:**
-```bash
-# Test: "What's the weather in Tokyo?"
-curl -X POST http://localhost:3000/mcp \
-  -H "Content-Type: application/json" \
-  -H "Accept: application/json, text/event-stream" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_weather","arguments":{"location":"Tokyo"}}}'
+Create a `coverage.config.yaml` file for CLI usage:
+
+```yaml
+thresholds:
+  overall: 80
+  docs: 90
+  code: 75
+
+exclude:
+  - "node_modules/**"
+  - "dist/**"
+
+include:
+  - "src/**/*.ts"
+  - "docs/**/*.md"
 ```
-
----
-
-## 🔌 Client Integration
-
-### Cursor IDE
-Add to `~/.cursor/mcp.json`:
-```json
-{
-  "mcpServers": {
-    "your-server-name": {
-      "command": "node",
-      "args": ["/absolute/path/to/your-server/dist/index.js"],
-      "env": {
-        "OPENWEATHER_API_KEY": "your-actual-api-key-here"
-      }
-    }
-  }
-}
-```
-
-**Alternative using pnpm (automatically loads .env file):**
-```json
-{
-  "mcpServers": {
-    "your-server-name": {
-      "command": "pnpm",
-      "args": ["start"],
-      "cwd": "/absolute/path/to/your-server"
-    }
-  }
-}
-```
-
----
 
 ## 🧪 Testing
 
 ```bash
-# Run comprehensive test suite (104 tests)
+# Run all tests
 pnpm test
-pnpm test:coverage
+
+# Run tests for specific package
+pnpm test:shared
+pnpm test:cli
+pnpm test:mcp
+
+# Watch mode
 pnpm test:watch
 
-# Test tools locally
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | pnpm start
-
-# HTTP mode for debugging
-pnpm start:http  # Then visit http://localhost:3000/health
-./test-mcp-tools.sh # Test tools locally
+# Coverage report
+pnpm test:coverage
 ```
 
-**📖 See [TESTING.md](TESTING.md) for comprehensive testing patterns covering all parts of the template.**
+## 📦 Distribution
 
----
+### GitHub Installation
 
-## 🔧 Troubleshooting
+Users can install packages directly from GitHub:
 
-| Problem | Solution |
-|---------|----------|
-| Tools not showing | Check absolute paths in config |
-| Permission denied | Run `chmod +x dist/index.js` |
-| Module not found | Run `pnpm build` first |
-| Server won't start | Check Node.js version (needs 24+) |
+```bash
+# Install CLI only
+npm install -g github:yourusername/llm-mem#main --workspace=packages/cli
 
----
+# Install MCP server only
+npm install -g github:yourusername/llm-mem#main --workspace=packages/mcp
+```
 
-## 🔒 Security Best Practices
+### Local Development Installation
 
-For production deployments:
+```bash
+# Install CLI locally
+npm install -g packages/cli
 
-1. **Authentication**: Implement proper auth if serving over HTTP
-2. **Input Validation**: Always use Zod schemas for tool parameters
-3. **Error Handling**: Never expose internal errors to clients
-4. **Rate Limiting**: Consider rate limiting for HTTP endpoints
-5. **HTTPS**: Use HTTPS in production environments
+# Install MCP server locally
+npm install -g packages/mcp
+```
 
-**Note**: This template follows MCP 2025-06-18 specification including protocol version headers and enhanced capabilities.
+## 🤝 Contributing
 
----
-
-## 📚 Resources
-
-- [MCP Documentation](https://modelcontextprotocol.io/)
-- [TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
-- [Zod Validation](https://zod.dev/)
-
----
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) for details.
+
+## 🆘 Support
+
+- [Issues](https://github.com/yourusername/llm-mem/issues)
+- [Discussions](https://github.com/yourusername/llm-mem/discussions)
+- [Documentation](docs/)

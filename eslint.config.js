@@ -25,7 +25,16 @@ export default [
       '@typescript-eslint': tsPlugin
     },
     rules: {
-      'no-unused-vars': 'warn',
+      // Use TypeScript-aware unused vars rule and allow underscore-prefixed names
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_'
+        }
+      ],
       'no-console': ['warn', { allow: ['error', 'warn', 'log'] }],
       'no-undef': 'off' // TypeScript handles this better
     }

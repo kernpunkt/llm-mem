@@ -1,34 +1,48 @@
 {
-  "name": "mcp-template-server",
+  "name": "llm-mem",
   "version": "1.0.0",
-  "description": "MCP Server Template - A starting point for building Model Context Protocol servers",
-  "main": "index.js",
-  "type": "module",
+  "description": "LLM Memory Management Tools - MCP Server and CLI",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "engines": {
     "node": ">=24.0.0"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
-    "dev": "tsc --watch",
-    "start": "node dist/index.js",
-    "start:stdio": "node dist/index.js --transport=stdio",
-    "start:http": "node dist/index.js --transport=http",
-    "start:http:port": "node dist/index.js --transport=http --port=3001",
-    "dev:http": "tsc --watch & node dist/index.js --transport=http",
-    "test": "vitest run",
-    "test:watch": "vitest watch",
-    "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix"
+    "build": "pnpm -r build",
+    "build:shared": "pnpm --filter @llm-mem/shared build",
+    "build:cli": "pnpm --filter @llm-mem/cli build",
+    "build:mcp": "pnpm --filter @llm-mem/mcp build",
+    "dev": "pnpm -r dev",
+    "dev:shared": "pnpm --filter @llm-mem/shared dev",
+    "dev:cli": "pnpm --filter @llm-mem/cli dev",
+    "dev:mcp": "pnpm --filter @llm-mem/mcp dev",
+    "test": "pnpm -r test",
+    "test:shared": "pnpm --filter @llm-mem/shared test",
+    "test:cli": "pnpm --filter @llm-mem/cli test",
+    "test:mcp": "pnpm --filter @llm-mem/mcp test",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r clean",
+    "start:cli": "pnpm --filter @llm-mem/cli start",
+    "start:mcp": "pnpm --filter @llm-mem/mcp start",
+    "start:mcp:stdio": "pnpm --filter @llm-mem/mcp start:stdio",
+    "start:mcp:http": "pnpm --filter @llm-mem/mcp start:http"
   },
   "keywords": [
     "mcp",
     "model-context-protocol",
-    "template",
-    "server"
+    "memory",
+    "flexsearch",
+    "sqlite",
+    "llm",
+    "ai",
+    "cli",
+    "coverage"
   ],
-  "author": "TODO: Your Name",
+  "author": "Memory Tools MCP Team",
   "license": "MIT",
   "packageManager": "pnpm@10.12.4",
   "devDependencies": {
@@ -41,11 +55,5 @@
     "globals": "^16.3.0",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.15.0",
-    "dotenv": "^17.1.0",
-    "h3": "^1.15.3",
-    "zod": "^3.25.76"
   }
 }
