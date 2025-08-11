@@ -87,9 +87,11 @@ If you encounter issues:
 **Installation process**:
 1. Install the package: `pnpm install --save-dev github:kernpunkt/llm-mem#main`
 2. Build the package: `cd node_modules/llm-mem && pnpm install && pnpm build`
-3. Use the tools: `node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --help`
+3. Rebuild sqlite3 with npm(!): `cd node_modules/llm-mem/packages/shared && npm rebuild sqlite3`
+4. Use the tools: `node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --help`
 
 **Why manual build?**: The package can't automatically build itself during installation due to npm/pnpm lifecycle script limitations when installing from Git repositories.
+**Why rebuild sqlite3 with npm?**:Because the native binaries might not work in your environment and pnpm seems not to be able to rebuild the package correctly
 
 ### Alternative Installation Methods
 
