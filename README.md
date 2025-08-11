@@ -66,9 +66,38 @@ pnpm install --save-dev github:kernpunkt/llm-mem#main
 pnpm install --save-dev git+ssh://git@github.com/kernpunkt/llm-mem.git#main
 ```
 
-**Note**: The package automatically builds itself after installation using the `prepare` script.
+**Note**: The package will automatically build itself after installation using the `postinstall` script. This process may take a few minutes and will show build progress. Please be patient during the build phase.
 
-**Important**: Since this package is not published to the npm registry, we use `pnpm exec` instead of `npx` to run the tools from the locally installed package.
+### Troubleshooting Installation
+
+If you encounter issues:
+
+1. **Ensure Node.js 24+** is installed
+2. **Check pnpm availability** - the package requires pnpm for building
+3. **Verify GitHub access** - ensure you can clone the repository
+4. **Wait for build completion** - the package automatically builds after installation
+
+**Installation process**:
+1. Install the package: `pnpm install --save-dev github:kernpunkt/llm-mem#main`
+2. Wait for automatic build to complete (may take a few minutes)
+3. Use the tools: `node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --help`
+
+**If build fails**: The package will show build errors in the console. Ensure pnpm is available and you have sufficient disk space.
+
+### Alternative Installation Methods
+
+If direct GitHub installation fails or hangs:
+
+```bash
+# Clone and install locally
+git clone git@github.com:kernpunkt/llm-mem.git /tmp/llm-mem
+cd /tmp/llm-mem
+pnpm install
+pnpm build
+
+# Install from local path
+pnpm install --save-dev file:/tmp/llm-mem
+```
 
 ### Using the CLI in Your Project
 
@@ -148,30 +177,6 @@ MCP_HTTP_HOST=localhost
 # Memory store paths
 MEMORY_STORE_PATH=./my-memories
 INDEX_PATH=./my-memories/search-index
-```
-
-### Troubleshooting Installation
-
-If you encounter issues:
-
-1. **Ensure Node.js 24+** is installed
-2. **Check pnpm availability** - the package requires pnpm for building
-3. **Verify GitHub access** - ensure you can clone the repository
-4. **Check build logs** - the prepare script will show build progress
-
-### Alternative Installation Methods
-
-If direct GitHub installation fails:
-
-```bash
-# Clone and install locally
-git clone git@github.com:kernpunkt/llm-mem.git /tmp/llm-mem
-cd /tmp/llm-mem
-pnpm install
-pnpm build
-
-# Install from local path
-pnpm install --save-dev file:/tmp/llm-mem
 ```
 
 ## 📦 Package Details
