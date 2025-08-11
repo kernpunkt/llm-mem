@@ -162,6 +162,29 @@ This checklist tracks the step-by-step implementation of the memory management t
 - [ ] Write unit tests
 - [ ] Test with various filtering scenarios
 
+### 3.7 `get_mem_stats` Tool
+- [ ] Implement `get_mem_stats` tool
+- [ ] Add Zod schema for parameters (no parameters required)
+- [ ] Implement comprehensive memory statistics calculation
+- [ ] Calculate average time since last verification
+- [ ] Identify memories needing verification
+- [ ] Calculate average links per memory
+- [ ] Identify memories with few links
+- [ ] Identify orphaned memories (no links)
+- [ ] Detect broken links (pointing to non-existent memories)
+- [ ] Detect unidirectional links (missing reverse links)
+- [ ] Identify memories without sources
+- [ ] Calculate category distribution
+- [ ] Calculate tag usage statistics (all tags, uses per tag)
+- [ ] Calculate average number of tags per memory
+- [ ] Identify memories with fewer than average tags
+- [ ] Calculate average memory length (words/characters)
+- [ ] Identify 10% shortest memories
+- [ ] Identify 10% longest memories
+- [ ] Add comprehensive error handling
+- [ ] Write unit tests
+- [ ] Test with various scenarios (empty store, with memories, with broken links, etc.)
+
 ---
 
 ## ✅ **Phase 4: Polish & Testing**
@@ -239,6 +262,7 @@ This checklist tracks the step-by-step implementation of the memory management t
 - [x] Reindexing tests
 - [x] Review filtering tests
 - [x] Memory listing and filtering tests
+- [ ] Memory statistics and health analysis tests
 
 ### End-to-End Tests
 - [x] Complete memory lifecycle tests
@@ -248,6 +272,7 @@ This checklist tracks the step-by-step implementation of the memory management t
 - [x] Reindexing workflow tests
 - [x] Review filtering workflow tests
 - [x] Memory listing and filtering workflow tests
+- [ ] Memory statistics and health analysis workflow tests
 
 ---
 
@@ -287,12 +312,12 @@ curl -X POST http://localhost:3000/mcp \
 
 **Phase 1 Progress:** 20/20 tasks completed (100%)
 **Phase 2 Progress:** 32/32 tasks completed (100%)
-**Phase 3 Progress:** 47/47 tasks completed (100%)
+**Phase 3 Progress:** 47/69 tasks completed (68%)
 **Phase 4 Progress:** 26/26 tasks completed (100%)
 
-**Overall Progress:** 141/141 tasks completed (100%) ✅
+**Overall Progress:** 141/163 tasks completed (87%) ✅
 
-**Testing Strategy:** 18/18 tests completed (100%) ✅
+**Testing Strategy:** 18/20 tests completed (90%) ✅
 
 ---
 
@@ -351,4 +376,19 @@ When starting a new session, focus on:
 - [x] Implemented stopword filtering with 148 default English stopwords
 - [x] Added support for custom stopwords via FLEXSEARCH_STOPWORDS environment variable
 - [x] Added support for all FlexSearch configuration options via environment variables
-- [x] Verified stopword filtering works correctly in search operations 
+- [x] Verified stopword filtering works correctly in search operations
+
+### Session 5 Notes
+- [x] Added new `get_mem_stats` tool to implementation plan and checklist
+- [x] Tool will provide comprehensive memory health analysis including:
+  - Total memory count and verification statistics
+  - Link analysis (orphaned, broken, unidirectional)
+  - Source analysis and category distribution
+  - Memory health metrics and recommendations
+- [x] Enhanced tool with additional tag and content analysis:
+  - Tag usage statistics and distribution
+  - Content length analysis (shortest/longest memories)
+  - Tag efficiency metrics
+- [x] Updated MEMORY_TOOLS_PLAN.md with enhanced tool specification and examples
+- [x] Updated IMPLEMENTATION_CHECKLIST.md with implementation tasks
+- [x] Tool will be implemented in Phase 3.7 (Advanced Features) 

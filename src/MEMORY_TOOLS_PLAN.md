@@ -181,6 +181,120 @@ Returns the current date and time for LLMs that need temporal context.
 }
 ```
 
+### 9. **`get_mem_stats`** - Get Memory Statistics
+Returns comprehensive statistics about the memory store including counts, averages, and analysis of memory health.
+
+**Parameters:**
+- No parameters required
+
+**Returns:**
+- Total number of memories
+- Average time since last verification
+- List of memories with last verification time longer than average
+- Average number of links per memory
+- Number and list of memories with fewer than average links
+- Number and list of orphaned memories (no links)
+- Number and list of memories with broken links
+- Number and list of memories with unidirectional links
+- Number and list of memories without sources
+- List of categories used by memories
+- Number of memories per category
+- List of all tags used across memories
+- Number of uses per tag
+- Average number of tags per memory
+- List of memories with fewer than average tags
+- Average length of memories (in words/characters)
+- List of 10% shortest memories
+- List of 10% longest memories
+
+**Example:**
+```json
+{
+  "total_memories": 25,
+  "average_time_since_verification": "15.2 days",
+  "memories_needing_verification": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "title": "Old Meeting Notes",
+      "days_since_verification": 45
+    }
+  ],
+  "average_links_per_memory": 2.4,
+  "memories_with_few_links": [
+    {
+      "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+      "title": "Isolated Note",
+      "link_count": 0
+    }
+  ],
+  "orphaned_memories": [
+    {
+      "id": "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
+      "title": "Unlinked Memory"
+    }
+  ],
+  "broken_links": [
+    {
+      "id": "6ba7b812-9dad-11d1-80b4-00c04fd430c8",
+      "title": "Memory with Broken Link",
+      "broken_link_id": "non-existent-uuid"
+    }
+  ],
+  "unidirectional_links": [
+    {
+      "id": "6ba7b813-9dad-11d1-80b4-00c04fd430c8",
+      "title": "Memory with Unidirectional Link",
+      "unidirectional_link_id": "target-memory-id"
+    }
+  ],
+  "memories_without_sources": [
+    {
+      "id": "6ba7b814-9dad-11d1-80b4-00c04fd430c8",
+      "title": "Memory without Sources"
+    }
+  ],
+  "categories": {
+    "work": 12,
+    "personal": 8,
+    "research": 3,
+    "general": 2
+  },
+  "tags": {
+    "meeting": 8,
+    "goals": 6,
+    "project": 5,
+    "ideas": 4,
+    "notes": 3,
+    "planning": 2
+  },
+  "average_tags_per_memory": 2.8,
+  "memories_with_few_tags": [
+    {
+      "id": "6ba7b815-9dad-11d1-80b4-00c04fd430c8",
+      "title": "Minimally Tagged Memory",
+      "tag_count": 1
+    }
+  ],
+  "average_memory_length_words": 156,
+  "shortest_memories": [
+    {
+      "id": "6ba7b816-9dad-11d1-80b4-00c04fd430c8",
+      "title": "Very Short Note",
+      "word_count": 12,
+      "length_percentile": 5
+    }
+  ],
+  "longest_memories": [
+    {
+      "id": "6ba7b817-9dad-11d1-80b4-00c04fd430c8",
+      "title": "Comprehensive Document",
+      "word_count": 450,
+      "length_percentile": 95
+    }
+  ]
+}
+```
+
 ## 🗄️ Data Structure
 
 ### Memory Interface
@@ -374,6 +488,9 @@ it('should list all memories with optional filtering')
 
 // Test get_current_date
 it('should return current date in requested format')
+
+// Test get_mem_stats
+it('should return comprehensive memory statistics and health analysis')
 ```
 
 ## 🔒 Security Considerations
@@ -425,7 +542,7 @@ it('should return current date in requested format')
 2. **Memory Relationships**: Link related memories ✅
 3. **Memory Templates**: Predefined formats
 4. **Memory Export**: Multiple formats (JSON, CSV, PDF)
-5. **Memory Analytics**: Usage statistics
+5. **Memory Analytics**: Usage statistics ✅ (get_mem_stats tool)
 6. **Memory Sharing**: Collaborative features
 7. **Memory Versioning**: Track changes over time
 8. **Memory Encryption**: Secure sensitive data
@@ -534,6 +651,22 @@ curl -X POST http://localhost:3000/mcp \
       "arguments": {
         "format": "iso"
       }
+    }
+  }'
+```
+
+### Get Memory Statistics
+```bash
+# Get comprehensive memory statistics and health analysis
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 6,
+    "method": "tools/call",
+    "params": {
+      "name": "get_mem_stats",
+      "arguments": {}
     }
   }'
 ```
