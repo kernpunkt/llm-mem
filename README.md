@@ -66,7 +66,14 @@ pnpm install --save-dev github:kernpunkt/llm-mem#main
 pnpm install --save-dev git+ssh://git@github.com/kernpunkt/llm-mem.git#main
 ```
 
-**Note**: The package will automatically build itself after installation using the `postinstall` script. This process may take a few minutes and will show build progress. Please be patient during the build phase.
+**Note**: After installation, you'll need to build the package manually. The package will be downloaded but not built automatically to ensure reliable installation.
+
+**After installation, build the package**:
+```bash
+cd node_modules/llm-mem
+pnpm install
+pnpm build
+```
 
 ### Troubleshooting Installation
 
@@ -75,14 +82,14 @@ If you encounter issues:
 1. **Ensure Node.js 24+** is installed
 2. **Check pnpm availability** - the package requires pnpm for building
 3. **Verify GitHub access** - ensure you can clone the repository
-4. **Wait for build completion** - the package automatically builds after installation
+4. **Build after installation** - the package needs to be built manually after installation
 
 **Installation process**:
 1. Install the package: `pnpm install --save-dev github:kernpunkt/llm-mem#main`
-2. Wait for automatic build to complete (may take a few minutes)
+2. Build the package: `cd node_modules/llm-mem && pnpm install && pnpm build`
 3. Use the tools: `node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --help`
 
-**If build fails**: The package will show build errors in the console. Ensure pnpm is available and you have sufficient disk space.
+**Why manual build?**: The package can't automatically build itself during installation due to npm/pnpm lifecycle script limitations when installing from Git repositories.
 
 ### Alternative Installation Methods
 
@@ -222,68 +229,6 @@ pnpm build:mcp
 
 # Development mode (watch for changes)
 pnpm dev
-
-# Run tests
-pnpm test
-
-# Linting
-pnpm lint
-pnpm lint:fix
-
-# Type checking
-pnpm typecheck
-
-# Clean build artifacts
-pnpm clean
-```
-
-### Development Workflow
-
-1. **Shared Package**: Update core utilities and services
-2. **CLI Package**: Modify CLI behavior and add new commands
-3. **MCP Package**: Enhance MCP server capabilities
-4. **Testing**: Run tests across all packages
-5. **Build**: Compile all packages for distribution
-
-## 📚 Documentation
-
-- [CLI Documentation](packages/cli/README.md)
-- [MCP Server Documentation](packages/mcp/README.md)
-- [Shared Package Documentation](packages/shared/README.md)
-- [Testing Guide](TESTING.md)
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Create a `.env` file in the root directory:
-
-```bash
-# API keys for external services
-YOUR_API_KEY=your-key-here
-
-# MCP server configuration
-MCP_HTTP_PORT=3001
-MCP_HTTP_HOST=localhost
-```
-
-### Coverage Configuration
-
-Create a `coverage.config.yaml` file for CLI usage:
-
-```yaml
-thresholds:
-  overall: 80
-  docs: 90
-  code: 75
-
-exclude:
-  - "node_modules/**"
-  - "dist/**"
-
-include:
-  - "src/**/*.ts"
-  - "docs/**/*.md"
 ```
 
 ## 🧪 Testing
@@ -319,9 +264,8 @@ pnpm install --save-dev git+ssh://git@github.com/kernpunkt/llm-mem.git#main
 ```
 
 **Features**:
-- ✅ Automatically builds after installation
 - ✅ Includes all packages (CLI, MCP, Shared)
-- ✅ No manual build steps required
+- ✅ Simple installation process
 - ✅ Works with pnpm, npm, and yarn
 
 ### Local Development Installation
@@ -344,7 +288,7 @@ pnpm install -g packages/mcp
 
 ### Package-Specific Usage
 
-After installation, you can use individual packages:
+After installation and building, you can use individual packages:
 
 ```bash
 # CLI tools
@@ -373,5 +317,5 @@ MIT License - see [LICENSE](LICENSE) for details.
 ## 🆘 Support
 
 - [Issues](https://github.com/kernpunkt/llm-mem/issues)
-- [Discussions](https://github.com/kernpunkt/llm-mem/discussions)
+- [Discussions](https://github.com/kernpunkt/llm-mem/issues)
 - [Documentation](docs/)
