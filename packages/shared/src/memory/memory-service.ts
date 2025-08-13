@@ -418,13 +418,18 @@ export class MemoryService {
     if (updates.sources !== undefined) frontmatterUpdates.sources = updates.sources;
     frontmatterUpdates.updated_at = new Date().toISOString();
 
-    // Update the file with potential renaming
-    const { newFilePath } = await this.fileService.updateMemoryFileWithRename(
+    // Update the file with potential renaming and wiki-style link updates
+    const { newFilePath, updatedLinkedMemories } = await this.fileService.updateMemoryFileWithRename(
       existing.file_path,
       frontmatterUpdates,
       id,
       updates.content
     );
+
+    // Log information about wiki-style link updates if any occurred
+    if (updatedLinkedMemories.length > 0) {
+      console.log(`Updated wiki-style links in ${updatedLinkedMemories.length} linked memories:`, updatedLinkedMemories);
+    }
 
     // Re-read the updated memory
     const updated = await this.readMemory({ id });

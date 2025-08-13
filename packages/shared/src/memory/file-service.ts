@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import { ensureDirectoryExists, generateMemoryFilePath, listMemoryFiles, parseMemoryFilePath, slugify } from "../utils/file-system.js";
 import { createFrontmatter, parseFrontmatter, serializeFrontmatter, updateFrontmatter } from "../utils/yaml.js";
+import { updateWikiLinks } from "../utils/wiki-links.js";
 
 export interface FileServiceConfig {
   notestorePath: string;
@@ -86,7 +87,7 @@ export class FileService {
   /**
    * Updates a memory file with potential renaming if category or title changes.
    * This method handles the case where the filename needs to change to reflect
-   * updated metadata.
+   * updated metadata, and also updates wiki-style links in linked memories.
    */
   async updateMemoryFileWithRename(
     currentFilePath: string,
@@ -100,7 +101,7 @@ export class FileService {
     }>,
     memoryId: string,
     newContent?: string
-  ): Promise<{ newFilePath: string; markdown: string }> {
+  ): Promise<{ newFilePath: string; markdown: string; updatedLinkedMemories: string[] }> {
     // Read current file to get existing metadata
     const existing = await fs.readFile(currentFilePath, "utf-8");
     const { frontmatter: currentFrontmatter } = parseFrontmatter(existing);
@@ -108,6 +109,9 @@ export class FileService {
     // Determine if we need to rename the file
     const needsRename = (updates.title !== undefined && updates.title !== currentFrontmatter.title) ||
                        (updates.category !== undefined && updates.category !== currentFrontmatter.category);
+    
+    // Track which linked memories were updated
+    const updatedLinkedMemories: string[] = [];
     
     if (!needsRename) {
       // No rename needed, just update content
@@ -120,7 +124,7 @@ export class FileService {
         : updatedMarkdown;
       
       await fs.writeFile(currentFilePath, finalMarkdown, "utf-8");
-      return { newFilePath: currentFilePath, markdown: finalMarkdown };
+      return { newFilePath: currentFilePath, markdown: finalMarkdown, updatedLinkedMemories };
     }
     
     // Rename needed - determine new path
@@ -140,6 +144,38 @@ export class FileService {
       }
     }
     
+    // Update wiki-style links in linked memories if title changed
+    if (updates.title !== undefined && updates.title !== currentFrontmatter.title) {
+      const oldTitle = currentFrontmatter.title;
+      const newTitleValue = updates.title;
+      
+      // Get the current links array
+      const currentLinks = currentFrontmatter.links || [];
+      
+      // Update wiki-style links in each linked memory
+      for (const linkedMemoryId of currentLinks) {
+        try {
+          const linkedMemory = await this.readMemoryFileById(linkedMemoryId);
+          if (linkedMemory) {
+            // Check if the linked memory contains wiki-style links to the old title
+            if (linkedMemory.content.includes(`[[${oldTitle}]]`) || 
+                linkedMemory.content.includes(`[[${oldTitle}|`)) {
+              
+              // Update the wiki-style links in the content
+              const updatedContent = updateWikiLinks(linkedMemory.content, oldTitle, newTitleValue);
+              
+              // Update the linked memory file
+              await this.updateMemoryFile(linkedMemory.file_path, {}, updatedContent);
+              updatedLinkedMemories.push(linkedMemoryId);
+            }
+          }
+        } catch (error) {
+          // Log error but continue with other linked memories
+          console.error(`Failed to update wiki-style links in linked memory ${linkedMemoryId}:`, error);
+        }
+      }
+    }
+    
     // Create updated content
     const updatedMarkdown = updateFrontmatter(existing, updates as any);
     const finalMarkdown = typeof newContent === "string"
@@ -155,7 +191,7 @@ export class FileService {
     // Remove old file
     await fs.unlink(currentFilePath);
     
-    return { newFilePath, markdown: finalMarkdown };
+    return { newFilePath, markdown: finalMarkdown, updatedLinkedMemories };
   }
 
   async updateMemoryFile(filePath: string, updates: Partial<{
