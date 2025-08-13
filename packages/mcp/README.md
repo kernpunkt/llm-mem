@@ -42,6 +42,7 @@ The `@llm-mem/mcp` server transforms how AI assistants work with long-term memor
 - **`get_current_date`** - Date/time utilities for timestamps
 - **`get_usage_info`** - Comprehensive usage documentation
 - **`get_flexsearch_config`** - Current search configuration
+- **`get_allowed_values`** - View current category and tag restrictions
 
 ## 🚀 Quick Start
 
@@ -49,37 +50,36 @@ The `@llm-mem/mcp` server transforms how AI assistants work with long-term memor
 
 ```bash
 # From GitHub (recommended)
-npm install -g github:yourusername/llm-mem#main --workspace=packages/mcp
-
-# From local development
-git clone https://github.com/yourusername/llm-mem.git
-cd llm-mem
+pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
+#After installation, build the package**:
+cd node_modules/llm-mem
 pnpm install
-pnpm build:mcp
-npm install -g packages/mcp
+pnpm build
+# Then use the MCP server
+node node_modules/llm-mem/packages/mcp/dist/index.js --help
 ```
 
 ### 2. Start the Server
 
 ```bash
 # Production mode (stdio transport)
-pnpm start:mcp:stdio
+node node_modules/llm-mem/packages/mcp/dist/index.js start:stdio
 
 # Development mode (HTTP transport)
-pnpm start:mcp:http
+node node_modules/llm-mem/packages/mcp/dist/index.js start:http
 
 # Custom port
-pnpm start:mcp:http --port=3001
+node node_modules/llm-mem/packages/mcp/dist/index.js start:http --port=3001
 ```
 
 ### 3. Basic Usage
 
 ```bash
 # Create your first memory
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"write_mem","arguments":{"title":"Getting Started","content":"This is my first memory using the MCP server.","category":"DOC","tags":["tutorial","first"]}}}' | node dist/index.js --transport=stdio
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"write_mem","arguments":{"title":"Getting Started","content":"This is my first memory using the MCP server.","category":"DOC","tags":["tutorial","first"]}}}' | node node_modules/llm-mem/packages/mcp/dist/index.js --transport=stdio
 
 # Search for memories
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_mem","arguments":{"query":"getting started"}}}' | node dist/index.js --transport=stdio
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_mem","arguments":{"query":"getting started"}}}' | node node_modules/llm-mem/packages/mcp/dist/index.js --transport=stdio
 ```
 
 ## 🔧 Configuration
@@ -98,20 +98,70 @@ Options:
 
 ### Environment Variables
 
-Create a `.env` file in your project:
+Create a `.env` file in your project root to configure the server:
 
 ```bash
-# Server configuration
-MCP_HTTP_PORT=3001
-MCP_HTTP_HOST=localhost
+# Memory Storage Configuration
+MEMORY_STORE_PATH=./memories
+MEMORY_INDEX_PATH=./memories/index
 
-# Memory store paths
-MEMORY_STORE_PATH=./my-memories
-INDEX_PATH=./my-memories/search-index
+# Category and Tag Restrictions (Optional)
+# If not set, any categories and tags are allowed
+# If set, only the specified values are allowed (comma-separated)
 
-# External service API keys (if needed)
-YOUR_API_KEY=your-key-here
+# Example: Restrict categories to specific values
+ALLOWED_CATEGORIES=work,personal,research,ideas
+
+# Example: Restrict tags to specific values  
+ALLOWED_TAGS=important,urgent,review,archive
 ```
+
+**Category and Tag Validation:**
+- When `ALLOWED_CATEGORIES` is set, only the specified categories can be used
+- When `ALLOWED_TAGS` is set, only the specified tags can be used
+- Values are comma-separated and whitespace is automatically trimmed
+- If not set, any categories and tags are allowed (default behavior)
+- Use the `get_allowed_values` tool to see current restrictions
+
+### FlexSearch Configuration
+
+The server uses FlexSearch for fast, semantic search capabilities. You can customize the search behavior using these environment variables:
+
+#### Tokenization Options
+- **`FLEXSEARCH_TOKENIZE`** - Tokenization strategy (`strict`, `forward`, `reverse`, `full`, `tolerant`)
+- **`FLEXSEARCH_RESOLUTION`** - Search precision (1-20, higher = more precise but slower)
+- **`FLEXSEARCH_DEPTH`** - Search thoroughness (1-10, higher = more thorough but slower)
+- **`FLEXSEARCH_THRESHOLD`** - Match leniency (0-10, lower = more lenient)
+- **`FLEXSEARCH_LIMIT`** - Maximum search results (1-1000)
+- **`FLEXSEARCH_SUGGEST`** - Enable search suggestions
+
+#### Encoder Options
+- **`FLEXSEARCH_CHARSET`** - Character encoding strategy (`exact`, `normalize`, `latinbalance`, etc.)
+- **`FLEXSEARCH_LANGUAGE`** - Language optimizations (`en`, `de`, `fr`)
+- **`FLEXSEARCH_STOPWORDS`** - JSON array of stopwords to filter out
+- **`FLEXSEARCH_MIN_LENGTH`** - Minimum term length to index (1-10)
+- **`FLEXSEARCH_MAX_LENGTH`** - Maximum term length to index (5-50)
+
+#### Context Search Options
+- **`FLEXSEARCH_CONTEXT`** - Enable context-aware search (finds terms near each other)
+- **`FLEXSEARCH_CONTEXT_RESOLUTION`** - Context search precision (1-20)
+- **`FLEXSEARCH_CONTEXT_DEPTH`** - Context search depth (1-10)
+- **`FLEXSEARCH_CONTEXT_BIDIRECTIONAL`** - Enable bidirectional context search
+
+**Example FlexSearch Configuration:**
+```bash
+# Optimize for German language with context search
+FLEXSEARCH_LANGUAGE=de
+FLEXSEARCH_CONTEXT=true
+FLEXSEARCH_RESOLUTION=12
+FLEXSEARCH_DEPTH=4
+
+# Custom stopwords for technical documentation
+FLEXSEARCH_STOPWORDS=["the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by"]
+```
+
+**View Current Configuration:**
+Use the `get_flexsearch_config` tool to see your current FlexSearch settings.
 
 ## 🔌 MCP Client Integration
 
@@ -124,11 +174,11 @@ Add to `~/.cursor/mcp.json`:
   "mcpServers": {
     "llm-mem": {
       "command": "node",
-      "args": ["/absolute/path/to/packages/mcp/dist/index.js"],
-      "env": {
-        "MEMORY_STORE_PATH": "./memories",
-        "INDEX_PATH": "./memories/index"
-      }
+      "args": [
+        "./node_modules/llm-mem/packages/mcp/dist/index.js",
+        "--memoryStorePath=./memories",
+        "--indexPath=./memories/index"
+      ],
     }
   }
 }
@@ -143,7 +193,7 @@ Add to your Claude Desktop MCP configuration:
   "mcpServers": {
     "llm-mem": {
       "command": "node",
-      "args": ["/absolute/path/to/packages/mcp/dist/index.js"]
+      "args": ["/absolute/path/to/node_modules/llm-mem/packages/mcp/dist/index.js"]
     }
   }
 }
@@ -177,12 +227,6 @@ Can include:
 - Lists
 - And more...
 ```
-
-### Memory Categories
-
-- **`DOC`** - Documentation and guides
-- **`ADR`** - Architecture Decision Records
-- **`CTX`** - Context and background information
 
 ## 🔍 Search Capabilities
 
@@ -324,27 +368,19 @@ pnpm lint:mcp:fix
 - Verify memory exists in store
 - Check category and tag filters
 
-### Debug Mode
-
-Enable verbose logging by setting environment variables:
-
-```bash
-DEBUG=* node dist/index.js --transport=stdio
-```
-
 ## 📖 Examples
 
 ### Creating a Knowledge Base
 
 ```bash
 # 1. Create project documentation
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"write_mem","arguments":{"title":"Project Overview","content":"This project implements a memory management system for AI assistants.","category":"DOC","tags":["project","overview"]}}}' | node dist/index.js --transport=stdio
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"write_mem","arguments":{"title":"Project Overview","content":"This project implements a memory management system for AI assistants.","category":"DOC","tags":["project","overview"]}}}' | node node_modules/llm-mem/packages/mcp/dist/index.js --transport=stdio
 
 # 2. Add technical decisions
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"write_mem","arguments":{"title":"Use SQLite for Storage","content":"We chose SQLite for its reliability and zero-configuration setup.","category":"ADR","tags":["architecture","storage","sqlite"]}}}' | node dist/index.js --transport=stdio
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"write_mem","arguments":{"title":"Use SQLite for Storage","content":"We chose SQLite for its reliability and zero-configuration setup.","category":"ADR","tags":["architecture","storage","sqlite"]}}}' | node node_modules/llm-mem/packages/mcp/dist/index.js --transport=stdio
 
 # 3. Search for information
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_mem","arguments":{"query":"storage architecture"}}}' | node dist/index.js --transport=stdio
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_mem","arguments":{"query":"storage architecture"}}}' | node node_modules/llm-mem/packages/mcp/dist/index.js --transport=stdio
 ```
 
 ## 🤝 Contributing
@@ -366,6 +402,6 @@ This project is licensed under the MIT License - see the [LICENSE](../../LICENSE
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/llm-mem/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/llm-mem/discussions)
-- **Documentation**: [Project Wiki](https://github.com/yourusername/llm-mem/wiki)
+- **Issues**: [GitHub Issues](https://github.com/kernpunkt/llm-mem/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/kernpunkt/llm-mem/issues)
+- **Documentation**: [Project Wiki](https://github.com/kernpunkt/llm-mem/wiki)

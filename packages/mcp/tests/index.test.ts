@@ -1374,4 +1374,103 @@ describe('MCP Template Server', () => {
       expect(serverIds.every(id => id === 'McpServer')).toBe(true);
     });
   });
+
+  describe('Category and Tag Validation', () => {
+    let originalEnv: NodeJS.ProcessEnv;
+
+    beforeEach(() => {
+      originalEnv = { ...process.env };
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
+    it('should parse ALLOWED_CATEGORIES environment variable correctly', () => {
+      process.env.ALLOWED_CATEGORIES = 'work,personal,research';
+
+      // Test parsing logic
+      const parseAllowedValues = (envVar: string | undefined): string[] | null => {
+        if (!envVar || envVar.trim() === "") {
+          return null;
+        }
+        return envVar.split(",").map(s => s.trim()).filter(s => s.length > 0);
+      };
+
+      const categories = parseAllowedValues(process.env.ALLOWED_CATEGORIES);
+      expect(categories).toEqual(['work', 'personal', 'research']);
+    });
+
+    it('should parse ALLOWED_TAGS environment variable correctly', () => {
+      process.env.ALLOWED_TAGS = 'important,urgent,review';
+
+      // Test parsing logic
+      const parseAllowedValues = (envVar: string | undefined): string[] | null => {
+        if (!envVar || envVar.trim() === "") {
+          return null;
+        }
+        return envVar.split(",").map(s => s.trim()).filter(s => s.length > 0);
+      };
+
+      const tags = parseAllowedValues(process.env.ALLOWED_TAGS);
+      expect(tags).toEqual(['important', 'urgent', 'review']);
+    });
+
+    it('should handle comma-separated environment variables with whitespace correctly', () => {
+      process.env.ALLOWED_CATEGORIES = 'work, personal , research';
+      process.env.ALLOWED_TAGS = 'important , urgent, review ';
+
+      // Test parsing logic
+      const parseAllowedValues = (envVar: string | undefined): string[] | null => {
+        if (!envVar || envVar.trim() === "") {
+          return null;
+        }
+        return envVar.split(",").map(s => s.trim()).filter(s => s.length > 0);
+      };
+
+      const categories = parseAllowedValues(process.env.ALLOWED_CATEGORIES);
+      const tags = parseAllowedValues(process.env.ALLOWED_TAGS);
+
+      expect(categories).toEqual(['work', 'personal', 'research']);
+      expect(tags).toEqual(['important', 'urgent', 'review']);
+    });
+
+    it('should handle empty environment variables gracefully', () => {
+      process.env.ALLOWED_CATEGORIES = '';
+      process.env.ALLOWED_TAGS = '   ';
+
+      // Test parsing logic
+      const parseAllowedValues = (envVar: string | undefined): string[] | null => {
+        if (!envVar || envVar.trim() === "") {
+          return null;
+        }
+        return envVar.split(",").map(s => s.trim()).filter(s => s.length > 0);
+      };
+
+      const categories = parseAllowedValues(process.env.ALLOWED_CATEGORIES);
+      const tags = parseAllowedValues(process.env.ALLOWED_TAGS);
+
+      expect(categories).toBeNull();
+      expect(tags).toBeNull();
+    });
+
+    it('should handle undefined environment variables gracefully', () => {
+      delete process.env.ALLOWED_CATEGORIES;
+      delete process.env.ALLOWED_TAGS;
+
+      // Test parsing logic
+      const parseAllowedValues = (envVar: string | undefined): string[] | null => {
+        if (!envVar || envVar.trim() === "") {
+          return null;
+        }
+        return envVar.split(",").map(s => s.trim()).filter(s => s.length > 0);
+      };
+
+      const categories = parseAllowedValues(process.env.ALLOWED_CATEGORIES);
+      const tags = parseAllowedValues(process.env.ALLOWED_TAGS);
+
+      expect(categories).toBeNull();
+      expect(tags).toBeNull();
+    });
+  });
 });

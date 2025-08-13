@@ -8,7 +8,7 @@ This CLI tool requires the **@llm-mem/mcp** server to be running for proper func
 
 ### Setup Requirements
 
-1. **Install the MCP Server**: The `@llm-mem/mcp` package must be available and configured
+1. **Install the MCP Server**: Install the entire monorepo using `pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main`
 2. **Memory Store**: A memory store must be populated with documentation using the MCP server
 3. **Search Index**: The MCP server must have indexed the memories for search functionality
 
@@ -34,28 +34,17 @@ See `usage.md` in this package for detailed examples of how to:
 
 ## Installation
 
-Build the project:
+Install the entire monorepo:
 
 ```bash
-pnpm build
-```
-
-Run in dev mode:
-
-```bash
-pnpm mem-coverage:dev -- --help
-```
-
-Run from dist:
-
-```bash
-pnpm mem-coverage -- --help
+pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
 ```
 
 ## Usage
 
 ```bash
-mem-coverage [options]
+# Run the CLI tool from the installed package
+node node_modules/llm-mem/packages/cli/dist/mem-coverage.js [options]
 ```
 
 ### Options
@@ -67,6 +56,23 @@ mem-coverage [options]
 - `--memoryStorePath=PATH`: Path to memory store (default `./memories`)
 - `--indexPath=PATH`: Path to search index (default `./memories/index`)
 - `--verbose`: Verbose output and progress
+
+## Package.json Scripts
+
+Add this to your package.json for easier usage:
+
+```json
+{
+  "scripts": {
+    "mem-coverage": "node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --config=./coverage.config.yaml"
+  }
+}
+```
+
+Then run:
+```bash
+pnpm run mem-coverage
+```
 
 ## Configuration
 

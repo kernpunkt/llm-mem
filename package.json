@@ -10,6 +10,8 @@
     "node": ">=24.0.0"
   },
   "scripts": {
+    "prepare": "echo 'Package downloaded. Please run: cd node_modules/llm-mem && pnpm install && pnpm build'",
+    "postinstall": "echo 'Package installed. Please run: cd node_modules/llm-mem && pnpm install && pnpm build'",
     "build": "pnpm -r build",
     "build:shared": "pnpm --filter @llm-mem/shared build",
     "build:cli": "pnpm --filter @llm-mem/cli build",

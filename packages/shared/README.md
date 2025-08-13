@@ -2,6 +2,17 @@
 
 Shared utilities and types for LLM Memory tools.
 
+## Installation
+
+```bash
+# Install the entire monorepo
+pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
+#After installation, build the package**:
+cd node_modules/llm-mem
+pnpm install
+pnpm build
+```
+
 ## Features
 
 - **Memory Services**: Core memory management functionality
@@ -19,6 +30,8 @@ const memoryService = new MemoryService({
   indexPath: './memories/index'
 });
 ```
+
+**Note**: The `@llm-mem/shared` import works because it's resolved to the actual file path during TypeScript compilation, not as a package name lookup.
 
 ## Development
 

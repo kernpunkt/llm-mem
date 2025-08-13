@@ -184,5 +184,370 @@ End of content`;
     expect(markdownMemory.content).toContain("**Bold text**");
     expect(markdownMemory.content).toContain("> Blockquote");
   });
+
+  it("should update memory content without renaming when only content changes", async () => {
+    const memory = await service.createMemory({
+      title: "Update Test Memory",
+      content: "# Original Content\n\nThis is the original content.",
+      tags: ["test", "update"],
+      category: "testing"
+    });
+
+    const originalFilePath = memory.file_path;
+    
+    // Update only content
+    const updated = await service.updateMemory({
+      id: memory.id,
+      content: "# Updated Content\n\nThis is the updated content with new information."
+    });
+
+    expect(updated.content).toContain("Updated Content");
+    expect(updated.content).toContain("new information");
+    expect(updated.file_path).toBe(originalFilePath); // File path should not change
+    expect(updated.title).toBe("Update Test Memory"); // Title should remain the same
+    expect(updated.category).toBe("testing"); // Category should remain the same
+  });
+
+  it("should rename file when title changes", async () => {
+    const memory = await service.createMemory({
+      title: "Original Title",
+      content: "# Original Content\n\nContent here.",
+      tags: ["test", "rename"],
+      category: "testing"
+    });
+
+    const originalFilePath = memory.file_path;
+    
+    // Update title
+    const updated = await service.updateMemory({
+      id: memory.id,
+      title: "New Updated Title"
+    });
+
+    expect(updated.title).toBe("New Updated Title");
+    expect(updated.file_path).not.toBe(originalFilePath); // File path should change
+    expect(updated.file_path).toContain("new-updated-title"); // New path should contain new title
+    expect(updated.category).toBe("testing"); // Category should remain the same
+    
+    // Verify old file doesn't exist and new file does
+    const oldFileExists = await service.readMemory({ id: memory.id });
+    expect(oldFileExists).not.toBeNull();
+    expect(oldFileExists!.file_path).toBe(updated.file_path);
+  });
+
+  it("should rename file when category changes", async () => {
+    const memory = await service.createMemory({
+      title: "Category Test Memory",
+      content: "# Category Test\n\nContent here.",
+      tags: ["test", "category"],
+      category: "old-category"
+    });
+
+    const originalFilePath = memory.file_path;
+    
+    // Update category
+    const updated = await service.updateMemory({
+      id: memory.id,
+      category: "new-category"
+    });
+
+    expect(updated.category).toBe("new-category");
+    expect(updated.file_path).not.toBe(originalFilePath); // File path should change
+    expect(updated.file_path).toContain("new-category"); // New path should contain new category
+    expect(updated.title).toBe("Category Test Memory"); // Title should remain the same
+    
+    // Verify old file doesn't exist and new file does
+    const oldFileExists = await service.readMemory({ id: memory.id });
+    expect(oldFileExists).not.toBeNull();
+    expect(oldFileExists!.file_path).toBe(updated.file_path);
+  });
+
+  it("should rename file when both title and category change", async () => {
+    const memory = await service.createMemory({
+      title: "Original Title",
+      content: "# Original Content\n\nContent here.",
+      tags: ["test", "both"],
+      category: "old-category"
+    });
+
+    const originalFilePath = memory.file_path;
+    
+    // Update both title and category
+    const updated = await service.updateMemory({
+      id: memory.id,
+      title: "Completely New Title",
+      category: "completely-new-category"
+    });
+
+    expect(updated.title).toBe("Completely New Title");
+    expect(updated.category).toBe("completely-new-category");
+    expect(updated.file_path).not.toBe(originalFilePath); // File path should change
+    expect(updated.file_path).toContain("completely-new-title"); // New path should contain new title
+    expect(updated.file_path).toContain("completely-new-category"); // New path should contain new category
+    
+    // Verify old file doesn't exist and new file does
+    const oldFileExists = await service.readMemory({ id: memory.id });
+    expect(oldFileExists).not.toBeNull();
+    expect(oldFileExists!.file_path).toBe(updated.file_path);
+  });
+
+  it("should update tags and sources without renaming", async () => {
+    const memory = await service.createMemory({
+      title: "Tags Test Memory",
+      content: "# Tags Test\n\nContent here.",
+      tags: ["original", "tags"],
+      category: "testing",
+      sources: ["original-source"]
+    });
+
+    const originalFilePath = memory.file_path;
+    
+    // Update tags and sources
+    const updated = await service.updateMemory({
+      id: memory.id,
+      tags: ["new", "updated", "tags"],
+      sources: ["new-source-1", "new-source-2"]
+    });
+
+    expect(updated.tags).toEqual(["new", "updated", "tags"]);
+    expect(updated.sources).toEqual(["new-source-1", "new-source-2"]);
+    expect(updated.file_path).toBe(originalFilePath); // File path should not change
+    expect(updated.title).toBe("Tags Test Memory"); // Title should remain the same
+    expect(updated.category).toBe("testing"); // Category should remain the same
+  });
+
+  it("should handle complex updates with mixed changes", async () => {
+    const memory = await service.createMemory({
+      title: "Complex Update Test",
+      content: "# Complex Test\n\nOriginal content.",
+      tags: ["original"],
+      category: "original-category",
+      sources: ["original-source"]
+    });
+
+    const originalFilePath = memory.file_path;
+    
+    // Update multiple fields including title and category
+    const updated = await service.updateMemory({
+      id: memory.id,
+      title: "Simplified Title",
+      content: "# Simplified Content\n\nUpdated content with changes.",
+      tags: ["simplified", "updated"],
+      category: "simplified-category",
+      sources: ["new-source"]
+    });
+
+    expect(updated.title).toBe("Simplified Title");
+    expect(updated.content).toContain("Simplified Content");
+    expect(updated.tags).toEqual(["simplified", "updated"]);
+    expect(updated.category).toBe("simplified-category");
+    expect(updated.sources).toEqual(["new-source"]);
+    expect(updated.file_path).not.toBe(originalFilePath); // File path should change due to title/category changes
+    expect(updated.file_path).toContain("simplified-title");
+    expect(updated.file_path).toContain("simplified-category");
+  });
+
+  it("should preserve all metadata during updates", async () => {
+    const memory = await service.createMemory({
+      title: "Metadata Test",
+      content: "# Metadata Test\n\nContent here.",
+      tags: ["metadata", "test"],
+      category: "metadata-category",
+      sources: ["metadata-source"]
+    });
+
+    const originalCreatedAt = memory.created_at;
+    const originalLastReviewed = memory.last_reviewed;
+    
+    // Update title and content
+    const updated = await service.updateMemory({
+      id: memory.id,
+      title: "Updated Metadata Test",
+      content: "# Updated Metadata\n\nNew content here."
+    });
+
+    expect(updated.created_at).toBe(originalCreatedAt); // Created date should be preserved
+    expect(updated.last_reviewed).toBe(originalLastReviewed); // Last reviewed should be preserved
+    expect(updated.updated_at).not.toBe(memory.updated_at); // Updated date should change
+    expect(updated.tags).toEqual(["metadata", "test"]); // Tags should be preserved
+    expect(updated.sources).toEqual(["metadata-source"]); // Sources should be preserved
+    expect(updated.category).toBe("metadata-category"); // Category should be preserved
+  });
+
+  it("should update wiki-style links in linked memories when title changes", async () => {
+    // Create a memory that will be linked to
+    const targetMemory = await service.createMemory({
+      title: "Target Memory",
+      content: "# Target Memory\n\nThis is the target content.",
+      tags: ["target"],
+      category: "testing"
+    });
+
+    // Create a memory that links to the target
+    const linkingMemory = await service.createMemory({
+      title: "Linking Memory",
+      content: "# Linking Memory\n\nSee [[Target Memory]] for more information.\n\nAlso check [[Target Memory|this link]] with display text.",
+      tags: ["linking"],
+      category: "testing"
+    });
+
+    // Create a third memory that also links to the target
+    const anotherLinkingMemory = await service.createMemory({
+      title: "Another Linking Memory",
+      content: "# Another Linking Memory\n\nReference: [[Target Memory]]\n\nMore content here.",
+      tags: ["linking"],
+      category: "testing"
+    });
+
+    // Link the memories together
+    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id });
+    await service.linkMemories({ source_id: anotherLinkingMemory.id, target_id: targetMemory.id });
+
+    // Verify the links are established
+    const updatedTarget = await service.readMemory({ id: targetMemory.id });
+    expect(updatedTarget!.links).toContain(linkingMemory.id);
+    expect(updatedTarget!.links).toContain(anotherLinkingMemory.id);
+
+    // Now rename the target memory - this should update wiki-style links in linked memories
+    const renamedTarget = await service.updateMemory({
+      id: targetMemory.id,
+      title: "Renamed Target Memory"
+    });
+
+    expect(renamedTarget.title).toBe("Renamed Target Memory");
+
+    // Verify that wiki-style links in linked memories were updated
+    const updatedLinkingMemory = await service.readMemory({ id: linkingMemory.id });
+    expect(updatedLinkingMemory!.content).toContain("[[Renamed Target Memory]]");
+    expect(updatedLinkingMemory!.content).toContain("[[Renamed Target Memory|this link]]");
+    expect(updatedLinkingMemory!.content).not.toContain("[[Target Memory]]");
+
+    const updatedAnotherLinkingMemory = await service.readMemory({ id: anotherLinkingMemory.id });
+    expect(updatedAnotherLinkingMemory!.content).toContain("[[Renamed Target Memory]]");
+    expect(updatedAnotherLinkingMemory!.content).not.toContain("[[Target Memory]]");
+  });
+
+  it("should not update wiki-style links when only content changes", async () => {
+    // Create a memory that will be linked to
+    const targetMemory = await service.createMemory({
+      title: "Content Target",
+      content: "# Content Target\n\nThis is the target content.",
+      tags: ["target"],
+      category: "testing"
+    });
+
+    // Create a memory that links to the target
+    const linkingMemory = await service.createMemory({
+      title: "Content Linking Memory",
+      content: "# Content Linking Memory\n\nSee [[Content Target]] for more information.",
+      tags: ["linking"],
+      category: "testing"
+    });
+
+    // Link the memories together
+    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id });
+
+    // Update only the content of the target memory (no title change)
+    const updatedTarget = await service.updateMemory({
+      id: targetMemory.id,
+      content: "# Content Target\n\nThis is the updated target content with new information."
+    });
+
+    expect(updatedTarget.title).toBe("Content Target"); // Title unchanged
+    expect(updatedTarget.content).toContain("updated target content");
+
+    // Verify that wiki-style links in linked memory were NOT updated
+    const updatedLinkingMemory = await service.readMemory({ id: linkingMemory.id });
+    expect(updatedLinkingMemory!.content).toContain("[[Content Target]]"); // Link unchanged
+  });
+
+  it("should handle wiki-style link updates with special characters in titles", async () => {
+    // Create a memory with special characters in title
+    const targetMemory = await service.createMemory({
+      title: "Special Title (with parentheses) & symbols!",
+      content: "# Special Title\n\nThis is the target content.",
+      tags: ["special"],
+      category: "testing"
+    });
+
+    // Create a memory that links to the target
+    const linkingMemory = await service.createMemory({
+      title: "Special Linking Memory",
+      content: "# Special Linking Memory\n\nSee [[Special Title (with parentheses) & symbols!]] for more information.",
+      tags: ["linking"],
+      category: "testing"
+    });
+
+    // Link the memories together
+    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id });
+
+    // Rename the target memory to a simpler title
+    const renamedTarget = await service.updateMemory({
+      id: targetMemory.id,
+      title: "Simple Title"
+    });
+
+    expect(renamedTarget.title).toBe("Simple Title");
+
+    // Verify that wiki-style links in linked memory were updated
+    const updatedLinkingMemory = await service.readMemory({ id: linkingMemory.id });
+    expect(updatedLinkingMemory!.content).toContain("[[Simple Title]]");
+    expect(updatedLinkingMemory!.content).not.toContain("[[Special Title (with parentheses) & symbols!]]");
+  });
+
+  it("should update wiki-style links in multiple linked memories", async () => {
+    // Create a target memory
+    const targetMemory = await service.createMemory({
+      title: "Multi Target",
+      content: "# Multi Target\n\nThis is the target content.",
+      tags: ["target"],
+      category: "testing"
+    });
+
+    // Create multiple memories that link to the target
+    const linkingMemory1 = await service.createMemory({
+      title: "Linking Memory 1",
+      content: "# Linking Memory 1\n\nSee [[Multi Target]] for more information.",
+      tags: ["linking"],
+      category: "testing"
+    });
+
+    const linkingMemory2 = await service.createMemory({
+      title: "Linking Memory 2",
+      content: "# Linking Memory 2\n\nReference: [[Multi Target]]\n\nMore content.",
+      tags: ["linking"],
+      category: "testing"
+    });
+
+    const linkingMemory3 = await service.createMemory({
+      title: "Linking Memory 3",
+      content: "# Linking Memory 3\n\nCheck [[Multi Target|this link]] with display text.",
+      tags: ["linking"],
+      category: "testing"
+    });
+
+    // Link all memories to the target
+    await service.linkMemories({ source_id: linkingMemory1.id, target_id: targetMemory.id });
+    await service.linkMemories({ source_id: linkingMemory2.id, target_id: targetMemory.id });
+    await service.linkMemories({ source_id: linkingMemory3.id, target_id: targetMemory.id });
+
+    // Rename the target memory
+    const renamedTarget = await service.updateMemory({
+      id: targetMemory.id,
+      title: "Renamed Multi Target"
+    });
+
+    expect(renamedTarget.title).toBe("Renamed Multi Target");
+
+    // Verify that wiki-style links in all linked memories were updated
+    const updatedLinkingMemory1 = await service.readMemory({ id: linkingMemory1.id });
+    expect(updatedLinkingMemory1!.content).toContain("[[Renamed Multi Target]]");
+
+    const updatedLinkingMemory2 = await service.readMemory({ id: linkingMemory2.id });
+    expect(updatedLinkingMemory2!.content).toContain("[[Renamed Multi Target]]");
+
+    const updatedLinkingMemory3 = await service.readMemory({ id: linkingMemory3.id });
+    expect(updatedLinkingMemory3!.content).toContain("[[Renamed Multi Target|this link]]");
+  });
 });
 

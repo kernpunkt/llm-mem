@@ -7,7 +7,8 @@ import {
   parseMemoryFilePath,
   listMemoryFiles,
   fileExists,
-  safeDeleteFile
+  safeDeleteFile,
+  migrateMemoryFileNames
 } from '../src/utils/file-system.js';
 
 // Mock fs module
@@ -16,7 +17,8 @@ vi.mock('fs', () => ({
     access: vi.fn(),
     mkdir: vi.fn(),
     readdir: vi.fn(),
-    unlink: vi.fn()
+    unlink: vi.fn(),
+    rename: vi.fn()
   }
 }));
 
@@ -58,7 +60,7 @@ describe('File System Utilities', () => {
         'Meeting with John',
         '550e8400-e29b-41d4-a716-446655440000'
       );
-      expect(result).toBe('./memories/work|meeting-with-john|550e8400-e29b-41d4-a716-446655440000.md');
+      expect(result).toBe('./memories/(work)(meeting-with-john)(550e8400-e29b-41d4-a716-446655440000).md');
     });
 
     it('should handle custom paths', () => {
@@ -68,7 +70,7 @@ describe('File System Utilities', () => {
         'Project Ideas',
         '6ba7b810-9dad-11d1-80b4-00c04fd430c8'
       );
-      expect(result).toBe('/custom/path/personal|project-ideas|6ba7b810-9dad-11d1-80b4-00c04fd430c8.md');
+      expect(result).toBe('/custom/path/(personal)(project-ideas)(6ba7b810-9dad-11d1-80b4-00c04fd430c8).md');
     });
 
     it('should handle special characters in title', () => {
@@ -78,13 +80,13 @@ describe('File System Utilities', () => {
         'Test & Special @ Characters!',
         '550e8400-e29b-41d4-a716-446655440000'
       );
-      expect(result).toBe('./memories/work|test-special-characters|550e8400-e29b-41d4-a716-446655440000.md');
+      expect(result).toBe('./memories/(work)(test-special-characters)(550e8400-e29b-41d4-a716-446655440000).md');
     });
   });
 
   describe('parseMemoryFilePath', () => {
     it('should parse valid memory file path', () => {
-      const result = parseMemoryFilePath('./memories/work|meeting-with-john|550e8400-e29b-41d4-a716-446655440000.md');
+      const result = parseMemoryFilePath('./memories/(work)(meeting-with-john)(550e8400-e29b-41d4-a716-446655440000).md');
       expect(result).toEqual({
         category: 'work',
         title: 'meeting-with-john',
@@ -93,7 +95,7 @@ describe('File System Utilities', () => {
     });
 
     it('should handle custom paths', () => {
-      const result = parseMemoryFilePath('/custom/path/personal|project-ideas|6ba7b810-9dad-11d1-80b4-00c04fd430c8.md');
+      const result = parseMemoryFilePath('/custom/path/(personal)(project-ideas)(6ba7b810-9dad-11d1-80b4-00c04fd430c8).md');
       expect(result).toEqual({
         category: 'personal',
         title: 'project-ideas',
@@ -102,7 +104,7 @@ describe('File System Utilities', () => {
     });
 
     it('should handle complex titles with hyphens', () => {
-      const result = parseMemoryFilePath('./memories/work|team-retrospective-notes|550e8400-e29b-41d4-a716-446655440000.md');
+      const result = parseMemoryFilePath('./memories/(work)(team-retrospective-notes)(550e8400-e29b-41d4-a716-446655440000).md');
       expect(result).toEqual({
         category: 'work',
         title: 'team-retrospective-notes',
@@ -112,13 +114,13 @@ describe('File System Utilities', () => {
 
     it('should return null for invalid file paths', () => {
       expect(parseMemoryFilePath('./memories/invalid-file.txt')).toBeNull();
-      expect(parseMemoryFilePath('./memories/work|meeting.md')).toBeNull(); // No UUID
-      expect(parseMemoryFilePath('./memories/work|550e8400-e29b-41d4-a716-446655440000.md')).toBeNull(); // No title
-      expect(parseMemoryFilePath('./memories/550e8400-e29b-41d4-a716-446655440000.md')).toBeNull(); // No category
+      expect(parseMemoryFilePath('./memories/(work)(meeting).md')).toBeNull(); // No UUID
+      expect(parseMemoryFilePath('./memories/(work)(550e8400-e29b-41d4-a716-446655440000).md')).toBeNull(); // No title
+      expect(parseMemoryFilePath('./memories/(550e8400-e29b-41d4-a716-446655440000).md')).toBeNull(); // No category
     });
 
     it('should handle backward slashes', () => {
-      const result = parseMemoryFilePath('.\\memories\\work|meeting-with-john|550e8400-e29b-41d4-a716-446655440000.md');
+      const result = parseMemoryFilePath('.\\memories\\(work)(meeting-with-john)(550e8400-e29b-41d4-a716-446655440000).md');
       expect(result).toEqual({
         category: 'work',
         title: 'meeting-with-john',
@@ -164,21 +166,73 @@ describe('File System Utilities', () => {
     });
   });
 
+  describe('migrateMemoryFileNames', () => {
+    it('should migrate old format files to new format', async () => {
+      const mockReaddir = vi.mocked(fs.readdir);
+      const mockRename = vi.mocked(fs.rename);
+      
+      // Mock files in directory - create mock Dirent objects
+      const mockFiles = [
+        { name: 'old-format|file|123e4567-e89b-12d3-a456-426614174000.md' } as any,
+        { name: 'usage.md' } as any,
+        { name: 'new-format.md' } as any
+      ];
+      mockReaddir.mockResolvedValueOnce(mockFiles);
+      
+      await migrateMemoryFileNames('./memories');
+      
+      expect(mockRename).toHaveBeenCalledWith(
+        'memories/old-format|file|123e4567-e89b-12d3-a456-426614174000.md',
+        'memories/(old-format)(file)(123e4567-e89b-12d3-a456-426614174000).md'
+      );
+    });
+
+    it('should skip non-memory files and usage.md', async () => {
+      const mockReaddir = vi.mocked(fs.readdir);
+      const mockRename = vi.mocked(fs.rename);
+      
+      // Mock files in directory - create mock Dirent objects
+      const mockFiles = [
+        { name: 'usage.md' } as any,
+        { name: 'readme.txt' } as any,
+        { name: 'config.json' } as any
+      ];
+      mockReaddir.mockResolvedValueOnce(mockFiles);
+      
+      await migrateMemoryFileNames('./memories');
+      
+      expect(mockRename).not.toHaveBeenCalled();
+    });
+
+    it('should handle migration errors gracefully', async () => {
+      const mockReaddir = vi.mocked(fs.readdir);
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      
+      mockReaddir.mockRejectedValueOnce(new Error('Permission denied'));
+      
+      await expect(migrateMemoryFileNames('./memories')).rejects.toThrow('Permission denied');
+      expect(consoleSpy).toHaveBeenCalledWith('Migration failed:', expect.any(Error));
+      
+      consoleSpy.mockRestore();
+    });
+  });
+
   describe('listMemoryFiles', () => {
     it('should return array of memory file paths', async () => {
       const mockReaddir = vi.mocked(fs.readdir);
-      mockReaddir.mockResolvedValueOnce([
-        'work|meeting|550e8400-e29b-41d4-a716-446655440000.md',
-        'personal|notes|6ba7b810-9dad-11d1-80b4-00c04fd430c8.md',
-        'ignore.txt',
-        'another-file.pdf'
-      ]);
+      const mockFiles = [
+        { name: '(work)(meeting)(550e8400-e29b-41d4-a716-446655440000).md' } as any,
+        { name: '(personal)(notes)(6ba7b810-9dad-11d1-80b4-00c04fd430c8).md' } as any,
+        { name: 'ignore.txt' } as any,
+        { name: 'another-file.pdf' } as any
+      ];
+      mockReaddir.mockResolvedValueOnce(mockFiles);
 
       const result = await listMemoryFiles('./memories');
 
       expect(result).toEqual([
-        './memories/work|meeting|550e8400-e29b-41d4-a716-446655440000.md',
-        './memories/personal|notes|6ba7b810-9dad-11d1-80b4-00c04fd430c8.md'
+        './memories/(work)(meeting)(550e8400-e29b-41d4-a716-446655440000).md',
+        './memories/(personal)(notes)(6ba7b810-9dad-11d1-80b4-00c04fd430c8).md'
       ]);
     });
 

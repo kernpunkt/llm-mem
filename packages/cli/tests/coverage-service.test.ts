@@ -87,6 +87,43 @@ describe("CoverageService", () => {
     expect(fc?.coveredLines).toBe(10);
     // We do not expose granular arrays in report currently, but ensure no throw occurred
   });
+
+  it("logs invalid source entries with memory ID and title to stderr", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    
+    // Mock memory service with invalid source entries
+    (memoryService.getAllMemories as any).mockResolvedValueOnce([
+      { 
+        id: "test-memory-id-123", 
+        title: "Test Memory Title", 
+        content: "", 
+        tags: [], 
+        category: "DOC", 
+        created_at: "", 
+        updated_at: "", 
+        last_reviewed: "", 
+        file_path: "", 
+        links: [], 
+        sources: [
+          "",
+          "src/valid.ts:1-10"
+        ] 
+      }
+    ]);
+
+    const map = await svc.buildCoverageMap();
+    
+    // Should log the invalid source entry
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Skipping invalid source entry in memory "test-memory-id-123" ("Test Memory Title"): "" - reason: Source string is empty'
+    );
+    
+    // Should still process valid sources
+    expect(map.size).toBe(1);
+    expect(map.get("src/valid.ts")?.length).toBe(1);
+    
+    consoleSpy.mockRestore();
+  });
 });
 
 

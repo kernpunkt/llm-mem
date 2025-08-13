@@ -59,7 +59,7 @@ export async function ensureDirectoryExists(dirPath: string): Promise<void> {
  * @example
  * ```typescript
  * generateMemoryFilePath('./memories', 'work', 'Meeting with John', '550e8400-e29b-41d4-a716-446655440000')
- * // Returns: './memories/work|meeting-with-john|550e8400-e29b-41d4-a716-446655440000.md'
+ * // Returns: './memories/(work)(meeting-with-john)(550e8400-e29b-41d4-a716-446655440000).md'
  * ```
  */
 export function generateMemoryFilePath(
@@ -69,7 +69,7 @@ export function generateMemoryFilePath(
   id: string
 ): string {
   const slugifiedTitle = slugify(title);
-  const filename = `${category}|${slugifiedTitle}|${id}.md`;
+  const filename = `(${category})(${slugifiedTitle})(${id}).md`;
   const result = join(notestorePath, filename);
   // Ensure we return the expected format with ./ prefix for relative paths
   return notestorePath.startsWith('./') && !result.startsWith('./') ? `./${result}` : result;
@@ -83,7 +83,7 @@ export function generateMemoryFilePath(
  * 
  * @example
  * ```typescript
- * parseMemoryFilePath('./memories/work|meeting-with-john|550e8400-e29b-41d4-a716-446655440000.md')
+ * parseMemoryFilePath('./memories/(work)(meeting-with-john)(550e8400-e29b-41d4-a716-446655440000).md')
  * // Returns: { category: 'work', title: 'meeting-with-john', id: '550e8400-e29b-41d4-a716-446655440000' }
  * ```
  */
@@ -98,14 +98,15 @@ export function parseMemoryFilePath(filePath: string): { category: string; title
 
   const nameWithoutExt = filename.slice(0, -3); // Remove .md extension
   
-  // Split by | separator
-  const parts = nameWithoutExt.split('|');
+  // Parse format: (category)(title)(uuid)
+  // Use regex to extract the three groups
+  const match = nameWithoutExt.match(/^\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)$/);
   
-  if (parts.length !== 3) {
+  if (!match) {
     return null;
   }
 
-  const [category, title, id] = parts;
+  const [, category, title, id] = match;
   
   // Validate UUID format
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -131,8 +132,9 @@ export async function listMemoryFiles(notestorePath: string): Promise<string[]> 
   try {
     const files = await fs.readdir(notestorePath);
     const result = files
-      .filter(file => file.endsWith('.md'))
-      .map(file => join(notestorePath, file));
+      .map(file => typeof file === 'string' ? file : (file as any).name)
+      .filter(fileName => fileName.endsWith('.md'))
+      .map(fileName => join(notestorePath, fileName));
     // Ensure we return the expected format with ./ prefix for relative paths
     return notestorePath.startsWith('./') 
       ? result.map(path => path.startsWith('./') ? path : `./${path}`)
@@ -186,6 +188,86 @@ export async function safeDeleteFile(filePath: string): Promise<boolean> {
       // File doesn't exist
       return false;
     }
+    throw error;
+  }
+} 
+
+/**
+ * Parses a memory file path in the old pipe separator format.
+ * This is used for migration purposes only.
+ * 
+ * @param filePath - The full file path to parse (old format)
+ * @returns Object containing category, title, and ID, or null if invalid
+ */
+function parseOldMemoryFilePath(filePath: string): { category: string; title: string; id: string } | null {
+  // Handle both forward and backward slashes
+  const normalizedPath = filePath.replace(/\\/g, '/');
+  const filename = normalizedPath.split('/').pop();
+  
+  if (!filename || !filename.endsWith('.md')) {
+    return null;
+  }
+
+  const nameWithoutExt = filename.slice(0, -3); // Remove .md extension
+  
+  // Split by | separator (old format)
+  const parts = nameWithoutExt.split('|');
+  
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  const [category, title, id] = parts;
+  
+  // Validate UUID format
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidPattern.test(id)) {
+    return null;
+  }
+
+  return { category, title, id };
+}
+
+/**
+ * Migrates existing memory files from the old pipe separator format to the new parentheses format.
+ * This function should be called once to update existing files.
+ * 
+ * @param notestorePath - Base path for memory files
+ * @returns Promise that resolves when migration is complete
+ * 
+ * @example
+ * ```typescript
+ * await migrateMemoryFileNames('./memories')
+ * ```
+ */
+export async function migrateMemoryFileNames(notestorePath: string): Promise<void> {
+  try {
+    const files = await fs.readdir(notestorePath);
+    
+    for (const file of files) {
+      const fileName = typeof file === 'string' ? file : (file as any).name;
+      if (!fileName.endsWith('.md') || fileName === 'usage.md') {
+        continue; // Skip non-memory files and usage.md
+      }
+      
+      // Check if this is an old format file (contains | separators)
+      if (fileName.includes('|')) {
+        const oldPath = join(notestorePath, fileName);
+        const parsed = parseOldMemoryFilePath(oldPath);
+        
+        if (parsed) {
+          // Generate new filename with parentheses format
+          const newFilename = `(${parsed.category})(${parsed.title})(${parsed.id}).md`;
+          const newPath = join(notestorePath, newFilename);
+          
+          // Rename the file
+          await fs.rename(oldPath, newPath);
+          console.log(`Migrated: ${fileName} -> ${newFilename}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Migration failed:', error);
     throw error;
   }
 } 

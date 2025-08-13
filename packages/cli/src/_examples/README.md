@@ -11,7 +11,11 @@ This directory contains example configurations and CI usage for the mem-coverage
 
 ## Run with .coverage.json
 ```bash
-pnpm mem-coverage -- --config=src/mem-coverage/_examples/.coverage.json --verbose
+# Using the installed package
+node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --config=src/mem-coverage/_examples/.coverage.json --verbose
+
+# Or if you have a package.json script
+pnpm run mem-coverage --config=src/mem-coverage/_examples/.coverage.json --verbose
 ```
 
 ## Glob patterns
