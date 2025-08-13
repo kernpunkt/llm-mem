@@ -14,6 +14,40 @@ import { fileURLToPath } from "url";
 config({ quiet: true });
 
 /**
+ * Validation utilities for categories and tags
+ */
+function parseAllowedValues(envVar: string | undefined): string[] | null {
+    if (!envVar || envVar.trim() === "") {
+        return null; // No restrictions
+    }
+    return envVar.split(",").map(s => s.trim()).filter(s => s.length > 0);
+}
+
+function validateCategory(category: string | undefined): void {
+    if (category === undefined) return; // Optional field
+    
+    const allowedCategories = parseAllowedValues(process.env.ALLOWED_CATEGORIES);
+    if (allowedCategories && !allowedCategories.includes(category)) {
+        const allowedList = allowedCategories.join(", ");
+        throw new Error(`Category "${category}" is not allowed. Allowed categories: ${allowedList}`);
+    }
+}
+
+function validateTags(tags: string[] | undefined): void {
+    if (tags === undefined) return; // Optional field
+    
+    const allowedTags = parseAllowedValues(process.env.ALLOWED_TAGS);
+    if (allowedTags) {
+        const invalidTags = tags.filter(tag => !allowedTags.includes(tag));
+        if (invalidTags.length > 0) {
+            const allowedList = allowedTags.join(", ");
+            const invalidList = invalidTags.join(", ");
+            throw new Error(`Tags [${invalidList}] are not allowed. Allowed tags: ${allowedList}`);
+        }
+    }
+}
+
+/**
  * MCP Server Template
  * 
  * A production-ready template for building Model Context Protocol (MCP) servers
@@ -104,6 +138,10 @@ export function createServer(): McpServer {
     },
     async ({ title, content, tags = [], category = "general", sources = [] }) => {
       try {
+        // Validate category and tags against allowed values
+        validateCategory(category);
+        validateTags(tags);
+        
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         const mem = await memoryService.createMemory({ title, content, tags, category, sources });
@@ -206,6 +244,10 @@ export function createServer(): McpServer {
     },
     async ({ id, title, content, tags, category, sources }) => {
       try {
+        // Validate category and tags against allowed values
+        validateCategory(category);
+        validateTags(tags);
+        
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
@@ -243,6 +285,10 @@ export function createServer(): McpServer {
     },
     async ({ query, limit = 10, category, tags }) => {
       try {
+        // Validate category and tags against allowed values
+        validateCategory(category);
+        validateTags(tags);
+        
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
@@ -459,6 +505,10 @@ export function createServer(): McpServer {
     },
     async ({ category, tags, limit = 100 }) => {
       try {
+        // Validate category and tags against allowed values
+        validateCategory(category);
+        validateTags(tags);
+        
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
@@ -592,6 +642,42 @@ ${stats.recommendations.join('\n')}`;
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         throw new Error(`get_flexsearch_config failed: ${msg}`);
+      }
+    }
+  );
+
+  server.tool(
+    "get_allowed_values",
+    "Returns the currently allowed categories and tags based on environment configuration",
+    {},
+    async () => {
+      try {
+        const allowedCategories = parseAllowedValues(process.env.ALLOWED_CATEGORIES);
+        const allowedTags = parseAllowedValues(process.env.ALLOWED_TAGS);
+        
+        let message = "Category and Tag Restrictions:\n\n";
+        
+        if (allowedCategories) {
+          message += `**Allowed Categories:** ${allowedCategories.join(", ")}\n`;
+        } else {
+          message += "**Categories:** No restrictions (any category allowed)\n";
+        }
+        
+        if (allowedTags) {
+          message += `**Allowed Tags:** ${allowedTags.join(", ")}\n`;
+        } else {
+          message += "**Tags:** No restrictions (any tags allowed)\n";
+        }
+        
+        message += "\nTo set restrictions, configure ALLOWED_CATEGORIES and/or ALLOWED_TAGS environment variables with comma-separated values.";
+        
+        return {
+          content: [{ type: "text", text: message }],
+          isError: false
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`get_allowed_values failed: ${msg}`);
       }
     }
   );

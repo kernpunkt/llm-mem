@@ -42,6 +42,7 @@ The `@llm-mem/mcp` server transforms how AI assistants work with long-term memor
 - **`get_current_date`** - Date/time utilities for timestamps
 - **`get_usage_info`** - Comprehensive usage documentation
 - **`get_flexsearch_config`** - Current search configuration
+- **`get_allowed_values`** - View current category and tag restrictions
 
 ## 🚀 Quick Start
 
@@ -91,6 +92,73 @@ Options:
   --memoryStorePath=PATH    Memory store location (default: ./memories)
   --indexPath=PATH          Search index location (default: ./memories/index)
 ```
+
+### Environment Variables
+
+Create a `.env` file in your project root to configure the server:
+
+```bash
+# Memory Storage Configuration
+MEMORY_STORE_PATH=./memories
+MEMORY_INDEX_PATH=./memories/index
+
+# Category and Tag Restrictions (Optional)
+# If not set, any categories and tags are allowed
+# If set, only the specified values are allowed (comma-separated)
+
+# Example: Restrict categories to specific values
+ALLOWED_CATEGORIES=work,personal,research,ideas
+
+# Example: Restrict tags to specific values  
+ALLOWED_TAGS=important,urgent,review,archive
+```
+
+**Category and Tag Validation:**
+- When `ALLOWED_CATEGORIES` is set, only the specified categories can be used
+- When `ALLOWED_TAGS` is set, only the specified tags can be used
+- Values are comma-separated and whitespace is automatically trimmed
+- If not set, any categories and tags are allowed (default behavior)
+- Use the `get_allowed_values` tool to see current restrictions
+
+### FlexSearch Configuration
+
+The server uses FlexSearch for fast, semantic search capabilities. You can customize the search behavior using these environment variables:
+
+#### Tokenization Options
+- **`FLEXSEARCH_TOKENIZE`** - Tokenization strategy (`strict`, `forward`, `reverse`, `full`, `tolerant`)
+- **`FLEXSEARCH_RESOLUTION`** - Search precision (1-20, higher = more precise but slower)
+- **`FLEXSEARCH_DEPTH`** - Search thoroughness (1-10, higher = more thorough but slower)
+- **`FLEXSEARCH_THRESHOLD`** - Match leniency (0-10, lower = more lenient)
+- **`FLEXSEARCH_LIMIT`** - Maximum search results (1-1000)
+- **`FLEXSEARCH_SUGGEST`** - Enable search suggestions
+
+#### Encoder Options
+- **`FLEXSEARCH_CHARSET`** - Character encoding strategy (`exact`, `normalize`, `latinbalance`, etc.)
+- **`FLEXSEARCH_LANGUAGE`** - Language optimizations (`en`, `de`, `fr`)
+- **`FLEXSEARCH_STOPWORDS`** - JSON array of stopwords to filter out
+- **`FLEXSEARCH_MIN_LENGTH`** - Minimum term length to index (1-10)
+- **`FLEXSEARCH_MAX_LENGTH`** - Maximum term length to index (5-50)
+
+#### Context Search Options
+- **`FLEXSEARCH_CONTEXT`** - Enable context-aware search (finds terms near each other)
+- **`FLEXSEARCH_CONTEXT_RESOLUTION`** - Context search precision (1-20)
+- **`FLEXSEARCH_CONTEXT_DEPTH`** - Context search depth (1-10)
+- **`FLEXSEARCH_CONTEXT_BIDIRECTIONAL`** - Enable bidirectional context search
+
+**Example FlexSearch Configuration:**
+```bash
+# Optimize for German language with context search
+FLEXSEARCH_LANGUAGE=de
+FLEXSEARCH_CONTEXT=true
+FLEXSEARCH_RESOLUTION=12
+FLEXSEARCH_DEPTH=4
+
+# Custom stopwords for technical documentation
+FLEXSEARCH_STOPWORDS=["the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by"]
+```
+
+**View Current Configuration:**
+Use the `get_flexsearch_config` tool to see your current FlexSearch settings.
 
 ## 🔌 MCP Client Integration
 
