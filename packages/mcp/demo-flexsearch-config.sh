@@ -54,3 +54,4 @@ echo "- Set these variables in your .env file for persistent configuration"
 echo "- Use the get_flexsearch_config tool to verify your settings"
 echo "- Adjust resolution and depth based on your performance needs"
 echo "- Enable context search for finding related terms near each other"
+
