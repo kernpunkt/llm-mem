@@ -418,10 +418,11 @@ export class MemoryService {
     if (updates.sources !== undefined) frontmatterUpdates.sources = updates.sources;
     frontmatterUpdates.updated_at = new Date().toISOString();
 
-    // Update the file
-    await this.fileService.updateMemoryFile(
+    // Update the file with potential renaming
+    const { newFilePath } = await this.fileService.updateMemoryFileWithRename(
       existing.file_path,
       frontmatterUpdates,
+      id,
       updates.content
     );
 

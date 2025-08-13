@@ -184,5 +184,194 @@ End of content`;
     expect(markdownMemory.content).toContain("**Bold text**");
     expect(markdownMemory.content).toContain("> Blockquote");
   });
+
+  it("should update memory content without renaming when only content changes", async () => {
+    const memory = await service.createMemory({
+      title: "Update Test Memory",
+      content: "# Original Content\n\nThis is the original content.",
+      tags: ["test", "update"],
+      category: "testing"
+    });
+
+    const originalFilePath = memory.file_path;
+    
+    // Update only content
+    const updated = await service.updateMemory({
+      id: memory.id,
+      content: "# Updated Content\n\nThis is the updated content with new information."
+    });
+
+    expect(updated.content).toContain("Updated Content");
+    expect(updated.content).toContain("new information");
+    expect(updated.file_path).toBe(originalFilePath); // File path should not change
+    expect(updated.title).toBe("Update Test Memory"); // Title should remain the same
+    expect(updated.category).toBe("testing"); // Category should remain the same
+  });
+
+  it("should rename file when title changes", async () => {
+    const memory = await service.createMemory({
+      title: "Original Title",
+      content: "# Original Content\n\nContent here.",
+      tags: ["test", "rename"],
+      category: "testing"
+    });
+
+    const originalFilePath = memory.file_path;
+    
+    // Update title
+    const updated = await service.updateMemory({
+      id: memory.id,
+      title: "New Updated Title"
+    });
+
+    expect(updated.title).toBe("New Updated Title");
+    expect(updated.file_path).not.toBe(originalFilePath); // File path should change
+    expect(updated.file_path).toContain("new-updated-title"); // New path should contain new title
+    expect(updated.category).toBe("testing"); // Category should remain the same
+    
+    // Verify old file doesn't exist and new file does
+    const oldFileExists = await service.readMemory({ id: memory.id });
+    expect(oldFileExists).not.toBeNull();
+    expect(oldFileExists!.file_path).toBe(updated.file_path);
+  });
+
+  it("should rename file when category changes", async () => {
+    const memory = await service.createMemory({
+      title: "Category Test Memory",
+      content: "# Category Test\n\nContent here.",
+      tags: ["test", "category"],
+      category: "old-category"
+    });
+
+    const originalFilePath = memory.file_path;
+    
+    // Update category
+    const updated = await service.updateMemory({
+      id: memory.id,
+      category: "new-category"
+    });
+
+    expect(updated.category).toBe("new-category");
+    expect(updated.file_path).not.toBe(originalFilePath); // File path should change
+    expect(updated.file_path).toContain("new-category"); // New path should contain new category
+    expect(updated.title).toBe("Category Test Memory"); // Title should remain the same
+    
+    // Verify old file doesn't exist and new file does
+    const oldFileExists = await service.readMemory({ id: memory.id });
+    expect(oldFileExists).not.toBeNull();
+    expect(oldFileExists!.file_path).toBe(updated.file_path);
+  });
+
+  it("should rename file when both title and category change", async () => {
+    const memory = await service.createMemory({
+      title: "Original Title",
+      content: "# Original Content\n\nContent here.",
+      tags: ["test", "both"],
+      category: "old-category"
+    });
+
+    const originalFilePath = memory.file_path;
+    
+    // Update both title and category
+    const updated = await service.updateMemory({
+      id: memory.id,
+      title: "Completely New Title",
+      category: "completely-new-category"
+    });
+
+    expect(updated.title).toBe("Completely New Title");
+    expect(updated.category).toBe("completely-new-category");
+    expect(updated.file_path).not.toBe(originalFilePath); // File path should change
+    expect(updated.file_path).toContain("completely-new-title"); // New path should contain new title
+    expect(updated.file_path).toContain("completely-new-category"); // New path should contain new category
+    
+    // Verify old file doesn't exist and new file does
+    const oldFileExists = await service.readMemory({ id: memory.id });
+    expect(oldFileExists).not.toBeNull();
+    expect(oldFileExists!.file_path).toBe(updated.file_path);
+  });
+
+  it("should update tags and sources without renaming", async () => {
+    const memory = await service.createMemory({
+      title: "Tags Test Memory",
+      content: "# Tags Test\n\nContent here.",
+      tags: ["original", "tags"],
+      category: "testing",
+      sources: ["original-source"]
+    });
+
+    const originalFilePath = memory.file_path;
+    
+    // Update tags and sources
+    const updated = await service.updateMemory({
+      id: memory.id,
+      tags: ["new", "updated", "tags"],
+      sources: ["new-source-1", "new-source-2"]
+    });
+
+    expect(updated.tags).toEqual(["new", "updated", "tags"]);
+    expect(updated.sources).toEqual(["new-source-1", "new-source-2"]);
+    expect(updated.file_path).toBe(originalFilePath); // File path should not change
+    expect(updated.title).toBe("Tags Test Memory"); // Title should remain the same
+    expect(updated.category).toBe("testing"); // Category should remain the same
+  });
+
+  it("should handle complex updates with mixed changes", async () => {
+    const memory = await service.createMemory({
+      title: "Complex Update Test",
+      content: "# Complex Test\n\nOriginal content.",
+      tags: ["original"],
+      category: "original-category",
+      sources: ["original-source"]
+    });
+
+    const originalFilePath = memory.file_path;
+    
+    // Update multiple fields including title and category
+    const updated = await service.updateMemory({
+      id: memory.id,
+      title: "Simplified Title",
+      content: "# Simplified Content\n\nUpdated content with changes.",
+      tags: ["simplified", "updated"],
+      category: "simplified-category",
+      sources: ["new-source"]
+    });
+
+    expect(updated.title).toBe("Simplified Title");
+    expect(updated.content).toContain("Simplified Content");
+    expect(updated.tags).toEqual(["simplified", "updated"]);
+    expect(updated.category).toBe("simplified-category");
+    expect(updated.sources).toEqual(["new-source"]);
+    expect(updated.file_path).not.toBe(originalFilePath); // File path should change due to title/category changes
+    expect(updated.file_path).toContain("simplified-title");
+    expect(updated.file_path).toContain("simplified-category");
+  });
+
+  it("should preserve all metadata during updates", async () => {
+    const memory = await service.createMemory({
+      title: "Metadata Test",
+      content: "# Metadata Test\n\nContent here.",
+      tags: ["metadata", "test"],
+      category: "metadata-category",
+      sources: ["metadata-source"]
+    });
+
+    const originalCreatedAt = memory.created_at;
+    const originalLastReviewed = memory.last_reviewed;
+    
+    // Update title and content
+    const updated = await service.updateMemory({
+      id: memory.id,
+      title: "Updated Metadata Test",
+      content: "# Updated Metadata\n\nNew content here."
+    });
+
+    expect(updated.created_at).toBe(originalCreatedAt); // Created date should be preserved
+    expect(updated.last_reviewed).toBe(originalLastReviewed); // Last reviewed should be preserved
+    expect(updated.updated_at).not.toBe(memory.updated_at); // Updated date should change
+    expect(updated.tags).toEqual(["metadata", "test"]); // Tags should be preserved
+    expect(updated.sources).toEqual(["metadata-source"]); // Sources should be preserved
+    expect(updated.category).toBe("metadata-category"); // Category should be preserved
+  });
 });
 
