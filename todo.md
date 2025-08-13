@@ -2,4 +2,4 @@
 [ ] MCP: edit mem might need to change the filename
 [ ] MCP: update readme.md
 [ ] CLI: update readme.md
-[ ] when skipping invalid source entries mention the offending memory id and mark this as an error
+[x] when skipping invalid source entries mention the offending memory id and mark this as an error

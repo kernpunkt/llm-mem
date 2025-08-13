@@ -112,13 +112,14 @@ export class MemoryService {
     const files = await this.fileService.listAllMemoryFiles();
     const memories: Memory[] = [];
     for (const filePath of files) {
+      const parsed = parseMemoryFilePath(filePath);
+      if (!parsed) continue;
+      
       try {
-        const parsed = parseMemoryFilePath(filePath);
-        if (!parsed) continue;
         const mem = await this.readMemory({ id: parsed.id });
         if (mem) memories.push(mem);
       } catch (error) {
-        console.error(`Failed to read memory from ${filePath}:`, error);
+        console.error(`Failed to read memory from ${filePath} (ID: ${parsed.id}):`, error);
       }
     }
     return memories;
@@ -570,10 +571,10 @@ export class MemoryService {
     
     // Reindex each memory
     for (const filePath of memoryFiles) {
+      const parsed = parseMemoryFilePath(filePath);
+      if (!parsed) continue;
+      
       try {
-        const parsed = parseMemoryFilePath(filePath);
-        if (!parsed) continue;
-        
         const memory = await this.readMemory({ id: parsed.id });
         if (!memory) continue;
         
@@ -592,7 +593,7 @@ export class MemoryService {
         
         indexedCount++;
       } catch (error) {
-        console.error(`Failed to reindex memory from ${filePath}:`, error);
+        console.error(`Failed to reindex memory from ${filePath} (ID: ${parsed.id}):`, error);
       }
     }
     
@@ -629,10 +630,10 @@ export class MemoryService {
     const cutoff = new Date(cutoffDate);
     
     for (const filePath of memoryFiles) {
+      const parsed = parseMemoryFilePath(filePath);
+      if (!parsed) continue;
+      
       try {
-        const parsed = parseMemoryFilePath(filePath);
-        if (!parsed) continue;
-        
         const memory = await this.readMemory({ id: parsed.id });
         if (!memory) continue;
         
@@ -648,7 +649,7 @@ export class MemoryService {
           });
         }
       } catch (error) {
-        console.error(`Failed to check memory from ${filePath}:`, error);
+        console.error(`Failed to check memory from ${filePath} (ID: ${parsed.id}):`, error);
       }
     }
     

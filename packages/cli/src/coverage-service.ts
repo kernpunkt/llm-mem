@@ -23,7 +23,7 @@ export class CoverageService {
           coverageMap.set(parsed.filePath, list);
         } catch (err) {
           // Skip invalid source strings or unsafe file paths but continue processing
-          console.error("Skipping invalid source entry:", src, "reason:", (err as Error)?.message ?? String(err));
+          console.error(`Skipping invalid source entry in memory "${mem.id}" ("${mem.title}"): "${src}" - reason: ${(err as Error)?.message ?? String(err)}`);
           continue;
         }
       }
