@@ -7,6 +7,10 @@ Shared utilities and types for LLM Memory tools.
 ```bash
 # Install the entire monorepo
 pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
+#After installation, build the package**:
+cd node_modules/llm-mem
+pnpm install
+pnpm build
 ```
 
 ## Features

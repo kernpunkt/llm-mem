@@ -51,7 +51,10 @@ The `@llm-mem/mcp` server transforms how AI assistants work with long-term memor
 ```bash
 # From GitHub (recommended)
 pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
-
+#After installation, build the package**:
+cd node_modules/llm-mem
+pnpm install
+pnpm build
 # Then use the MCP server
 node node_modules/llm-mem/packages/mcp/dist/index.js --help
 ```
@@ -225,12 +228,6 @@ Can include:
 - And more...
 ```
 
-### Memory Categories
-
-- **`DOC`** - Documentation and guides
-- **`ADR`** - Architecture Decision Records
-- **`CTX`** - Context and background information
-
 ## 🔍 Search Capabilities
 
 ### Basic Search
@@ -370,14 +367,6 @@ pnpm lint:mcp:fix
 - Check memory ID/title spelling
 - Verify memory exists in store
 - Check category and tag filters
-
-### Debug Mode
-
-Enable verbose logging by setting environment variables:
-
-```bash
-DEBUG=* node dist/index.js --transport=stdio
-```
 
 ## 📖 Examples
 

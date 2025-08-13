@@ -64,6 +64,7 @@ pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
 
 # Or using SSH if you have access to the repository
 pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
+
 ```
 
 **Note**: After installation, you'll need to build the package manually. The package will be downloaded but not built automatically to ensure reliable installation.
@@ -156,37 +157,8 @@ const memoryService = new MemoryService();
 const fileService = new FileService();
 ```
 
-### Configuration Files
-
-Create configuration files in your project root:
-
-**Coverage Configuration** (`coverage.config.yaml`):
-```yaml
-thresholds:
-  overall: 80
-  docs: 90
-  code: 75
-
-exclude:
-  - "node_modules/**"
-  - "dist/**"
-  - "build/**"
-
-include:
-  - "src/**/*.ts"
-  - "docs/**/*.md"
-```
-
-**Environment Variables** (`.env`):
-```bash
-# MCP server configuration
-MCP_HTTP_PORT=3001
-MCP_HTTP_HOST=localhost
-
-# Memory store paths
-MEMORY_STORE_PATH=./my-memories
-INDEX_PATH=./my-memories/search-index
-```
+### Configuration
+see individual package readme.md
 
 ## 📦 Package Details
 
