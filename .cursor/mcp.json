@@ -2,7 +2,7 @@
     "mcpServers": {
       "memory-tools": {
         "command": "node",
-        "args": ["./dist/index.js --notestore_path=./llm-mem/docs/md --index_path=./llm-mem/docs/db"],
+        "args": ["./packages/mcp/dist/index.js --notestore_path=./docs/md --index_path=./docs/db"],
         "env": {}
       }
     }
