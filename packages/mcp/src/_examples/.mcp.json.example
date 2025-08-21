@@ -1,0 +1,9 @@
+{
+    "mcpServers": {
+      "memory-tools": {
+        "command": "node",
+        "args": ["./packages/mcp/dist/index.js --notestore_path=./docs/md --index_path=./docs/db"],
+        "env": {}
+      }
+    }
+}
