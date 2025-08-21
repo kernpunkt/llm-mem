@@ -337,6 +337,35 @@ export class FlexSearchManager {
   }
 
   /**
+   * Properly destroys and cleans up all resources.
+   * This method should be called before disposing of the FlexSearchManager instance.
+   * 
+   * @throws Error if cleanup fails
+   */
+  async destroy(): Promise<void> {
+    try {
+      // Clear all indexes first
+      await this.clearIndexes();
+      
+      // Destroy the document index to release resources
+      if (this.documentIndex) {
+        await this.documentIndex.destroy();
+      }
+      
+      // Close the SQLite database connection
+      if (this.db) {
+        await this.db.close();
+      }
+      
+      // Reset initialization state
+      this.isInitialized = false;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to destroy FlexSearch manager: ${errorMessage}`);
+    }
+  }
+
+  /**
    * Gets the total number of indexed documents.
    * 
    * @returns Number of indexed documents

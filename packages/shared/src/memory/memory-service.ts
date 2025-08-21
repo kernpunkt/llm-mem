@@ -669,5 +669,33 @@ export class MemoryService {
       total: memoriesNeedingReview.length,
     };
   }
+
+  /**
+   * Properly destroys and cleans up all resources.
+   * This method should be called before disposing of the MemoryService instance.
+   * 
+   * @throws Error if cleanup fails
+   */
+  async destroy(): Promise<void> {
+    try {
+      // Destroy the search service to release FlexSearch resources
+      if (this.searchService) {
+        await this.searchService.destroy();
+      }
+      
+      // Destroy the link service if it has cleanup methods
+      if (this.linkService && typeof (this.linkService as any).destroy === 'function') {
+        await (this.linkService as any).destroy();
+      }
+      
+      // Destroy the file service if it has cleanup methods
+      if (this.fileService && typeof (this.fileService as any).destroy === 'function') {
+        await (this.fileService as any).destroy();
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to destroy MemoryService: ${errorMessage}`);
+    }
+  }
 }
 
