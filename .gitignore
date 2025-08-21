@@ -104,3 +104,6 @@ mcp_config.json
 
 # Cursor
 .cursor/mcp.json
+
+# pnpm
+pnpm-lock.yaml
