@@ -1,240 +1,323 @@
-# Memory Tools MCP Server - LLM Usage Guide
+# Code Documentation Coverage - MCP Usage Guide
 
 ## Overview
 
-This MCP server provides powerful memory management tools designed to help you create, organize, and maintain high-quality documentation that serves both human readers and other AI assistants. Use these tools to build a comprehensive knowledge base that grows more valuable over time.
+This guide explains how to use the Memory Tools MCP server to create documentation memories that will be compatible with the code documentation coverage tool. The coverage tool analyzes your memories to identify which parts of your codebase are documented and which need attention.
 
-## Core Philosophy: Documentation That Serves Both Humans and LLMs
+## The Importance of Good Documentation
 
-When using these tools, always think about creating content that:
-- **Humans can easily scan and understand** - Clear structure, good formatting, logical flow
-- **LLMs can efficiently process and retrieve** - Well-tagged, properly categorized, linked content
-- **Gets better with use** - Each memory should reference and build upon existing knowledge
+⚠️ **Critical Warning: Coverage ≠ Quality**
 
-## Essential Tools for Effective Documentation
+While the coverage tool helps identify undocumented areas, **coverage metrics alone do not guarantee good documentation**. The goal is to create documentation that provides genuine value to humans and LLMs, not just to satisfy coverage requirements.
 
-### 1. `write_mem` - Creating New Knowledge
+### What Makes Documentation Valuable
 
-**When to use:** Documenting new information, insights, or processes
+**Good documentation provides insights that cannot be easily derived from reading the code:**
 
-**Best practices for LLMs:**
-- **Write descriptive titles** that clearly indicate the content (e.g., "React Server Components Best Practices" not just "React Tips")
-- **Use structured markdown** with headers, lists, and code blocks for easy scanning
-- **Add comprehensive tags** that capture all relevant concepts (e.g., ["react", "server-components", "performance", "nextjs"])
-- **Choose appropriate categories** to group related knowledge (e.g., "development", "architecture", "troubleshooting")
-- **Include sources** when documenting external information or research
-
-**Example workflow:**
+✅ **Explains the "Why" Behind the "What"**
 ```json
 {
-  "title": "Next.js 15 Server Actions Implementation Guide",
-  "content": "# Next.js 15 Server Actions Implementation Guide\n\n## Overview\nServer Actions in Next.js 15 provide a powerful way to handle form submissions and data mutations directly from React components.\n\n## Key Benefits\n- **Type Safety**: Full TypeScript support with automatic validation\n- **Performance**: No additional API routes needed\n- **UX**: Optimistic updates and error handling built-in\n\n## Implementation Steps\n1. Create the server action\n2. Add form validation\n3. Handle errors gracefully\n4. Implement optimistic updates\n\n## Common Pitfalls\n- Forgetting to add 'use server' directive\n- Not handling loading states\n- Missing error boundaries\n\n## Related Concepts\n- React Server Components\n- Form validation patterns\n- Error handling strategies",
-  "tags": ["nextjs", "server-actions", "react", "typescript", "forms", "validation"],
-  "category": "development",
-  "sources": ["https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions"]
+  "title": "Why we use bidirectional linking in MemoryService",
+  "content": "# Bidirectional Linking Rationale\n\n**Problem:** Traditional one-way links create orphaned references when memories are deleted.\n\n**Solution:** Bidirectional linking ensures referential integrity and enables discovery of related content.\n\n**Trade-offs:**\n- Slightly more complex implementation\n- Better data consistency\n- Improved search and discovery\n\n**Implementation Details:**\nThe LinkService maintains both forward and reverse link maps, automatically updating both when links are created or removed.",
+  "category": "DOC",
+  "tags": ["architecture", "linking", "data-integrity"],
+  "sources": ["src/memory/link-service.ts:1-50"]
 }
 ```
 
-### 2. `search_mem` - Finding Existing Knowledge
-
-**When to use:** Before creating new content, when you need to reference existing information, or to avoid duplicating knowledge
-
-**Best practices for LLMs:**
-- **Search before writing** to see if similar content already exists
-- **Use multiple search terms** to find related memories
-- **Filter by category and tags** to narrow down results
-- **Review existing content** to understand what's already documented
-
-**Critical for coding tasks:** Always search and read existing documentation before starting new development work. This improves your context and leads to better, more consistent code.
-
-**Example searches:**
+✅ **Documents Complex Business Logic and Edge Cases**
 ```json
-// Before writing about React performance
 {
-  "query": "React performance optimization techniques",
-  "category": "development",
-  "tags": ["react", "performance"]
-}
-
-// Finding troubleshooting guides
-{
-  "query": "Next.js build errors deployment issues",
-  "category": "troubleshooting",
-  "limit": 5
+  "title": "Memory validation edge cases and business rules",
+  "content": "# Memory Validation Business Rules\n\n**Critical Edge Cases:**\n\n1. **Circular References:** Prevent infinite loops in memory linking\n2. **Duplicate Prevention:** Allow same title if different categories\n3. **Content Sanitization:** Strip HTML but preserve markdown formatting\n4. **Size Limits:** 10MB max content size to prevent memory issues\n\n**Business Logic:**\n- Memories without categories default to 'general'\n- Auto-generated IDs use UUID v4 for collision resistance\n- Search indexing happens asynchronously to avoid blocking\n\n**Error Handling:**\n- Invalid JSON content returns 400, not 500\n- Missing required fields provide specific error messages\n- Network timeouts are retried with exponential backoff",
+  "category": "DOC",
+  "tags": ["validation", "business-rules", "edge-cases"],
+  "sources": ["src/memory/memory-service.ts:25-75", "src/memory/types.ts:15-30"]
 }
 ```
 
-### 3. `edit_mem` - Improving and Updating Knowledge
-
-**When to use:** Updating outdated information, adding new insights, correcting errors, or expanding existing content
-
-**Best practices for LLMs:**
-- **Preserve valuable existing content** while adding new information
-- **Update timestamps and review dates** to maintain freshness
-- **Add new tags** when content scope expands
-- **Link to related memories** to create knowledge connections
-- **Maintain version history** in the content itself
-
-**Example update:**
+✅ **Explains Performance Characteristics and Trade-offs**
 ```json
 {
-  "id": "existing-memory-id",
-  "content": "# Updated Next.js 15 Server Actions Guide\n\n## Overview\nServer Actions in Next.js 15 provide a powerful way to handle form submissions and data mutations directly from React components.\n\n## Key Benefits\n- **Type Safety**: Full TypeScript support with automatic validation\n- **Performance**: No additional API routes needed\n- **UX**: Optimistic updates and error handling built-in\n- **Streaming**: Support for streaming responses (NEW in 15.3)\n\n## Implementation Steps\n1. Create the server action\n2. Add form validation\n3. Handle errors gracefully\n4. Implement optimistic updates\n5. Configure streaming responses (NEW)\n\n## Common Pitfalls\n- Forgetting to add 'use server' directive\n- Not handling loading states\n- Missing error boundaries\n- Ignoring streaming capabilities\n\n## Related Concepts\n- React Server Components\n- Form validation patterns\n- Error handling strategies\n- Streaming responses\n\n## Update History\n- 2024-01-15: Added streaming response information\n- 2024-01-10: Initial version created",
-  "tags": ["nextjs", "server-actions", "react", "typescript", "forms", "validation", "streaming"]
+  "title": "FlexSearch performance characteristics and optimization",
+  "content": "# FlexSearch Performance Analysis\n\n**Performance Characteristics:**\n- **Indexing:** O(n) where n = number of tokens\n- **Search:** O(log n) for exact matches, O(n) for fuzzy\n- **Memory:** ~2-3x the original text size\n\n**Optimization Strategies:**\n1. **Tokenization:** Use 'forward' for speed, 'strict' for precision\n2. **Resolution:** Higher values = more memory, better recall\n3. **Depth:** Controls search depth vs performance trade-off\n\n**Real-world Performance:**\n- 10,000 memories: ~50ms search time\n- 100,000 memories: ~200ms search time\n- Index size: ~15MB for 10k memories\n\n**When to Use Each Mode:**\n- **Development:** Use 'tolerant' for quick iteration\n- **Production:** Use 'forward' for balanced performance\n- **High Precision:** Use 'strict' for exact matching",
+  "category": "DOC",
+  "tags": ["performance", "optimization", "flexsearch"],
+  "sources": ["src/utils/flexsearch-config.ts:1-40", "src/memory/search-service.ts:25-60"]
 }
 ```
 
-### 4. `link_mem` - Creating Knowledge Networks
+### What Makes Documentation Useless
 
-**When to use:** When you discover relationships between different pieces of knowledge, when content references other concepts, or to create navigable knowledge graphs
+❌ **Avoid Documentation That Merely Restates the Obvious**
 
-**Best practices for LLMs:**
-- **Link related concepts** to help readers discover connected information
-- **Create bidirectional relationships** so knowledge flows both ways
-- **Use descriptive link text** that explains the relationship
-- **Don't over-link** - only link when there's a meaningful connection
-
-**Example linking:**
+**Bad Example - Just Describes What the Code Does:**
 ```json
 {
-  "source_id": "nextjs-server-actions-memory-id",
-  "target_id": "react-server-components-memory-id",
-  "link_text": "Builds upon React Server Components concepts"
+  "title": "createMemory function documentation",
+  "content": "# createMemory Function\n\nThis function creates a new memory. It takes a title, content, and category as parameters. It returns a Promise that resolves to the created memory.",
+  "category": "DOC",
+  "tags": ["function", "memory"],
+  "sources": ["src/memory/memory-service.ts:25-35"]
 }
 ```
 
-### 5. `read_mem` - Retrieving and Reviewing Knowledge
-
-**When to use:** When you need to reference existing content, review what you've written, or understand the current state of knowledge
-
-**Best practices for LLMs:**
-- **Use different formats** based on your needs:
-  - `markdown` for editing or reviewing
-  - `plain` for extracting just the content
-  - `json` for programmatic processing
-- **Read memories before editing** to understand current content
-- **Use for fact-checking** when writing new content
-
-## Advanced Documentation Strategies
-
-### Building Comprehensive Knowledge Bases
-
-1. **Start with overview documents** that provide high-level understanding
-2. **Create detailed implementation guides** for specific topics
-3. **Develop troubleshooting sections** for common problems
-4. **Maintain reference materials** for quick lookups
-5. **Link everything together** to create a navigable knowledge graph
-
-### The Documentation-First Development Workflow
-
-**Before starting any coding task:**
-1. **Search existing documentation** for related patterns, solutions, or guidelines
-2. **Read relevant memories** to understand established conventions and approaches
-3. **Check for similar implementations** to avoid reinventing solutions
-4. **Review architectural decisions** to maintain consistency with existing code
-
-**Why this matters:**
-- **Better context** leads to more informed technical decisions
-- **Consistent patterns** across your codebase improve maintainability
-- **Avoiding duplication** saves time and reduces technical debt
-- **Learning from past solutions** prevents repeating mistakes
-- **Building on existing knowledge** creates more robust implementations
-
-**Example workflow for a new feature:**
+**Good Example - Explains Why and How:**
 ```json
-// 1. Search for existing patterns
 {
-  "query": "authentication middleware implementation patterns",
-  "category": "development",
-  "tags": ["authentication", "middleware", "security"]
+  "title": "createMemory validation and business logic",
+  "content": "# createMemory: Validation and Business Logic\n\n**Purpose:** Creates validated memories with proper error handling and business rule enforcement.\n\n**Key Business Rules:**\n1. **Title Validation:** Must be 1-200 characters, no HTML\n2. **Content Sanitization:** Strips HTML but preserves markdown\n3. **Category Handling:** Defaults to 'general' if not specified\n4. **Duplicate Prevention:** Same title allowed in different categories\n\n**Error Scenarios:**\n- Invalid JSON: Returns 400 with specific field errors\n- Network failures: Retries with exponential backoff\n- Validation errors: Returns structured error messages\n\n**Performance Considerations:**\n- Async validation to avoid blocking\n- Batch processing for multiple memories\n- Indexing happens in background thread",
+  "category": "DOC",
+  "tags": ["validation", "business-logic", "error-handling"],
+  "sources": ["src/memory/memory-service.ts:25-75"]
 }
-
-// 2. Read related memories to understand context
-{
-  "identifier": "auth-middleware-patterns-memory-id",
-  "format": "markdown"
-}
-
-// 3. Check for similar implementations
-{
-  "query": "user authentication flow login logout",
-  "category": "development"
-}
-
-// 4. Then start coding with full context
 ```
 
-### Content Organization Patterns
+### Documentation Quality Checklist
 
-**Hierarchical Structure:**
-- **Category** → **Topic** → **Specific Implementation**
-- Example: `development` → `frontend` → `react-hooks-custom`
+Before creating documentation, ask yourself:
 
-**Tag-Based Organization:**
-- Use consistent tag naming conventions
-- Group related tags together
-- Avoid overly specific or overly broad tags
+1. **Does this explain something not obvious from the code?**
+   - ✅ Explains business rules, edge cases, or design decisions
+   - ❌ Just restates what the function parameters are
 
-**Temporal Organization:**
-- Keep content current with regular updates
-- Use the `needs_review` tool to identify outdated content
-- Maintain update histories in your content
+2. **Would this help someone understand the system better?**
+   - ✅ Provides context about why certain choices were made
+   - ❌ Just lists method names and parameters
 
-### Quality Assurance for LLMs
+3. **Does this document complex logic or trade-offs?**
+   - ✅ Explains performance characteristics, error handling, or architectural decisions
+   - ❌ Just describes what the code does
 
-**Before saving any memory:**
-1. **Search for existing content** to avoid duplication
-2. **Check if you can enhance existing content** instead of creating new
-3. **Ensure proper categorization and tagging**
-4. **Link to related memories** when appropriate
-5. **Include sources** for external information
+4. **Would this be valuable for future maintenance?**
+   - ✅ Documents edge cases, gotchas, or non-obvious behaviors
+   - ❌ Just restates the obvious
 
-**Regular maintenance:**
-1. **Use `needs_review`** to identify outdated content
-2. **Search for similar content** and consider consolidation
-3. **Update tags and categories** as your knowledge base evolves
-4. **Remove broken links** and update references
+### When to Document vs. When to Skip
 
-## Tool Reference
+**Document These:**
+- Architectural decisions and their rationale
+- Complex business logic and edge cases
+- Performance characteristics and trade-offs
+- Error handling strategies
+- Integration patterns and dependencies
+- Security considerations
+- Testing strategies and coverage gaps
 
-### Core Tools
-- `write_mem` - Create new memories
-- `read_mem` - Retrieve existing memories
-- `edit_mem` - Update and improve memories
-- `search_mem` - Find relevant knowledge
-- `link_mem` - Connect related memories
-- `unlink_mem` - Remove connections
+**Skip These:**
+- Simple getter/setter methods with obvious purposes
+- Standard CRUD operations without special logic
+- Configuration files that are self-explanatory
+- Boilerplate code with no business logic
+- Comments that just restate what the code does
 
-### Maintenance Tools
-- `needs_review` - Find outdated content
-- `reindex_mems` - Rebuild search indexes
-- `migrate_memory_files` - Update file formats
-- `get_current_date` - Get timestamps for updates
+### Quality Over Quantity
 
-## Success Metrics
+Remember: **One high-quality documentation memory is worth ten trivial ones.** Focus on creating documentation that provides genuine insights and helps both humans and LLMs understand the deeper aspects of your codebase.
 
-Your documentation is working well when:
-- **Humans can quickly find** what they need
-- **LLMs can efficiently retrieve** relevant information
-- **Content builds upon itself** rather than repeating
-- **Knowledge is discoverable** through search and links
-- **Content stays current** and relevant
-- **Developers read docs first** before starting new coding tasks
-- **Code quality improves** due to better context and established patterns
-- **Technical decisions are consistent** across the codebase
+## Memory Categories for Code Documentation
 
-## Remember: You're Building for the Future
+When creating memories for code documentation, use these specific categories:
 
-Every memory you create becomes part of a growing knowledge base that will help:
-- **Future you** remember important details
-- **Other AI assistants** understand context and history
-- **Human users** find solutions quickly
-- **Your team** maintain institutional knowledge
+### 1. **ADR** - Architecture Decision Records
+Use for high-level architectural decisions and design patterns that explain the "why" behind architectural choices.
 
-**The virtuous cycle of documentation:**
-1. **Write good docs** when developing features
-2. **Read existing docs** before starting new work
-3. **Improve docs** based on what you learn while coding
-4. **Repeat** - each cycle makes your knowledge base more valuable
+**Example:**
+```json
+{
+  "title": "ADR-001: Memory-based documentation over traditional docs",
+  "content": "# ADR-001: Memory-Based Documentation Architecture\n\n**Date:** 2024-01-15\n\n**Context:** Need to choose between traditional documentation (README, wiki, etc.) and a memory-based system for LLM-friendly documentation.\n\n**Decision:** Use memory-based documentation with structured JSON format and semantic search capabilities.\n\n**Rationale:**\n- **LLM Compatibility:** Memories can be directly ingested by LLMs without parsing\n- **Semantic Search:** FlexSearch enables natural language queries across documentation\n- **Structured Data:** JSON format allows for precise source mapping and coverage analysis\n- **Version Control:** Git-friendly format enables tracking documentation changes\n- **Bidirectional Linking:** Enables discovery of related documentation\n\n**Trade-offs:**\n- **Learning Curve:** Team needs to learn new documentation format\n- **Tooling:** Requires custom tools for coverage analysis and management\n- **Migration:** Existing documentation needs conversion\n- **Search Dependency:** Relies on FlexSearch for effective discovery\n\n**Implementation Strategy:**\n- Start with critical architectural decisions and complex business logic\n- Gradually migrate existing documentation\n- Build tooling for coverage analysis and quality assessment\n- Establish patterns for linking related memories",
+  "category": "ADR",
+  "tags": ["architecture", "documentation", "memory-system", "llm-integration"],
+  "sources": ["src/memory/", "src/utils/flexsearch.ts", "src/memory/memory-service.ts"]
+}
+```
 
-Focus on creating content that gets more valuable over time, not just documenting what you know today. Remember: the best documentation is both written and read consistently. 
+### 2. **DOC** - Documentation about features, business logic, edge-cases, classes and functions
+Use for documenting specific code elements, functions, classes or features, business logic, edge cases.
+
+**Example:**
+```json
+{
+  "title": "MemoryService validation and error handling patterns",
+  "content": "# MemoryService: Validation and Error Handling Architecture\n\n**Purpose:** Core service for memory operations with comprehensive validation and robust error handling.\n\n**Critical Business Rules:**\n\n**Memory Creation Validation:**\n- **Title Requirements:** 1-200 characters, no HTML tags, must be unique within category\n- **Content Sanitization:** Strips HTML but preserves markdown formatting\n- **Category Handling:** Defaults to 'general' if not specified, validates against allowed categories\n- **Size Limits:** 10MB max content size to prevent memory issues\n\n**Error Handling Strategy:**\n- **Validation Errors:** Return 400 with specific field errors and suggestions\n- **Network Failures:** Implement exponential backoff with max 3 retries\n- **Concurrent Access:** Use optimistic locking to prevent race conditions\n- **Partial Failures:** Rollback changes if any part of the operation fails\n\n**Performance Optimizations:**\n- **Async Validation:** Non-blocking validation to maintain responsiveness\n- **Batch Operations:** Process multiple memories in single transaction\n- **Background Indexing:** Search index updates happen asynchronously\n- **Caching Strategy:** LRU cache for frequently accessed memories\n\n**Edge Cases Handled:**\n- **Circular References:** Detect and prevent infinite loops in memory linking\n- **Duplicate Prevention:** Allow same title across different categories\n- **Content Encoding:** Handle UTF-8, HTML entities, and special characters\n- **Memory Limits:** Graceful degradation when approaching system limits\n\n**Integration Points:**\n- **SearchService:** Automatic indexing of new memories\n- **LinkService:** Bidirectional link management\n- **FileService:** Persistent storage with atomic writes\n- **ValidationService:** Centralized validation logic",
+  "category": "DOC",
+  "tags": ["validation", "error-handling", "business-logic", "performance", "architecture"],
+  "sources": ["src/memory/memory-service.ts:25-75", "src/memory/types.ts:15-30", "src/memory/validation-service.ts"]
+}
+```
+
+### 3. **CTX** - Context memories for LLM sessions
+Use for any information that would be valuable for LLMs to remember during development sessions.
+
+**Example:**
+```json
+{
+  "title": "Memory system development patterns and conventions",
+  "content": "# Memory System Development Patterns\n\n**Core Development Principles:**\n\n**Memory Creation Patterns:**\n- Always validate input before processing\n- Use structured error responses with specific field errors\n- Implement idempotent operations where possible\n- Handle concurrent access with optimistic locking\n\n**Search and Discovery Patterns:**\n- Use semantic search for natural language queries\n- Implement fuzzy matching for typo tolerance\n- Cache frequently accessed search results\n- Provide relevance scoring for search results\n\n**Data Integrity Patterns:**\n- Use bidirectional linking to maintain referential integrity\n- Implement atomic operations for multi-step processes\n- Validate data consistency on read operations\n- Use transactions for complex operations\n\n**Performance Optimization Patterns:**\n- Async operations for non-blocking user experience\n- Background processing for heavy operations\n- LRU caching for frequently accessed data\n- Batch operations for bulk processing\n\n**Error Handling Patterns:**\n- Return structured error responses with actionable messages\n- Implement graceful degradation for non-critical features\n- Use exponential backoff for retry operations\n- Log errors with sufficient context for debugging\n\n**Testing Patterns:**\n- Unit tests for business logic validation\n- Integration tests for service interactions\n- Performance tests for search operations\n- Error scenario testing for edge cases\n\n**Code Organization Patterns:**\n- Separate concerns: validation, business logic, data access\n- Use dependency injection for testability\n- Implement interfaces for service contracts\n- Keep services focused on single responsibilities",
+  "category": "CTX",
+  "tags": ["patterns", "conventions", "development", "architecture", "best-practices"],
+  "sources": ["src/memory/", "src/utils/", "tests/"]
+}
+```
+
+## Source Reference Format
+
+The `sources` array is crucial for coverage analysis. Use these formats:
+
+### Basic File References
+```json
+"sources": ["src/index.ts"]
+```
+Covers the entire file.
+
+### Line Range References
+```json
+"sources": ["src/memory/types.ts:15-30"]
+```
+Covers lines 15 through 30 (inclusive).
+
+### Multiple Line Ranges
+```json
+"sources": ["src/memory/types.ts:15-30", "src/memory/types.ts:45-60"]
+```
+Covers multiple sections of the same file.
+
+### Multiple File References
+```json
+"sources": [
+  "src/memory/types.ts:1-50",
+  "src/memory/memory-service.ts:25-75",
+  "tests/memory/memory-service.test.ts:10-40"
+]
+```
+
+## Best Practices for Coverage-Compatible Documentation
+
+### 1. **Be Specific with Sources**
+Instead of:
+```json
+"sources": ["src/memory/"]
+```
+
+Use:
+```json
+"sources": [
+  "src/memory/types.ts:1-50",
+  "src/memory/memory-service.ts:25-75",
+  "src/memory/file-service.ts:10-30"
+]
+```
+
+### 2. **Document at the Right Level**
+- **ADR**: Document architectural decisions affecting multiple files
+- **DOC**: Document specific functions, classes, or features
+- **CTX**: Document conventions, patterns, or context
+
+### 3. **Use Descriptive Titles**
+Good:
+```json
+"title": "MemoryService.createMemory() method documentation"
+```
+
+Avoid:
+```json
+"title": "Memory service"
+```
+
+### 4. **Include Code Examples**
+```json
+{
+  "title": "FlexSearch configuration options",
+  "content": "# FlexSearch Configuration\n\n**Tokenization Methods:**\n- `strict` - Exact matching\n- `forward` - Forward matching (default)\n- `reverse` - Reverse matching\n- `full` - Full matching\n- `tolerant` - Fuzzy matching\n\n**Example Configuration:**\n```typescript\nconst config = {\n  tokenize: 'forward',\n  resolution: 9,\n  depth: 3,\n  threshold: 1\n};\n```",
+  "category": "DOC",
+  "tags": ["flexsearch", "configuration", "search"],
+  "sources": ["src/utils/flexsearch-config.ts:1-40"]
+}
+```
+
+### 5. **Link Related Documentation**
+```json
+{
+  "title": "Memory linking functionality",
+  "content": "# Memory Linking\n\n**Purpose:** Create bidirectional links between related memories.\n\n**Related Documentation:**\n- [[MemoryService class documentation]]\n- [[ADR-001: TypeScript Adoption]]\n\n**Implementation:** Uses LinkService for bidirectional link management.",
+  "category": "DOC",
+  "tags": ["linking", "relationships", "memory"],
+  "sources": ["src/memory/link-service.ts:1-50"]
+}
+```
+
+## Example: Complete Documentation Workflow
+
+### Step 1: Document Architecture Decision
+```json
+{
+  "title": "ADR-002: Using FlexSearch for full-text search",
+  "content": "# ADR-002: FlexSearch for Search\n\n**Context:** Need fast, flexible full-text search for memories.\n\n**Decision:** Use FlexSearch for its speed and configurability.\n\n**Consequences:**\n- Fast search performance\n- Configurable search behavior\n- Lightweight implementation\n- Good TypeScript support",
+  "category": "ADR",
+  "tags": ["architecture", "search", "flexsearch"],
+  "sources": ["src/utils/flexsearch.ts", "src/utils/flexsearch-config.ts"]
+}
+```
+
+### Step 2: Document Implementation
+```json
+{
+  "title": "SearchService implementation with FlexSearch",
+  "content": "# SearchService Class\n\n**Purpose:** Provides full-text search capabilities using FlexSearch.\n\n**Key Methods:**\n- `initialize()` - Sets up FlexSearch index\n- `indexMemory()` - Adds memory to search index\n- `search()` - Performs full-text search\n\n**Configuration:**\nUses FlexSearch with forward tokenization and resolution 9.",
+  "category": "DOC",
+  "tags": ["search", "service", "flexsearch"],
+  "sources": ["src/memory/search-service.ts:1-80"]
+}
+```
+
+### Step 3: Document Context
+```json
+{
+  "title": "Search configuration patterns",
+  "content": "# Search Configuration Patterns\n\n**Common Configurations:**\n\n**High Precision:**\n```typescript\n{ tokenize: 'strict', resolution: 15, depth: 5 }\n```\n\n**Fast Search:**\n```typescript\n{ tokenize: 'tolerant', resolution: 5, depth: 2 }\n```\n\n**German Language:**\n```typescript\n{ language: 'de', charset: 'latinadvanced' }\n```",
+  "category": "CTX",
+  "tags": ["search", "configuration", "patterns"],
+  "sources": ["src/utils/flexsearch-config.ts:20-60"]
+}
+```
+
+## Coverage Tool Integration
+
+When you create memories following these patterns, the coverage tool will be able to:
+
+1. **Identify documented code** by parsing the `sources` arrays
+2. **Calculate coverage percentages** for files, functions, and classes
+3. **Find undocumented sections** that need attention
+4. **Generate reports** showing documentation gaps
+5. **Provide recommendations** for improving coverage
+
+## Command Line Usage
+
+Once you've created memories, run the coverage tool:
+
+```bash
+# Basic coverage report
+pnpm mem-coverage
+
+# Coverage for specific categories
+pnpm mem-coverage --categories=DOC,ADR
+
+# Coverage with custom config
+pnpm mem-coverage --config=./coverage.json
+
+# Coverage with threshold
+pnpm mem-coverage --threshold=80
+```
+
+## Tips for LLMs
+
+1. **Always include specific source references** in the `sources` array
+2. **Use the appropriate category** (ADR, DOC, CTX) for the type of documentation
+3. **Be precise with line ranges** when documenting specific functions or classes
+4. **Link related memories** to create a knowledge graph
+5. **Include code examples** in your documentation content
+6. **Use descriptive titles** that clearly indicate what's being documented
+7. **Add relevant tags** for better categorization and search
+
+This approach ensures your documentation will be fully compatible with the coverage analysis tool and provides maximum value for understanding your codebase's documentation completeness.
