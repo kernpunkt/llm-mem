@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from "vitest";
 import { promises as fs } from "node:fs";
 import { join } from "node:path";
 import { runCoverageCLI } from "../src/mem-coverage.js";
@@ -8,8 +8,10 @@ describe("CI/CD integration", () => {
   const tmpDir = join(process.cwd(), "tests/tmp/ci");
   let logSpy: any;
   let errSpy: any;
+  const createdFiles: string[] = [];
 
   beforeEach(async () => {
+    // Ensure the directory exists (global setup might have cleaned it)
     await fs.mkdir(tmpDir, { recursive: true });
     logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -30,7 +32,7 @@ describe("CI/CD integration", () => {
 
     // Mock fs.readFile for line counting and config files
     const readFileSpy = vi.spyOn(fs, "readFile");
-    readFileSpy.mockImplementation((path: string | Buffer | URL) => {
+    readFileSpy.mockImplementation((path: any) => {
       const p = path.toString();
       if (p.includes("src/test.ts")) {
         return Promise.resolve("line\n".repeat(100)); // 100 lines
@@ -80,6 +82,25 @@ describe("CI/CD integration", () => {
   afterEach(async () => {
     logSpy.mockRestore();
     errSpy.mockRestore();
+    
+    // Clean up individual test files
+    for (const file of createdFiles) {
+      try {
+        await fs.unlink(file);
+      } catch (error) {
+        // Ignore errors if file was already deleted
+      }
+    }
+    createdFiles.length = 0;
+  });
+
+  afterAll(async () => {
+    // Clean up the entire tmp directory
+    try {
+      await fs.rm(join(process.cwd(), "tests/tmp"), { recursive: true, force: true });
+    } catch (error) {
+      // Ignore errors if directory was already deleted
+    }
   });
 
   it("exits with code 1 when global threshold not met", async () => {
@@ -88,6 +109,7 @@ describe("CI/CD integration", () => {
       thresholds: { overall: 99 },
       include: ["src/**", "tests/**"]
     }));
+    createdFiles.push(configPath);
 
     const { exitCode } = await runCoverageCLI({ config: configPath, threshold: 99 });
     expect(exitCode).toBe(1);
@@ -99,6 +121,7 @@ describe("CI/CD integration", () => {
       thresholds: { overall: 0 },
       include: ["src/**", "tests/**"]
     }));
+    createdFiles.push(configPath);
 
     const { exitCode } = await runCoverageCLI({ config: configPath, threshold: 0 });
     expect(exitCode).toBe(0);
@@ -110,6 +133,7 @@ describe("CI/CD integration", () => {
       thresholds: { overall: 0, src: 95, tests: 0 },
       include: ["src/**", "tests/**"]
     }));
+    createdFiles.push(configPath);
 
     const { exitCode } = await runCoverageCLI({ config: configPath });
     expect(exitCode).toBe(1);
@@ -124,6 +148,7 @@ describe("CI/CD integration", () => {
       thresholds: { overall: 0 },
       include: ["src/**"]
     }));
+    createdFiles.push(configPath);
 
     await runCoverageCLI({ config: configPath, verbose: true });
     const errCalls = errSpy.mock.calls.flat().join("\n");
@@ -142,6 +167,7 @@ describe("CI/CD integration", () => {
         }
       };
     `);
+    createdFiles.push(configPath);
 
     const { exitCode } = await runCoverageCLI({ config: configPath, threshold: 99 });
     expect(exitCode).toBe(1); // 99% threshold should fail
@@ -155,6 +181,7 @@ describe("CI/CD integration", () => {
         coverageThreshold: { global: { lines: 99 } }
       };
     `);
+    createdFiles.push(configPath);
 
     const { exitCode } = await runCoverageCLI({ config: configPath, threshold: 99 });
     expect(exitCode).toBe(1); // 99% threshold should fail
