@@ -101,3 +101,6 @@ Thumbs.db
 # MCP specific
 *.mcp.json
 mcp_config.json
+
+# Cursor
+.cursor/mcp.json
