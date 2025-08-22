@@ -47,9 +47,6 @@ pnpm install
 
 # allow build scripts
 pnpm approve-builds
-
-# Build all packages
-pnpm build
 ```
 
 ## 📥 Installation in Other Projects - recommended for using the mcp and cli in your projects
@@ -61,21 +58,9 @@ You can install the entire monorepo into any Node.js project to use the CLI and 
 ```bash
 # Install the entire monorepo (recommended)
 pnpm install -d git+ssh://git@github.com:kernpunkt/llm-mem.git#main
-```
-
-**Note**: After installation, you'll need to build the package manually. The package will be downloaded but not built automatically to ensure reliable installation.
-
-**After installation, build the package**:
-```bash
-cd node_modules/llm-mem
-pnpm install
+# allow build scripts
 pnpm approve-builds
-pnpm build
 ```
-
-**Why manual build?**: The package can't automatically build itself during installation due to npm/pnpm lifecycle script limitations when installing from Git repositories.
-**Why rebuild sqlite3 with npm?**:Because the native binaries might not work in your environment and pnpm seems not to be able to rebuild the package correctly
-
 
 ### Usage and Configuration
 

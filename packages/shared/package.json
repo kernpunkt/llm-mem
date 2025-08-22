@@ -12,7 +12,6 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "postinstall":"npm rebuild sqlite3",
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
