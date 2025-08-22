@@ -1,0 +1,17 @@
+{
+    "thresholds": {
+        "overall": 85,
+        "packages": 90
+    },
+    "exclude": [
+        "node_modules/**",
+        "dist/**",
+        "*.spec.ts"
+    ],
+    "include": [
+        "packages/**/*.ts"
+    ],
+    "categories": ["DOC", "ADR", "CTX"],
+    "memoryStorePath": "./docs/md",
+    "indexPath": "./docs/db"
+}
