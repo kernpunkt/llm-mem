@@ -10,8 +10,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "prepare": "pnpm install",
-    "postinstall": "pnpm approve-builds",
+    "postinstall": "pnpm install --ignore-scripts",
     "build": "pnpm -r build",
     "build:shared": "pnpm --filter @llm-mem/shared build",
     "build:cli": "pnpm --filter @llm-mem/cli build",
