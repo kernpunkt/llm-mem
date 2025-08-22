@@ -506,7 +506,7 @@ export class MemoryService {
     message: string;
   }> {
     await this.initialize();
-    const { source_id, target_id } = params;
+    const { source_id, target_id, link_text } = params;
 
     // Verify both memories exist
     const source = await this.readMemory({ id: source_id });
@@ -520,7 +520,7 @@ export class MemoryService {
     }
 
     // Create bidirectional links
-    await this.linkService.linkMemories({ id: source_id }, { id: target_id });
+    await this.linkService.linkMemories({ id: source_id }, { id: target_id }, link_text);
 
     return {
       source_id,

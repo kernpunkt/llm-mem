@@ -333,12 +333,12 @@ export function createServer(): McpServer {
       target_id: z.string().uuid().describe("ID of the target memory to link to"),
       link_text: z.string().optional().describe("Custom link text (defaults to target title)")
     },
-    async ({ source_id, target_id }) => {
+    async ({ source_id, target_id, link_text }) => {
       try {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
-        const result = await memoryService.linkMemories({ source_id, target_id });
+        const result = await memoryService.linkMemories({ source_id, target_id, link_text });
         
         return {
           content: [{ type: "text", text: result.message }],

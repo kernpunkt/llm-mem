@@ -438,8 +438,8 @@ End of content`;
     });
 
     // Link the memories together
-    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id });
-    await service.linkMemories({ source_id: anotherLinkingMemory.id, target_id: targetMemory.id });
+    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id, link_text: "Target Memory" });
+    await service.linkMemories({ source_id: anotherLinkingMemory.id, target_id: targetMemory.id, link_text: "Target Memory" });
 
     // Verify the links are established
     const updatedTarget = await service.readMemory({ id: targetMemory.id });
@@ -483,7 +483,7 @@ End of content`;
     });
 
     // Link the memories together
-    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id });
+    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id, link_text: "Content Target" });
 
     // Update only the content of the target memory (no title change)
     const updatedTarget = await service.updateMemory({
@@ -517,7 +517,7 @@ End of content`;
     });
 
     // Link the memories together
-    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id });
+    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id, link_text: "Special Title" });
 
     // Rename the target memory to a simpler title
     const renamedTarget = await service.updateMemory({
@@ -565,9 +565,9 @@ End of content`;
     });
 
     // Link all memories to the target
-    await service.linkMemories({ source_id: linkingMemory1.id, target_id: targetMemory.id });
-    await service.linkMemories({ source_id: linkingMemory2.id, target_id: targetMemory.id });
-    await service.linkMemories({ source_id: linkingMemory3.id, target_id: targetMemory.id });
+    await service.linkMemories({ source_id: linkingMemory1.id, target_id: targetMemory.id, link_text: "Multi Target" });
+    await service.linkMemories({ source_id: linkingMemory2.id, target_id: targetMemory.id, link_text: "Multi Target" });
+    await service.linkMemories({ source_id: linkingMemory3.id, target_id: targetMemory.id, link_text: "Multi Target" });
 
     // Rename the target memory
     const renamedTarget = await service.updateMemory({
