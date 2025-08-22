@@ -45,7 +45,7 @@ cd llm-mem
 # Install dependencies
 pnpm install
 
-# allow build scripts
+# allow build scripts this will automatically build all packages and rebuild sqlite3 for your plattform
 pnpm approve-builds
 ```
 
@@ -58,7 +58,7 @@ You can install the entire monorepo into any Node.js project to use the CLI and 
 ```bash
 # Install the entire monorepo (recommended)
 pnpm install -d git+ssh://git@github.com:kernpunkt/llm-mem.git#main
-# allow build scripts
+# allow build scripts, this will automatically install all dependencies and build all packages and rebuild sqlite3 for your plattform
 pnpm approve-builds
 ```
 
