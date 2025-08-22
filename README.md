@@ -60,7 +60,7 @@ You can install the entire monorepo into any Node.js project to use the CLI and 
 
 ```bash
 # Install the entire monorepo (recommended)
-pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
+pnpm install -d git+ssh://git@github.com:kernpunkt/llm-mem.git#main
 ```
 
 **Note**: After installation, you'll need to build the package manually. The package will be downloaded but not built automatically to ensure reliable installation.
