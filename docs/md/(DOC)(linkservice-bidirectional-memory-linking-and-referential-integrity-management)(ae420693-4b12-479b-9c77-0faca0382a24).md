@@ -9,13 +9,13 @@ tags:
   - memory-relationships
 category: DOC
 created_at: '2025-08-23T02:28:37.358Z'
-updated_at: '2025-08-23T05:31:30.184Z'
+updated_at: '2025-08-23T05:41:33.644Z'
 last_reviewed: '2025-08-23T02:28:37.358Z'
 links:
-  - c47b13f0-b934-40f2-807b-d301c6d9ed0c
-  - 5ec17d14-bce3-411b-bbda-0945af019338
-  - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
   - 9642186c-a143-4870-b41f-b900a45acd95
+  - c47b13f0-b934-40f2-807b-d301c6d9ed0c
+  - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
+  - 5ec17d14-bce3-411b-bbda-0945af019338
 sources:
   - packages/shared/src/memory/link-service.ts:1-100
   - packages/shared/src/memory/link-service.ts:101-148
@@ -282,4 +282,5 @@ The service leverages **wiki-link utilities**:
 - **Link Recommendations:** Suggest relevant links based on content
 - **Link Migration:** Tools for migrating between different link formats
 - ADR-002: Memory-Based Documentation System with FlexSearch
-- [[(DOC)(wiki-link-system-bidirectional-link-management-and-content-consistency)(9642186c-a143-4870-b41f-b900a45acd95)|Wiki-Link System: Bidirectional Link Management and Content Consistency]]
+- ADR-002: Memory-Based Documentation System with FlexSearch
+- [[(DOC)(shared-package-public-api-module-organization-and-export-strategy)(5ec17d14-bce3-411b-bbda-0945af019338)|Shared Package Public API: Module Organization and Export Strategy]]

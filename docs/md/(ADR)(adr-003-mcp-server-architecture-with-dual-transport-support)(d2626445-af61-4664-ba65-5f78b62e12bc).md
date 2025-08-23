@@ -10,11 +10,11 @@ tags:
   - llm-integration
 category: ADR
 created_at: '2025-08-22T13:50:50.264Z'
-updated_at: '2025-08-23T05:31:23.946Z'
+updated_at: '2025-08-23T05:40:59.523Z'
 last_reviewed: '2025-08-22T13:50:50.264Z'
 links:
-  - 3b201e08-784c-4a83-9a0e-05d715882e80
   - a91a6906-8f61-4071-a548-15b96967605e
+  - 3b201e08-784c-4a83-9a0e-05d715882e80
 sources:
   - packages/mcp/src/index.ts:1-100
   - packages/mcp/package.json:1-45
@@ -79,4 +79,5 @@ sources:
 
 
 ## Related
-- [[(CTX)(llm-memory-management-tools-project-overview)(a91a6906-8f61-4071-a548-15b96967605e)|LLM Memory Management Tools - Project Overview]]
+- LLM Memory Management Tools - Project Overview
+- [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]

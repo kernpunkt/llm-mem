@@ -18,9 +18,9 @@ export class LinkService {
     const srcLinks = Array.from(new Set([...(src.links || []), tgt.id]));
     const tgtLinks = Array.from(new Set([...(tgt.links || []), src.id]));
 
-    // Clean up existing wiki-style links and add new ones
-    let srcContent = this.cleanWikiLinks(src.content);
-    let tgtContent = this.cleanWikiLinks(tgt.content);
+    // Only remove the specific link being updated (if it exists) to preserve other links
+    let srcContent = this.removeSpecificWikiLink(src.content, tgt.title);
+    let tgtContent = this.removeSpecificWikiLink(tgt.content, src.title);
 
     // Add wiki-style link to source memory
     srcContent = this.addWikiLinkToContent(srcContent, tgt.title, linkText, tgt.file_path);
@@ -44,9 +44,9 @@ export class LinkService {
     const srcLinks = (src.links || []).filter((id) => id !== tgt.id);
     const tgtLinks = (tgt.links || []).filter((id) => id !== src.id);
 
-    // Remove wiki-style links from markdown content
-    let srcContent = this.cleanWikiLinks(src.content);
-    let tgtContent = this.cleanWikiLinks(tgt.content);
+    // Only remove the specific wiki-style links being unlinked to preserve other links
+    let srcContent = this.removeSpecificWikiLink(src.content, tgt.title);
+    let tgtContent = this.removeSpecificWikiLink(tgt.content, src.title);
 
     // Update both memories with new links and content
     await this.fileService.updateMemoryFile(src.file_path, { links: srcLinks }, srcContent);
@@ -142,6 +142,28 @@ export class LinkService {
     cleaned = cleaned.trimEnd();
     
     return cleaned;
+  }
+
+  /**
+   * Removes a specific wiki-style link from content by title.
+   * This is a more targeted removal compared to cleanWikiLinks.
+   * @param content - The markdown content to update
+   * @param title - The title of the link to remove
+   * @returns Updated content with the specific wiki-style link removed
+   */
+  private removeSpecificWikiLink(content: string, title: string): string {
+    // Escape special regex characters in title
+    const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Remove the specific wiki-style link (both simple and with display text)
+    const linkRegex = new RegExp(`\\n\\s*- \\[\\[${escapedTitle}(\\|[^\\]]*)?\\]\\]\\n?`, 'g');
+    let updatedContent = content.replace(linkRegex, '');
+
+    // Clean up empty "Related" sections that might have been left behind
+    updatedContent = updatedContent.replace(/\n## Related\n\s*\n/g, '\n');
+    updatedContent = updatedContent.replace(/\n## Related\n\s*$/g, '');
+
+    return updatedContent;
   }
 }
 

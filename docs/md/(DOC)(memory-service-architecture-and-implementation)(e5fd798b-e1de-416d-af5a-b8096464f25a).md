@@ -10,15 +10,15 @@ tags:
   - integration
 category: DOC
 created_at: '2025-08-22T13:51:21.570Z'
-updated_at: '2025-08-23T05:31:13.959Z'
+updated_at: '2025-08-23T05:41:25.080Z'
 last_reviewed: '2025-08-22T13:51:21.570Z'
 links:
   - cdd80bbf-3f1e-4984-abed-279a746c00cb
-  - f92958ad-882a-4739-9563-3347880830b8
-  - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
   - ac69f5f1-456a-44e3-8e63-cd39c29dd351
   - 64b2b4b3-c703-4ca0-9f26-1d007af8de39
   - de3c18d8-44c1-469f-b704-ccc3ff384594
+  - f92958ad-882a-4739-9563-3347880830b8
+  - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
 sources:
   - packages/shared/src/memory/memory-service.ts:1-100
   - packages/shared/src/memory/memory-service.ts:101-200
@@ -101,4 +101,5 @@ sources:
 
 ## Related- Memory Data Types and Validation Schemas- Link Service for Bidirectional Memory Relationships- Memory System Integration Patterns
 - MemoryService: Core Memory Management Architecture and Business Logic
-- [[(DOC)(link-service-for-bidirectional-memory-relationships)(de3c18d8-44c1-469f-b704-ccc3ff384594)|Link Service for Bidirectional Memory Relationships]]
+- FlexSearch Configuration and Performance Optimization
+- [[(DOC)(memoryservice-core-memory-management-architecture-and-business-logic)(cfa621d1-f8be-4065-aa25-2e82aa56e6b6)|MemoryService: Core Memory Management Architecture and Business Logic]]

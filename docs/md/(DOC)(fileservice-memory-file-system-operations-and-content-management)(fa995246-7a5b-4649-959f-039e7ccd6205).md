@@ -9,11 +9,11 @@ tags:
   - content-management
 category: DOC
 created_at: '2025-08-23T02:29:07.162Z'
-updated_at: '2025-08-23T05:31:03.124Z'
+updated_at: '2025-08-23T05:41:33.643Z'
 last_reviewed: '2025-08-23T02:29:07.162Z'
 links:
-  - 5ec17d14-bce3-411b-bbda-0945af019338
   - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
+  - 5ec17d14-bce3-411b-bbda-0945af019338
 sources:
   - packages/shared/src/memory/file-service.ts:1-100
   - packages/shared/src/memory/file-service.ts:101-224
@@ -308,4 +308,5 @@ The service leverages **utility functions**:
 
 ## Related
 - Shared Package Public API: Module Organization and Export Strategy
-- [[(DOC)(memoryservice-core-memory-management-architecture-and-business-logic)(cfa621d1-f8be-4065-aa25-2e82aa56e6b6)|MemoryService: Core Memory Management Architecture and Business Logic]]
+- MemoryService: Core Memory Management Architecture and Business Logic
+- [[(DOC)(shared-package-public-api-module-organization-and-export-strategy)(5ec17d14-bce3-411b-bbda-0945af019338)|Shared Package Public API: Module Organization and Export Strategy]]

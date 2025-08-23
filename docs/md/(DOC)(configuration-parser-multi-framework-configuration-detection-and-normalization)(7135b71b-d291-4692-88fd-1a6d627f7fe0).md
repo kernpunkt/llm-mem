@@ -12,7 +12,7 @@ tags:
   - jest
 category: DOC
 created_at: '2025-08-23T02:26:23.109Z'
-updated_at: '2025-08-23T05:30:52.572Z'
+updated_at: '2025-08-23T05:40:59.517Z'
 last_reviewed: '2025-08-23T02:26:23.109Z'
 links:
   - 3b201e08-784c-4a83-9a0e-05d715882e80

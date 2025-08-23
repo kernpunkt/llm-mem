@@ -723,7 +723,8 @@ ${stats.recommendations.join('\n')}`;
             if (targetMemory) {
               await memoryService.linkMemories({ 
                 source_id: memory_id, 
-                target_id: linkId 
+                target_id: linkId,
+                link_text: targetMemory.title
               });
               successfulLinks++;
             } else {
@@ -1696,7 +1697,8 @@ ${stats.recommendations.join('\n')}`;
                     if (targetMemory) {
                       await memoryService.linkMemories({ 
                         source_id: memory_id, 
-                        target_id: linkId 
+                        target_id: linkId,
+                        link_text: targetMemory.title
                       });
                       successfulLinks++;
                     } else {

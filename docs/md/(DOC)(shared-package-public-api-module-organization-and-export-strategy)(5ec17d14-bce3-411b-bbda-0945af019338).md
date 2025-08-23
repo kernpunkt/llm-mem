@@ -9,14 +9,14 @@ tags:
   - versioning
 category: DOC
 created_at: '2025-08-23T02:22:34.955Z'
-updated_at: '2025-08-23T05:31:05.311Z'
+updated_at: '2025-08-23T05:50:10.385Z'
 last_reviewed: '2025-08-23T02:22:34.955Z'
 links:
-  - d2331290-47d8-4f49-b0ce-4f350a2ad517
-  - ae420693-4b12-479b-9c77-0faca0382a24
   - fa995246-7a5b-4649-959f-039e7ccd6205
+  - ae420693-4b12-479b-9c77-0faca0382a24
   - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
   - de696ea4-c10b-462a-84b2-71073e3c97aa
+  - d2331290-47d8-4f49-b0ce-4f350a2ad517
 sources:
   - packages/shared/src/index.ts:1-13
 ---
@@ -216,4 +216,6 @@ const memory = await memoryService.createMemory({
 
 ## Related- FileService: Memory File System Operations and Content Management- Link Service for Bidirectional Memory Relationships
 - FileService: Memory File System Operations and Content Management
-- [[(DOC)(searchservice-full-text-search-integration-and-index-management)(de696ea4-c10b-462a-84b2-71073e3c97aa)|SearchService: Full-Text Search Integration and Index Management]]
+- SearchService: Full-Text Search Integration and Index Management
+- [[(ADR)(adr-001-monorepo-architecture-with-pnpm-workspaces)(d2331290-47d8-4f49-b0ce-4f350a2ad517)|ADR-001: Monorepo Architecture with pnpm Workspaces]]
+- [[(ADR)(adr-001-monorepo-architecture-with-pnpm-workspaces)(d2331290-47d8-4f49-b0ce-4f350a2ad517)|ADR-001: Monorepo Architecture with pnpm Workspaces]]

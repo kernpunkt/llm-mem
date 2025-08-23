@@ -9,11 +9,11 @@ tags:
   - continuous-integration
 category: CTX
 created_at: '2025-08-22T13:53:58.449Z'
-updated_at: '2025-08-23T05:30:44.438Z'
+updated_at: '2025-08-23T05:40:55.950Z'
 last_reviewed: '2025-08-22T13:53:58.449Z'
 links:
-  - 1cab02b8-2a60-4fad-b3d2-0f51fb7f96ec
   - 0348ba55-8529-4502-ac43-4061524ed7e1
+  - 1cab02b8-2a60-4fad-b3d2-0f51fb7f96ec
 sources:
   - vitest.config.ts
   - packages/shared/tests/
@@ -157,4 +157,5 @@ sources:
 
 
 ## Related
-- [[(ADR)(adr-004-typescript-first-development-with-strict-type-safety)(0348ba55-8529-4502-ac43-4061524ed7e1)|ADR-004: TypeScript-First Development with Strict Type Safety]]
+- Development Workflow and Best Practices
+- [[(CTX)(development-workflow-and-best-practices)(1cab02b8-2a60-4fad-b3d2-0f51fb7f96ec)|Development Workflow and Best Practices]]
