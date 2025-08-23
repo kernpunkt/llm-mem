@@ -20,6 +20,7 @@
     "dev": "tsx src/mem-coverage.ts",
     "test": "vitest run",
     "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
     "start": "node dist/mem-coverage.js",
     "clean": "rm -rf dist"
   },

@@ -15,5 +15,16 @@ export default defineConfig({
         singleFork: true, // Run tests sequentially in a single fork
       },
     },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'dist/',
+        '**/*.d.ts',
+        '**/*.config.*',
+        'tests/setup.ts',
+      ],
+    },
   },
 });
