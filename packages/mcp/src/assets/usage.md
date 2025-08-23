@@ -236,16 +236,10 @@ Avoid:
 }
 ```
 
-### 5. **Link Related Documentation**
-```json
-{
-  "title": "Memory linking functionality",
-  "content": "# Memory Linking\n\n**Purpose:** Create bidirectional links between related memories.\n\n**Related Documentation:**\n- [[MemoryService class documentation]]\n- [[ADR-001: TypeScript Adoption]]\n\n**Implementation:** Uses LinkService for bidirectional link management.",
-  "category": "DOC",
-  "tags": ["linking", "relationships", "memory"],
-  "sources": ["src/memory/link-service.ts:1-50"]
-}
-```
+### 5. **Link Related Memories**
+linking and unlinking must always be done by using the link_mem and unlink_mem tools.
+This will create or remove bidirectional links in the yaml formatter as well as corresponding obsidian style links in the content within a section titled '## Related'
+this section must never be edited by changing the content directly since it will lead to invalid links. Manually creating links in the content is only allowed for html links to external sources.
 
 ## Example: Complete Documentation Workflow
 
