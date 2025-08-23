@@ -1,0 +1,194 @@
+{
+  "main": {
+    "id": "10e81cda2fab1cfa",
+    "type": "split",
+    "children": [
+      {
+        "id": "cec1d9ec65d3a8d7",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "35fb8fa75fa12592",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "(DOC)(memory-data-types-and-validation-schemas)(ac69f5f1-456a-44e3-8e63-cd39c29dd351).md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "(DOC)(memory-data-types-and-validation-schemas)(ac69f5f1-456a-44e3-8e63-cd39c29dd351)"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "0fcc8f50828e4a85",
+    "type": "split",
+    "children": [
+      {
+        "id": "c99dd32bcaea2ede",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e2f45942e9c45e5b",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "48278214f833817c",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "969c294566ef1ae9",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "9b93639fcb51d63e",
+    "type": "split",
+    "children": [
+      {
+        "id": "377530c259444fba",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e87454dc6c3bd8b6",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Internationalization and language support.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Internationalization and language support"
+            }
+          },
+          {
+            "id": "23805ab562bb1325",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Internationalization and language support.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Internationalization and language support"
+            }
+          },
+          {
+            "id": "225692ad25e3e69c",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "e4f40ee77a61d4d4",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Internationalization and language support.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Internationalization and language support"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false
+    }
+  },
+  "active": "35fb8fa75fa12592",
+  "lastOpenFiles": [
+    "(DOC)(flexsearch-configuration-and-performance-optimization)(f92958ad-882a-4739-9563-3347880830b8).md",
+    "(DOC)(file-service-implementation-and-storage-patterns)(64b2b4b3-c703-4ca0-9f26-1d007af8de39).md",
+    "Internationalization and language support.md",
+    "(DOC)(mcp-server-implementation-and-tool-definitions)(e3b45e64-89e0-484d-a1a8-9a287c9d8837).md",
+    "(DOC)(fileservice-memory-file-system-operations-and-content-management)(fa995246-7a5b-4649-959f-039e7ccd6205).md",
+    "(DOC)(linkservice-bidirectional-memory-linking-and-referential-integrity-management)(ae420693-4b12-479b-9c77-0faca0382a24).md",
+    "(DOC)(searchservice-full-text-search-integration-and-index-management)(de696ea4-c10b-462a-84b2-71073e3c97aa).md",
+    "(DOC)(cli-test-infrastructure-test-environment-setup-and-cleanup-management)(6b6b39f3-45ef-4205-98b7-460bf0b1c010).md",
+    "(DOC)(code-scanner-typescriptjavascript-source-code-analysis-and-element-detection)(bbc4910c-1975-4c96-bd95-e9255f814eff).md",
+    "(DOC)(configuration-parser-multi-framework-configuration-detection-and-normalization)(7135b71b-d291-4692-88fd-1a6d627f7fe0).md",
+    "(DOC)(source-parser-memory-source-string-parsing-and-line-range-extraction)(c702229f-ac67-43dc-9eb9-266eb5655d83).md",
+    "(DOC)(cli-validation-system-security-first-input-validation-and-configuration-management)(f2cf0b6b-df35-4c16-9efe-518a77ee23ae).md",
+    "(DOC)(test-infrastructure-global-test-setup-and-cleanup-strategy)(ef581532-2751-47ae-b2d8-e6ef4a869daf).md",
+    "(DOC)(shared-package-public-api-module-organization-and-export-strategy)(5ec17d14-bce3-411b-bbda-0945af019338).md",
+    "(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80).md",
+    "(DOC)(memoryservice-core-memory-management-architecture-and-business-logic)(cfa621d1-f8be-4065-aa25-2e82aa56e6b6).md",
+    "(DOC)(wiki-link-system-bidirectional-link-management-and-content-consistency)(9642186c-a143-4870-b41f-b900a45acd95).md",
+    "(DOC)(cli-coverage-tool-type-system-architecture)(05e1ffd3-6058-4fe3-82a9-2cc2d43f04db).md",
+    "(DOC)(cli-tool-architecture-and-coverage-analysis)(b1434c95-1c44-440d-8aa1-f41a6c3393e9).md",
+    "File scanning and source parsing strategies.md"
+  ]
+}
