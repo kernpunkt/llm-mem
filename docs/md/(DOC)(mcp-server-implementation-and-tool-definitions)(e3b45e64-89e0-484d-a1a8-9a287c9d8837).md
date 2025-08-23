@@ -10,7 +10,7 @@ tags:
   - error-handling
 category: DOC
 created_at: '2025-08-22T13:52:50.145Z'
-updated_at: '2025-08-23T02:47:15.286Z'
+updated_at: '2025-08-23T05:31:27.861Z'
 last_reviewed: '2025-08-22T13:52:50.145Z'
 links:
   - b1434c95-1c44-440d-8aa1-f41a6c3393e9
@@ -134,6 +134,12 @@ server.tool(
 - **Resource Management**: Efficient memory and CPU usage
 - **Caching**: Cache frequently accessed data
 
-**Related Documentation:**
-- [[CLI Validation System: Security-First Input Validation and Configuration Management]] - Validation patterns
-- [[Testing Strategy and Quality Assurance]] - Testing approach for MCP server
+**Related Documentation:** - Validation patterns - Testing approach for MCP server
+
+
+- CLI Tool Architecture and Coverage Analysis
+
+
+## Related
+
+- [[(DOC)(cli-tool-architecture-and-coverage-analysis)(b1434c95-1c44-440d-8aa1-f41a6c3393e9)|CLI Tool Architecture and Coverage Analysis]]

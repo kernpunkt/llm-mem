@@ -10,15 +10,15 @@ tags:
   - integration
 category: DOC
 created_at: '2025-08-22T13:51:21.570Z'
-updated_at: '2025-08-23T02:53:10.926Z'
+updated_at: '2025-08-23T05:31:13.959Z'
 last_reviewed: '2025-08-22T13:51:21.570Z'
 links:
+  - cdd80bbf-3f1e-4984-abed-279a746c00cb
+  - f92958ad-882a-4739-9563-3347880830b8
+  - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
   - ac69f5f1-456a-44e3-8e63-cd39c29dd351
   - 64b2b4b3-c703-4ca0-9f26-1d007af8de39
   - de3c18d8-44c1-469f-b704-ccc3ff384594
-  - f92958ad-882a-4739-9563-3347880830b8
-  - cdd80bbf-3f1e-4984-abed-279a746c00cb
-  - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
 sources:
   - packages/shared/src/memory/memory-service.ts:1-100
   - packages/shared/src/memory/memory-service.ts:101-200
@@ -97,15 +97,8 @@ sources:
 - **LinkService**: Bidirectional link management
 - **External APIs**: MCP server integration and CLI tools
 
-**Related Documentation:**
-- [[FileService: Memory File System Operations and Content Management]] - File service implementation
-- [[LinkService: Bidirectional Memory Linking and Referential Integrity Management]] - Link service for relationships
+**Related Documentation:** - File service implementation - Link service for relationships
 
-## Related
-
-- [[(DOC)(memoryservice-core-memory-management-architecture-and-business-logic)(cfa621d1-f8be-4065-aa25-2e82aa56e6b6)|MemoryService: Core Memory Management Architecture and Business Logic]]
-- [[(DOC)(memory-data-types-and-validation-schemas)(ac69f5f1-456a-44e3-8e63-cd39c29dd351)|Memory Data Types and Validation Schemas]]
-- [[(DOC)(file-service-implementation-and-storage-patterns)(64b2b4b3-c703-4ca0-9f26-1d007af8de39)|File Service Implementation and Storage Patterns]]
+## Related- Memory Data Types and Validation Schemas- Link Service for Bidirectional Memory Relationships- Memory System Integration Patterns
+- MemoryService: Core Memory Management Architecture and Business Logic
 - [[(DOC)(link-service-for-bidirectional-memory-relationships)(de3c18d8-44c1-469f-b704-ccc3ff384594)|Link Service for Bidirectional Memory Relationships]]
-- [[(DOC)(flexsearch-configuration-and-performance-optimization)(f92958ad-882a-4739-9563-3347880830b8)|FlexSearch Configuration and Performance Optimization]]
-- [[(DOC)(memory-system-integration-patterns)(cdd80bbf-3f1e-4984-abed-279a746c00cb)|Memory System Integration Patterns]]

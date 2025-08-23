@@ -9,14 +9,14 @@ tags:
   - versioning
 category: DOC
 created_at: '2025-08-23T02:22:34.955Z'
-updated_at: '2025-08-23T02:52:53.721Z'
+updated_at: '2025-08-23T05:31:05.311Z'
 last_reviewed: '2025-08-23T02:22:34.955Z'
 links:
-  - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
-  - fa995246-7a5b-4649-959f-039e7ccd6205
-  - de696ea4-c10b-462a-84b2-71073e3c97aa
-  - ae420693-4b12-479b-9c77-0faca0382a24
   - d2331290-47d8-4f49-b0ce-4f350a2ad517
+  - ae420693-4b12-479b-9c77-0faca0382a24
+  - fa995246-7a5b-4649-959f-039e7ccd6205
+  - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
+  - de696ea4-c10b-462a-84b2-71073e3c97aa
 sources:
   - packages/shared/src/index.ts:1-13
 ---
@@ -214,10 +214,6 @@ const memory = await memoryService.createMemory({
 - **Data Isolation:** Memory isolation between users
 - **Audit Logging:** Comprehensive operation logging
 
-## Related
-
-- [[(ADR)(adr-001-monorepo-architecture-with-pnpm-workspaces)(d2331290-47d8-4f49-b0ce-4f350a2ad517)|ADR-001: Monorepo Architecture with pnpm Workspaces]]
-- [[(DOC)(file-service-implementation-and-storage-patterns)(fa995246-7a5b-4649-959f-039e7ccd6205)|FileService: Memory File System Operations and Content Management]]
-- [[(DOC)(search-service-full-text-search-integration-and-index-management)(de696ea4-c10b-462a-84b2-71073e3c97aa)|SearchService: Full-Text Search Integration and Index Management]]
-- [[(DOC)(link-service-for-bidirectional-memory-relationships)(ae420693-4b12-479b-9c77-0faca0382a24)|Link Service for Bidirectional Memory Relationships]]
-- [[(DOC)(wiki-link-system-bidirectional-link-management-and-content-consistency)(cfa621d1-f8be-4065-aa25-2e82aa56e6b6)|Wiki-Link System: Bidirectional Link Management and Content Consistency]]
+## Related- FileService: Memory File System Operations and Content Management- Link Service for Bidirectional Memory Relationships
+- FileService: Memory File System Operations and Content Management
+- [[(DOC)(searchservice-full-text-search-integration-and-index-management)(de696ea4-c10b-462a-84b2-71073e3c97aa)|SearchService: Full-Text Search Integration and Index Management]]

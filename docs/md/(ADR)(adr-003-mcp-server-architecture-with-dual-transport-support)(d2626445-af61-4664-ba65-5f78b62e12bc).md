@@ -10,11 +10,11 @@ tags:
   - llm-integration
 category: ADR
 created_at: '2025-08-22T13:50:50.264Z'
-updated_at: '2025-08-23T02:41:59.369Z'
+updated_at: '2025-08-23T05:31:23.946Z'
 last_reviewed: '2025-08-22T13:50:50.264Z'
 links:
-  - a91a6906-8f61-4071-a548-15b96967605e
   - 3b201e08-784c-4a83-9a0e-05d715882e80
+  - a91a6906-8f61-4071-a548-15b96967605e
 sources:
   - packages/mcp/src/index.ts:1-100
   - packages/mcp/package.json:1-45
@@ -74,5 +74,9 @@ sources:
 - Health endpoints and monitoring for HTTP transport
 
 **Related Documentation:**
-- [[CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]] - CLI implementation details
-- [[Testing Strategy and Quality Assurance]] - Testing approach for MCP server
+- CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management - CLI implementation details
+- Testing Strategy and Quality Assurance - Testing approach for MCP server
+
+
+## Related
+- [[(CTX)(llm-memory-management-tools-project-overview)(a91a6906-8f61-4071-a548-15b96967605e)|LLM Memory Management Tools - Project Overview]]

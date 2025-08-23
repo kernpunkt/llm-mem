@@ -9,14 +9,14 @@ tags:
   - performance
 category: DOC
 created_at: '2025-08-23T02:21:52.660Z'
-updated_at: '2025-08-23T02:36:10.275Z'
+updated_at: '2025-08-23T05:31:07.731Z'
 last_reviewed: '2025-08-23T02:21:52.660Z'
 links:
-  - e5fd798b-e1de-416d-af5a-b8096464f25a
-  - fa995246-7a5b-4649-959f-039e7ccd6205
-  - de696ea4-c10b-462a-84b2-71073e3c97aa
   - ae420693-4b12-479b-9c77-0faca0382a24
+  - fa995246-7a5b-4649-959f-039e7ccd6205
   - 5ec17d14-bce3-411b-bbda-0945af019338
+  - de696ea4-c10b-462a-84b2-71073e3c97aa
+  - e5fd798b-e1de-416d-af5a-b8096464f25a
 sources:
   - packages/shared/src/memory/memory-service.ts:1-100
   - packages/shared/src/memory/memory-service.ts:25-75
@@ -199,4 +199,5 @@ if (!parsed) {
 
 
 ## Related
-- [[(DOC)(shared-package-public-api-module-organization-and-export-strategy)(5ec17d14-bce3-411b-bbda-0945af019338)|Shared Package Public API: Module Organization and Export Strategy]]
+- Shared Package Public API: Module Organization and Export Strategy
+- [[(DOC)(memory-service-architecture-and-implementation)(e5fd798b-e1de-416d-af5a-b8096464f25a)|Memory Service Architecture and Implementation]]

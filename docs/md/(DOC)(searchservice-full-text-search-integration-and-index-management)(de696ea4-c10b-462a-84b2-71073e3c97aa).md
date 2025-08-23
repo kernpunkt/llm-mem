@@ -9,11 +9,11 @@ tags:
   - search-operations
 category: DOC
 created_at: '2025-08-23T02:28:02.236Z'
-updated_at: '2025-08-23T02:36:15.500Z'
+updated_at: '2025-08-23T05:31:05.312Z'
 last_reviewed: '2025-08-23T02:28:02.236Z'
 links:
-  - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
   - 5ec17d14-bce3-411b-bbda-0945af019338
+  - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
 sources:
   - packages/shared/src/memory/search-service.ts:1-63
 ---
@@ -253,4 +253,5 @@ The service leverages **FlexSearch capabilities**:
 
 
 ## Related
-- [[(DOC)(shared-package-public-api-module-organization-and-export-strategy)(5ec17d14-bce3-411b-bbda-0945af019338)|Shared Package Public API: Module Organization and Export Strategy]]
+- MemoryService: Core Memory Management Architecture and Business Logic
+- [[(DOC)(memoryservice-core-memory-management-architecture-and-business-logic)(cfa621d1-f8be-4065-aa25-2e82aa56e6b6)|MemoryService: Core Memory Management Architecture and Business Logic]]

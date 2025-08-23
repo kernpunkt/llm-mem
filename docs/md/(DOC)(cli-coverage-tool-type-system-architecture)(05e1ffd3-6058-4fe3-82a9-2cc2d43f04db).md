@@ -9,7 +9,7 @@ tags:
   - design-patterns
 category: DOC
 created_at: '2025-08-23T02:21:18.352Z'
-updated_at: '2025-08-23T02:35:39.658Z'
+updated_at: '2025-08-23T05:31:25.858Z'
 last_reviewed: '2025-08-23T02:21:18.352Z'
 links:
   - 3b201e08-784c-4a83-9a0e-05d715882e80
@@ -120,5 +120,5 @@ Future versions can add:
 
 
 ## Related
-
+- CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management
 - [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]

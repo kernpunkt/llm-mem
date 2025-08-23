@@ -11,16 +11,16 @@ tags:
   - workflow
 category: DOC
 created_at: '2025-08-23T02:22:15.189Z'
-updated_at: '2025-08-23T02:36:26.577Z'
+updated_at: '2025-08-23T05:31:25.859Z'
 last_reviewed: '2025-08-23T02:22:15.189Z'
 links:
-  - 05e1ffd3-6058-4fe3-82a9-2cc2d43f04db
-  - f2cf0b6b-df35-4c16-9efe-518a77ee23ae
+  - d2626445-af61-4664-ba65-5f78b62e12bc
   - bbc4910c-1975-4c96-bd95-e9255f814eff
   - 7135b71b-d291-4692-88fd-1a6d627f7fe0
   - c702229f-ac67-43dc-9eb9-266eb5655d83
   - 6b6b39f3-45ef-4205-98b7-460bf0b1c010
-  - d2626445-af61-4664-ba65-5f78b62e12bc
+  - f2cf0b6b-df35-4c16-9efe-518a77ee23ae
+  - 05e1ffd3-6058-4fe3-82a9-2cc2d43f04db
 sources:
   - packages/cli/src/mem-coverage.ts:1-100
   - packages/cli/src/mem-coverage.ts:101-226
@@ -230,4 +230,5 @@ The tool provides **flexible file system access**:
 
 
 ## Related
-- [[(ADR)(adr-003-mcp-server-architecture-with-dual-transport-support)(d2626445-af61-4664-ba65-5f78b62e12bc)|ADR-003: MCP Server Architecture with Dual Transport Support]]
+- ADR-003: MCP Server Architecture with Dual Transport Support
+- [[(DOC)(cli-coverage-tool-type-system-architecture)(05e1ffd3-6058-4fe3-82a9-2cc2d43f04db)|CLI Coverage Tool Type System Architecture]]

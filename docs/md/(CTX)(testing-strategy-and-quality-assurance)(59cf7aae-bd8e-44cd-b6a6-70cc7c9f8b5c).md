@@ -9,7 +9,7 @@ tags:
   - continuous-integration
 category: CTX
 created_at: '2025-08-22T13:53:58.449Z'
-updated_at: '2025-08-23T02:54:59.571Z'
+updated_at: '2025-08-23T05:30:44.438Z'
 last_reviewed: '2025-08-22T13:53:58.449Z'
 links:
   - 1cab02b8-2a60-4fad-b3d2-0f51fb7f96ec
@@ -153,6 +153,8 @@ sources:
 **Related Documentation:** - Development workflow patterns - Validation strategies
 
 
-## Related
+- ADR-004: TypeScript-First Development with Strict Type Safety
 
+
+## Related
 - [[(ADR)(adr-004-typescript-first-development-with-strict-type-safety)(0348ba55-8529-4502-ac43-4061524ed7e1)|ADR-004: TypeScript-First Development with Strict Type Safety]]

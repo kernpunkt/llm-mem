@@ -9,12 +9,12 @@ tags:
   - package-organization
 category: ADR
 created_at: '2025-08-22T13:50:22.926Z'
-updated_at: '2025-08-23T02:55:05.512Z'
+updated_at: '2025-08-23T05:31:23.944Z'
 last_reviewed: '2025-08-22T13:50:22.926Z'
 links:
-  - a91a6906-8f61-4071-a548-15b96967605e
-  - 5ec17d14-bce3-411b-bbda-0945af019338
   - 1cab02b8-2a60-4fad-b3d2-0f51fb7f96ec
+  - 5ec17d14-bce3-411b-bbda-0945af019338
+  - a91a6906-8f61-4071-a548-15b96967605e
 sources:
   - package.json:1-57
   - pnpm-workspace.yaml
@@ -65,6 +65,8 @@ sources:
 **Related Documentation:** - Development workflow patterns - Package organization details
 
 
-## Related
+- Development Workflow and Best Practices
 
-- [[(CTX)(development-workflow-and-best-practices)(1cab02b8-2a60-4fad-b3d2-0f51fb7f96ec)|Development Workflow and Best Practices]]
+
+## Related
+- [[(CTX)(llm-memory-management-tools-project-overview)(a91a6906-8f61-4071-a548-15b96967605e)|LLM Memory Management Tools - Project Overview]]

@@ -10,7 +10,7 @@ tags:
   - performance
 category: DOC
 created_at: '2025-08-22T13:54:17.394Z'
-updated_at: '2025-08-23T02:46:55.205Z'
+updated_at: '2025-08-23T05:31:11.408Z'
 last_reviewed: '2025-08-22T13:54:17.394Z'
 links:
   - e5fd798b-e1de-416d-af5a-b8096464f25a
@@ -131,6 +131,12 @@ Memory content in markdown format...
 - **Metadata Access**: Provide metadata for search operations
 - **Change Tracking**: Track file modifications for indexing
 
-**Related Documentation:**
-- [[FileService: Memory File System Operations and Content Management]] - Detailed file service implementation
-- [[Memory Service Architecture and Implementation]] - Service integration patterns
+**Related Documentation:** - Detailed file service implementation - Service integration patterns
+
+
+- Memory Service Architecture and Implementation
+
+
+## Related
+
+- [[(DOC)(memory-service-architecture-and-implementation)(e5fd798b-e1de-416d-af5a-b8096464f25a)|Memory Service Architecture and Implementation]]

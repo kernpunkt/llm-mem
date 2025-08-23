@@ -10,7 +10,7 @@ tags:
   - recovery
 category: DOC
 created_at: '2025-08-22T13:54:38.491Z'
-updated_at: '2025-08-23T02:52:19.118Z'
+updated_at: '2025-08-23T05:31:13.959Z'
 last_reviewed: '2025-08-22T13:54:38.491Z'
 links:
   - e5fd798b-e1de-416d-af5a-b8096464f25a
@@ -138,6 +138,12 @@ interface Link {
 - **Discovery Patterns**: Analyze how users discover content
 - **Performance Metrics**: Track link operation performance
 
-**Related Documentation:**
-- [[SearchService: Full-Text Search Integration and Index Management]] - Search service integration
-- [[FlexSearch Configuration and Performance Optimization]] - Performance optimization
+**Related Documentation:** - Search service integration - Performance optimization
+
+
+- Memory Service Architecture and Implementation
+
+
+## Related
+
+- [[(DOC)(memory-service-architecture-and-implementation)(e5fd798b-e1de-416d-af5a-b8096464f25a)|Memory Service Architecture and Implementation]]

@@ -9,7 +9,7 @@ tags:
   - file-system
 category: DOC
 created_at: '2025-08-23T02:23:00.860Z'
-updated_at: '2025-08-23T02:35:56.765Z'
+updated_at: '2025-08-23T05:30:56.864Z'
 last_reviewed: '2025-08-23T02:23:00.860Z'
 links:
   - 6b6b39f3-45ef-4205-98b7-460bf0b1c010
@@ -243,6 +243,8 @@ The cleanup system should be **tested itself**:
 - **Resource Tracking:** Ensure no resource leaks during cleanup
 
 
-## Related
+- CLI Test Infrastructure: Test Environment Setup and Cleanup Management
 
+
+## Related
 - [[(DOC)(cli-test-infrastructure-test-environment-setup-and-cleanup-management)(6b6b39f3-45ef-4205-98b7-460bf0b1c010)|CLI Test Infrastructure: Test Environment Setup and Cleanup Management]]

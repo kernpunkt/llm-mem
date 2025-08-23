@@ -10,7 +10,7 @@ tags:
   - configuration
 category: DOC
 created_at: '2025-08-22T13:52:27.679Z'
-updated_at: '2025-08-23T02:44:55.502Z'
+updated_at: '2025-08-23T05:31:27.861Z'
 last_reviewed: '2025-08-22T13:52:27.679Z'
 links:
   - e3b45e64-89e0-484d-a1a8-9a287c9d8837
@@ -130,5 +130,9 @@ mem-coverage [options]
 - **Recommendation Generation**: Suggest areas for documentation
 
 **Related Documentation:**
-- [[Code Scanner: TypeScript/JavaScript Source Code Analysis and Element Detection]] - File scanning and parsing
-- [[Configuration Parser: Multi-Framework Configuration Detection and Normalization]] - Configuration management
+- Code Scanner: TypeScript/JavaScript Source Code Analysis and Element Detection - File scanning and parsing
+- Configuration Parser: Multi-Framework Configuration Detection and Normalization - Configuration management
+
+
+## Related
+- [[(DOC)(mcp-server-implementation-and-tool-definitions)(e3b45e64-89e0-484d-a1a8-9a287c9d8837)|MCP Server Implementation and Tool Definitions]]

@@ -9,12 +9,12 @@ tags:
   - development-experience
 category: ADR
 created_at: '2025-08-22T13:51:05.081Z'
-updated_at: '2025-08-23T02:54:59.570Z'
+updated_at: '2025-08-23T05:31:23.947Z'
 last_reviewed: '2025-08-22T13:51:05.081Z'
 links:
-  - a91a6906-8f61-4071-a548-15b96967605e
-  - f2cf0b6b-df35-4c16-9efe-518a77ee23ae
   - 59cf7aae-bd8e-44cd-b6a6-70cc7c9f8b5c
+  - f2cf0b6b-df35-4c16-9efe-518a77ee23ae
+  - a91a6906-8f61-4071-a548-15b96967605e
 sources:
   - tsconfig.json
   - tsconfig.build.json
@@ -82,4 +82,5 @@ sources:
 
 
 ## Related
-- [[(CTX)(testing-strategy-and-quality-assurance)(59cf7aae-bd8e-44cd-b6a6-70cc7c9f8b5c)|Testing Strategy and Quality Assurance]]
+- Testing Strategy and Quality Assurance
+- [[(CTX)(llm-memory-management-tools-project-overview)(a91a6906-8f61-4071-a548-15b96967605e)|LLM Memory Management Tools - Project Overview]]
