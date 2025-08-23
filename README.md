@@ -10,6 +10,23 @@ This project is organized as a monorepo with three main packages:
 - **`@llm-mem/cli`** - Command-line interface for memory coverage analysis
 - **`@llm-mem/mcp`** - MCP server for LLM integration
 
+## 🔧 Package Configuration
+
+### Root package.json
+- **Workspace Management**: Uses pnpm workspaces
+- **Scripts**: Orchestrates builds across all packages
+- **Dev Dependencies**: Shared development tools
+
+### Package Dependencies
+- **Shared Dependencies**: Common across multiple packages
+- **Workspace Dependencies**: Internal package references using `workspace:*`
+- **External Dependencies**: Only included where needed
+
+### TypeScript Configuration
+- **Root tsconfig.json**: Base configuration for all packages
+- **Package tsconfig.json**: Extends root with package-specific settings
+- **Shared Types**: All packages can import from @llm-mem/shared
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -19,6 +36,7 @@ This project is organized as a monorepo with three main packages:
 
 ### Installation
 
+## stand alone - recommended mainly for taking part in developing the project
 ```bash
 # Clone the repository
 git clone git@github.com:kernpunkt/llm-mem.git
@@ -27,32 +45,11 @@ cd llm-mem
 # Install dependencies
 pnpm install
 
-# Build all packages
-pnpm build
+# allow build scripts this will automatically build all packages and rebuild sqlite3 for your plattform
+pnpm approve-builds
 ```
 
-### Using the CLI
-
-```bash
-# Run memory coverage analysis
-pnpm start:cli --help
-
-# Or install globally
-npm install -g packages/cli
-mem-coverage --help
-```
-
-### Using the MCP Server
-
-```bash
-# Start MCP server (stdio transport)
-pnpm start:mcp:stdio
-
-# Start MCP server (HTTP transport for development)
-pnpm start:mcp:http
-```
-
-## 📥 Installation in Other Projects
+## 📥 Installation in Other Projects - recommended for using the mcp and cli in your projects
 
 ### Installing as a Development Dependency
 
@@ -60,133 +57,72 @@ You can install the entire monorepo into any Node.js project to use the CLI and 
 
 ```bash
 # Install the entire monorepo (recommended)
-pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
-
-# Or using SSH if you have access to the repository
-pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
-
+pnpm install -d git+ssh://git@github.com:kernpunkt/llm-mem.git#main
+# allow build scripts, this will automatically install all dependencies and build all packages and rebuild sqlite3 for your plattform
+pnpm approve-builds
 ```
 
-**Note**: After installation, you'll need to build the package manually. The package will be downloaded but not built automatically to ensure reliable installation.
+### Usage and Configuration
 
-**After installation, build the package**:
-```bash
-cd node_modules/llm-mem
-pnpm install
-pnpm build
+see individual README.md files in the package directories
+
+
+### 📁 File Organization
+
+### Shared Package
+```
+packages/shared/
+├── src/
+│   ├── memory/          # Memory management services
+│   ├── utils/           # Utility functions
+│   └── index.ts         # Main export file
+├── dist/                # Built JavaScript files
+├── package.json         # Package configuration
+├── tsconfig.json        # TypeScript configuration
+└── README.md            # Package documentation
 ```
 
-### Troubleshooting Installation
-
-If you encounter issues:
-
-1. **Ensure Node.js 24+** is installed
-2. **Check pnpm availability** - the package requires pnpm for building
-3. **Verify GitHub access** - ensure you can clone the repository
-4. **Build after installation** - the package needs to be built manually after installation
-
-**Installation process**:
-1. Install the package: `pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main`
-2. Build the package: `cd node_modules/llm-mem && pnpm install && pnpm build`
-3. Rebuild sqlite3 with npm(!): `cd node_modules/llm-mem/packages/shared && npm rebuild sqlite3`
-4. Use the tools: `node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --help`
-
-**Why manual build?**: The package can't automatically build itself during installation due to npm/pnpm lifecycle script limitations when installing from Git repositories.
-**Why rebuild sqlite3 with npm?**:Because the native binaries might not work in your environment and pnpm seems not to be able to rebuild the package correctly
-
-### Alternative Installation Methods
-
-If direct GitHub installation fails or hangs:
-
-```bash
-# Clone and install locally
-git clone git@github.com:kernpunkt/llm-mem.git /tmp/llm-mem
-cd /tmp/llm-mem
-pnpm install
-pnpm build
-
-# Install from local path
-pnpm install --save-dev file:/tmp/llm-mem
+### CLI Package
+```
+packages/cli/
+├── src/
+│   ├── cli.ts           # Main CLI entry point
+│   ├── coverage-service.ts
+│   ├── file-scanner.ts
+│   ├── source-parser.ts
+│   ├── report-generator.ts
+│   ├── config-parser.ts
+│   ├── validation.ts
+│   └── types.ts
+├── dist/                # Built CLI executable
+├── package.json         # Package configuration
+├── tsconfig.json        # TypeScript configuration
+└── README.md            # Package documentation
 ```
 
-### Using the CLI in Your Project
-
-After installation, you can use the CLI tools directly:
-
-```bash
-# Run memory coverage analysis (using the built executable)
-node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --help
-
-# Or add a script to your package.json
+### MCP Package
+```
+packages/mcp/
+├── src/
+│   ├── index.ts         # MCP server entry point
+│   └── assets/          # Static assets
+├── dist/                # Built MCP server
+├── package.json         # Package configuration
+├── tsconfig.json        # TypeScript configuration
+└── README.md            # Package documentation
 ```
 
-```json
-{
-  "scripts": {
-    "mem-coverage": "node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --config=./coverage.config.yaml"
-  }
-}
-```
+## 🔄 Build Process
 
-Then run:
-```bash
-pnpm run mem-coverage
-```
+### Build Order
+1. **Shared Package**: Core utilities and services
+2. **CLI Package**: Depends on shared package
+3. **MCP Package**: Depends on shared package
 
-### Using the MCP Server in Your Project
-
-The MCP server can be integrated into your development workflow:
-
-```bash
-# Start the MCP server (stdio transport)
-node node_modules/llm-mem/packages/mcp/dist/index.js start:stdio
-
-# Start the MCP server (HTTP transport for development)
-node node_modules/llm-mem/packages/mcp/dist/index.js start:http --port=3001
-```
-
-### Importing Shared Utilities
-
-You can also import and use the shared utilities in your code:
-
-```typescript
-import { MemoryService, FileService } from '@llm-mem/shared';
-
-// Use the memory management services
-const memoryService = new MemoryService();
-const fileService = new FileService();
-```
-
-### Configuration
-see individual package readme.md
-
-## 📦 Package Details
-
-### @llm-mem/shared
-Core utilities and services used by both CLI and MCP packages.
-
-```bash
-pnpm build:shared
-pnpm test:shared
-```
-
-### @llm-mem/cli  
-Memory coverage analysis command-line tool.
-
-```bash
-pnpm build:cli
-pnpm test:cli
-pnpm start:cli
-```
-
-### @llm-mem/mcp
-MCP server for LLM integration with memory tools.
-
-```bash
-pnpm build:mcp
-pnpm test:mcp
-pnpm start:mcp:stdio
-```
+### Build Artifacts
+- **TypeScript Compilation**: All packages compile to individual `dist/` directories
+- **Asset Copying**: MCP package copies assets to dist
+- **Executable Permissions**: CLI package sets executable permissions
 
 ## 🛠️ Development
 
@@ -221,58 +157,6 @@ pnpm test:watch
 
 # Coverage report
 pnpm test:coverage
-```
-
-## 📦 Distribution
-
-### GitHub Installation (Recommended)
-
-Users can install the entire monorepo directly from GitHub:
-
-```bash
-# Install as a development dependency
-pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
-
-# Or using SSH if you have access
-pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
-```
-
-**Features**:
-- ✅ Includes all packages (CLI, MCP, Shared)
-- ✅ Simple installation process
-- ✅ Works with pnpm, npm, and yarn
-
-### Local Development Installation
-
-For local development and testing:
-
-```bash
-# Clone the repository
-git clone git@github.com:kernpunkt/llm-mem.git
-cd llm-mem
-
-# Install dependencies and build
-pnpm install
-pnpm build
-
-# Install globally for testing
-pnpm install -g packages/cli
-pnpm install -g packages/mcp
-```
-
-### Package-Specific Usage
-
-After installation and building, you can use individual packages:
-
-```bash
-# CLI tools
-node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --help
-
-# MCP server
-node node_modules/llm-mem/packages/mcp/dist/index.js start:stdio
-
-# Shared utilities
-import { MemoryService } from '@llm-mem/shared';
 ```
 
 ## 🤝 Contributing

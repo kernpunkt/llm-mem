@@ -40,5 +40,23 @@ export class SearchService {
     await this.initialize();
     await this.manager.clearIndexes();
   }
+
+  /**
+   * Properly destroys and cleans up all resources.
+   * This method should be called before disposing of the SearchService instance.
+   * 
+   * @throws Error if cleanup fails
+   */
+  async destroy(): Promise<void> {
+    try {
+      if (this.manager) {
+        await this.manager.destroy();
+      }
+      this.initialized = false;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to destroy SearchService: ${errorMessage}`);
+    }
+  }
 }
 

@@ -333,12 +333,12 @@ export function createServer(): McpServer {
       target_id: z.string().uuid().describe("ID of the target memory to link to"),
       link_text: z.string().optional().describe("Custom link text (defaults to target title)")
     },
-    async ({ source_id, target_id }) => {
+    async ({ source_id, target_id, link_text }) => {
       try {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
-        const result = await memoryService.linkMemories({ source_id, target_id });
+        const result = await memoryService.linkMemories({ source_id, target_id, link_text });
         
         return {
           content: [{ type: "text", text: result.message }],
@@ -351,62 +351,7 @@ export function createServer(): McpServer {
     }
   );
 
-  server.tool(
-    "migrate_memory_files",
-    "Migrates existing memory files from old pipe separator format to new parentheses format",
-    {
-      dry_run: z.boolean().optional().default(false).describe("If true, shows what would be migrated without making changes")
-    },
-    async ({ dry_run = false }) => {
-      try {
-        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories" };
-        const { migrateMemoryFileNames } = await import("@llm-mem/shared");
-        
-        if (dry_run) {
-          // For dry run, we'll just check what files would be migrated
-          const { promises: fs } = await import("fs");
-          const { join } = await import("path");
-          
-          const files = await fs.readdir(cfg.notestorePath);
-          const oldFormatFiles = files.filter(file => 
-            file.endsWith('.md') && 
-            file !== 'usage.md' && 
-            file.includes('|')
-          );
-          
-          if (oldFormatFiles.length === 0) {
-            return {
-              content: [{ type: "text", text: "No files need migration. All memory files are already in the new format." }],
-              isError: false
-            };
-          }
-          
-          const fileList = oldFormatFiles.map(file => `  - ${file}`).join('\n');
-          return {
-            content: [{ 
-              type: "text", 
-              text: `Dry run: The following ${oldFormatFiles.length} files would be migrated:\n${fileList}\n\nRun without dry_run=true to perform the actual migration.` 
-            }],
-            isError: false
-          };
-        }
-        
-        // Perform actual migration
-        await migrateMemoryFileNames(cfg.notestorePath);
-        
-        return {
-          content: [{ 
-            type: "text", 
-            text: "Memory files migration completed successfully! All files have been renamed to use the new parentheses format." 
-          }],
-          isError: false
-        };
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        throw new Error(`migrate_memory_files failed: ${msg}`);
-      }
-    }
-  );
+
 
   server.tool(
     "unlink_mem",
@@ -572,6 +517,30 @@ export function createServer(): McpServer {
 - Memories with Few Links: ${stats.memories_with_few_links.length}
 - Broken Links: ${stats.broken_links.length}
 - Unidirectional Links: ${stats.unidirectional_links.length}
+- Link Mismatches (YAML vs Markdown): ${stats.link_mismatches.length}
+- Invalid Links: ${stats.invalid_links.length}
+
+${stats.orphaned_memories.length > 0 ? `\n📋 **Orphaned Memories (No Links):**
+${stats.orphaned_memories.map(m => `  - ${m.title} (ID: ${m.id})`).join('\n')}` : ''}
+
+${stats.memories_with_few_links.length > 0 ? `\n📋 **Memories with Few Links (< ${stats.average_links_per_memory}):**
+${stats.memories_with_few_links.map(m => `  - ${m.title} (${m.link_count} links)`).join('\n')}` : ''}
+
+${stats.broken_links.length > 0 ? `\n📋 **Broken Links:**
+${stats.broken_links.map(m => `  - ${m.title} → broken link ID: ${m.broken_link_id}`).join('\n')}` : ''}
+
+${stats.unidirectional_links.length > 0 ? `\n📋 **Unidirectional Links:**
+${stats.unidirectional_links.map(m => `  - ${m.title} → unidirectional link to: ${m.unidirectional_link_id}`).join('\n')}` : ''}
+
+${stats.link_mismatches.length > 0 ? `\n📋 **Link Mismatches (YAML vs Markdown):**
+${stats.link_mismatches.map(m => `  - ${m.title}:
+    YAML links: ${m.yaml_link_count}, Markdown links: ${m.markdown_link_count}
+    Missing in markdown: ${m.missing_in_markdown.length > 0 ? m.missing_in_markdown.join(', ') : 'none'}
+    Missing in YAML: ${m.missing_in_yaml.length > 0 ? m.missing_in_yaml.join(', ') : 'none'}`).join('\n')}` : ''}
+
+${stats.invalid_links.length > 0 ? `\n📋 **Invalid Links:**
+${stats.invalid_links.map(m => `  - ${m.title}:
+${m.invalid_links.map(il => `    • ${il.link} (${il.type}): ${il.details}`).join('\n')}`).join('\n')}` : ''}
 
 📁 **Category Distribution**
 ${Object.entries(stats.categories).map(([cat, count]) => `  - ${cat}: ${count}`).join('\n')}
@@ -586,6 +555,12 @@ ${Object.entries(stats.tags).map(([tag, count]) => `  - ${tag}: ${count} uses`).
 ⚠️ **Memories Needing Attention**
 - Without Sources: ${stats.memories_without_sources.length}
 - Needing Verification: ${stats.memories_needing_verification.length}
+
+${stats.memories_without_sources.length > 0 ? `\n📋 **Memories Without Sources:**
+${stats.memories_without_sources.map(m => `  - ${m.title} (ID: ${m.id})`).join('\n')}` : ''}
+
+${stats.memories_needing_verification.length > 0 ? `\n📋 **Memories Needing Verification:**
+${stats.memories_needing_verification.map(m => `  - ${m.title} (${m.days_since_verification} days since last review)`).join('\n')}` : ''}
 
 💡 **Recommendations**
 ${stats.recommendations.join('\n')}`;
@@ -678,6 +653,131 @@ ${stats.recommendations.join('\n')}`;
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         throw new Error(`get_allowed_values failed: ${msg}`);
+      }
+    }
+  );
+
+  server.tool(
+    "fix_links",
+    "Fixes and recreates proper link structure for a memory by cleaning up broken links and recreating valid ones",
+    {
+      memory_id: z.string().uuid().describe("ID of the memory to fix links for")
+    },
+    async ({ memory_id }) => {
+      try {
+        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        
+        // Read the memory to get current links
+        const memory = await memoryService.readMemory({ id: memory_id });
+        if (!memory) {
+          return {
+            content: [{ type: "text", text: `Memory not found: ${memory_id}` }],
+            isError: true
+          };
+        }
+
+        // Store the current link IDs for later processing
+        const currentLinkIds = [...memory.links];
+        
+        // Step 1: Unlink all current links
+        for (const linkId of currentLinkIds) {
+          try {
+            await memoryService.unlinkMemories({ source_id: memory_id, target_id: linkId });
+          } catch (error) {
+            // Log but continue with other links
+            console.error(`Failed to unlink ${linkId}: ${error}`);
+          }
+        }
+
+        // Step 2: Remove ALL markdown links from content (keep only HTTP links)
+        let cleanedContent = memory.content;
+        
+        // Remove everything after "## Related" section (including the section itself)
+        const relatedSectionIndex = cleanedContent.indexOf('## Related');
+        if (relatedSectionIndex !== -1) {
+          cleanedContent = cleanedContent.substring(0, relatedSectionIndex).trim();
+        }
+        
+        // Remove all Obsidian-style links: [[(CATEGORY)(title)(id)|display_text]]
+        cleanedContent = cleanedContent.replace(/\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g, '');
+        
+        // Remove all simple markdown links: [[title|display_text]] or [[title]] (except HTTP links)
+        cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g, (match, linkText, displayText) => {
+          // Check if this is an external HTTP link
+          if (linkText.startsWith('http://') || linkText.startsWith('https://')) {
+            return match; // Keep external links
+          }
+          // Remove internal links completely
+          return '';
+        });
+        
+        // Clean up excessive empty lines and whitespace
+        cleanedContent = cleanedContent
+          .replace(/\n\s*\n\s*\n+/g, '\n\n')  // Remove triple+ newlines
+          .replace(/[ \t]+$/gm, '')           // Remove trailing whitespace
+          .replace(/^\s+$/gm, '')             // Remove lines with only whitespace
+          .replace(/\n{3,}/g, '\n\n')         // Limit to max 2 consecutive newlines
+          .trim();                            // Remove leading/trailing whitespace
+
+        // Step 3: Update the memory with cleaned content
+        if (cleanedContent !== memory.content) {
+          await memoryService.updateMemory({
+            id: memory_id,
+            content: cleanedContent
+          });
+        }
+
+        // Step 4: Recreate links using IDs from YAML frontmatter (as if link_mem was called for each)
+        let successfulLinks = 0;
+        let failedLinks = 0;
+        
+        // Recreate links for all IDs in the YAML frontmatter
+        for (const linkId of currentLinkIds) {
+          try {
+            // Verify the target memory still exists
+            const targetMemory = await memoryService.readMemory({ id: linkId });
+            if (targetMemory) {
+              // Use link_mem to create proper bidirectional links and Obsidian-style content
+              await memoryService.linkMemories({ 
+                source_id: memory_id, 
+                target_id: linkId,
+                link_text: targetMemory.title
+              });
+              successfulLinks++;
+            } else {
+              failedLinks++;
+            }
+          } catch (error) {
+            failedLinks++;
+            console.error(`Failed to recreate link to ${linkId}: ${error}`);
+          }
+        }
+
+        // Generate summary message
+        const summary = `Link structure fixed for memory "${memory.title}" (ID: ${memory_id}):
+
+✅ **Cleanup completed:**
+- Removed ${currentLinkIds.length} existing links
+- Cleaned markdown content of all Obsidian-style links
+- Preserved external HTTP/HTTPS links
+
+🔗 **Link recreation:**
+- Successfully recreated: ${successfulLinks} links
+- Failed to recreate: ${failedLinks} links
+- Total links processed: ${currentLinkIds.length}
+
+${failedLinks > 0 ? `\n⚠️ **Note:** ${failedLinks} links could not be recreated (target memories may have been deleted or are inaccessible).` : ''}
+
+The memory now has a clean link structure with ${successfulLinks} valid bidirectional links.`;
+
+        return {
+          content: [{ type: "text", text: summary }],
+          isError: false
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`fix_links failed: ${msg}`);
       }
     }
   );
@@ -1109,6 +1209,20 @@ export async function runHttp(port: number = 3000): Promise<void> {
                     type: 'object',
                     properties: {}
                   }
+                },
+                {
+                  name: 'fix_links',
+                  description: 'Fixes and recreates proper link structure for a memory by cleaning up broken links and recreating valid ones',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {
+                      memory_id: {
+                        type: 'string',
+                        description: 'ID of the memory to fix links for'
+                      }
+                    },
+                    required: ['memory_id']
+                  }
                 }
               ]
             },
@@ -1443,6 +1557,30 @@ export async function runHttp(port: number = 3000): Promise<void> {
 - Memories with Few Links: ${stats.memories_with_few_links.length}
 - Broken Links: ${stats.broken_links.length}
 - Unidirectional Links: ${stats.unidirectional_links.length}
+- Link Mismatches (YAML vs Markdown): ${stats.link_mismatches.length}
+- Invalid Links: ${stats.invalid_links.length}
+
+${stats.orphaned_memories.length > 0 ? `\n📋 **Orphaned Memories (No Links):**
+${stats.orphaned_memories.map(m => `  - ${m.title} (ID: ${m.id})`).join('\n')}` : ''}
+
+${stats.memories_with_few_links.length > 0 ? `\n📋 **Memories with Few Links (< ${stats.average_links_per_memory}):**
+${stats.memories_with_few_links.map(m => `  - ${m.title} (${m.link_count} links)`).join('\n')}` : ''}
+
+${stats.broken_links.length > 0 ? `\n📋 **Broken Links:**
+${stats.broken_links.map(m => `  - ${m.title} → broken link ID: ${m.broken_link_id}`).join('\n')}` : ''}
+
+${stats.unidirectional_links.length > 0 ? `\n📋 **Unidirectional Links:**
+${stats.unidirectional_links.map(m => `  - ${m.title} → unidirectional link to: ${m.unidirectional_link_id}`).join('\n')}` : ''}
+
+${stats.link_mismatches.length > 0 ? `\n📋 **Link Mismatches (YAML vs Markdown):**
+${stats.link_mismatches.map(m => `  - ${m.title}:
+    YAML links: ${m.yaml_link_count}, Markdown links: ${m.markdown_link_count}
+    Missing in markdown: ${m.missing_in_markdown.length > 0 ? m.missing_in_markdown.join(', ') : 'none'}
+    Missing in YAML: ${m.missing_in_yaml.length > 0 ? m.missing_in_yaml.join(', ') : 'none'}`).join('\n')}` : ''}
+
+${stats.invalid_links.length > 0 ? `\n📋 **Invalid Links:**
+${stats.invalid_links.map(m => `  - ${m.title}:
+${m.invalid_links.map(il => `    • ${il.link} (${il.type}): ${il.details}`).join('\n')}`).join('\n')}` : ''}
 
 📁 **Category Distribution**
 ${Object.entries(stats.categories).map(([cat, count]) => `  - ${cat}: ${count}`).join('\n')}
@@ -1457,6 +1595,12 @@ ${Object.entries(stats.tags).map(([tag, count]) => `  - ${tag}: ${count} uses`).
 ⚠️ **Memories Needing Attention**
 - Without Sources: ${stats.memories_without_sources.length}
 - Needing Verification: ${stats.memories_needing_verification.length}
+
+${stats.memories_without_sources.length > 0 ? `\n📋 **Memories Without Sources:**
+${stats.memories_without_sources.map(m => `  - ${m.title} (ID: ${m.id})`).join('\n')}` : ''}
+
+${stats.memories_needing_verification.length > 0 ? `\n📋 **Memories Needing Verification:**
+${stats.memories_needing_verification.map(m => `  - ${m.title} (${m.days_since_verification} days since last review)`).join('\n')}` : ''}
 
 💡 **Recommendations**
 ${stats.recommendations.join('\n')}`;
@@ -1499,6 +1643,128 @@ ${stats.recommendations.join('\n')}`;
                     type: "text", 
                     text: `FlexSearch Configuration:\n\n${JSON.stringify(configInfo, null, 2)}` 
                   }],
+                  isError: false
+                };
+                break;
+              }
+
+              case 'fix_links': {
+                const memory_id = toolArgs.memory_id as string;
+                
+                if (!memory_id) {
+                  throw new Error('Missing required parameter: memory_id');
+                }
+
+                const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+                const { MemoryService } = await import('@llm-mem/shared');
+                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                
+                // Read the memory to get current content and links
+                const memory = await memoryService.readMemory({ id: memory_id });
+                if (!memory) {
+                  toolResult = {
+                    content: [{ type: 'text', text: `Memory not found: ${memory_id}` }],
+                    isError: true
+                  };
+                  break;
+                }
+
+                // Store the current link IDs for later processing
+                const currentLinkIds = [...memory.links];
+                
+                // Step 1: Unlink all current links
+                for (const linkId of currentLinkIds) {
+                  try {
+                    await memoryService.unlinkMemories({ source_id: memory_id, target_id: linkId });
+                  } catch (error) {
+                    // Log but continue with other links
+                    console.error(`Failed to unlink ${linkId}: ${error}`);
+                  }
+                }
+
+                // Step 2: Remove ALL markdown links from content (keep only HTTP links)
+                let cleanedContent = memory.content;
+                
+                // Remove everything after "## Related" section (including the section itself)
+                const relatedSectionIndex = cleanedContent.indexOf('## Related');
+                if (relatedSectionIndex !== -1) {
+                  cleanedContent = cleanedContent.substring(0, relatedSectionIndex).trim();
+                }
+                
+                // Remove all Obsidian-style links: [[(CATEGORY)(title)(id)|display_text]]
+                cleanedContent = cleanedContent.replace(/\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g, '');
+                
+                // Remove all simple markdown links: [[title|display_text]] or [[title]] (except HTTP links)
+                cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g, (match, linkText, displayText) => {
+                  // Check if this is an external HTTP link
+                  if (linkText.startsWith('http://') || linkText.startsWith('https://')) {
+                    return match; // Keep external links
+                  }
+                  // Remove internal links completely
+                  return '';
+                });
+                
+                // Clean up excessive empty lines and whitespace
+                cleanedContent = cleanedContent
+                  .replace(/\n\s*\n\s*\n+/g, '\n\n')  // Remove triple+ newlines
+                  .replace(/[ \t]+$/gm, '')           // Remove trailing whitespace
+                  .replace(/^\s+$/gm, '')             // Remove lines with only whitespace
+                  .replace(/\n{3,}/g, '\n\n')         // Limit to max 2 consecutive newlines
+                  .trim();                            // Remove leading/trailing whitespace
+
+                // Step 3: Update the memory with cleaned content
+                if (cleanedContent !== memory.content) {
+                  await memoryService.updateMemory({
+                    id: memory_id,
+                    content: cleanedContent
+                  });
+                }
+
+                // Step 4: Recreate links using IDs from YAML frontmatter (as if link_mem was called for each)
+                let successfulLinks = 0;
+                let failedLinks = 0;
+                
+                // Recreate links for all IDs in the YAML frontmatter
+                for (const linkId of currentLinkIds) {
+                  try {
+                    // Verify the target memory still exists
+                    const targetMemory = await memoryService.readMemory({ id: linkId });
+                    if (targetMemory) {
+                      // Use link_mem to create proper bidirectional links and Obsidian-style content
+                      await memoryService.linkMemories({ 
+                        source_id: memory_id, 
+                        target_id: linkId,
+                        link_text: targetMemory.title
+                      });
+                      successfulLinks++;
+                    } else {
+                      failedLinks++;
+                    }
+                  } catch (error) {
+                    failedLinks++;
+                    console.error(`Failed to recreate link to ${linkId}: ${error}`);
+                  }
+                }
+
+                // Generate summary message
+                const summary = `Link structure fixed for memory "${memory.title}" (ID: ${memory_id}):
+
+✅ **Cleanup completed:**
+- Removed ${currentLinkIds.length} existing links
+- Cleaned markdown content of all Obsidian-style links
+- Preserved external HTTP/HTTPS links
+
+🔗 **Link recreation:**
+- Successfully recreated: ${successfulLinks} links
+- Failed to recreate: ${failedLinks} links
+- Total links processed: ${currentLinkIds.length}
+
+${failedLinks > 0 ? `\n⚠️ **Note:** ${failedLinks} links could not be recreated (target memories may have been deleted or are inaccessible).` : ''}
+
+The memory now has a clean link structure with ${successfulLinks} valid bidirectional links.`;
+
+                toolResult = {
+                  content: [{ type: 'text', text: summary }],
                   isError: false
                 };
                 break;

@@ -47,30 +47,10 @@ The `@llm-mem/mcp` server transforms how AI assistants work with long-term memor
 ## 🚀 Quick Start
 
 ### 1. Installation
+see README.md in [...]/LLM-MEM
 
-```bash
-# From GitHub (recommended)
-pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
-#After installation, build the package**:
-cd node_modules/llm-mem
-pnpm install
-pnpm build
-# Then use the MCP server
-node node_modules/llm-mem/packages/mcp/dist/index.js --help
-```
-
-### 2. Start the Server
-
-```bash
-# Production mode (stdio transport)
-node node_modules/llm-mem/packages/mcp/dist/index.js start:stdio
-
-# Development mode (HTTP transport)
-node node_modules/llm-mem/packages/mcp/dist/index.js start:http
-
-# Custom port
-node node_modules/llm-mem/packages/mcp/dist/index.js start:http --port=3001
-```
+### 2. Installation in cursor
+see mcp.json.example in /src/_examples
 
 ### 3. Basic Usage
 
@@ -97,6 +77,7 @@ Options:
 ```
 
 ### Environment Variables
+also see /src/_examples/env.example
 
 Create a `.env` file in your project root to configure the server:
 
@@ -110,7 +91,7 @@ MEMORY_INDEX_PATH=./memories/index
 # If set, only the specified values are allowed (comma-separated)
 
 # Example: Restrict categories to specific values
-ALLOWED_CATEGORIES=work,personal,research,ideas
+ALLOWED_CATEGORIES=DOC,CTX,ADR
 
 # Example: Restrict tags to specific values  
 ALLOWED_TAGS=important,urgent,review,archive
@@ -125,7 +106,9 @@ ALLOWED_TAGS=important,urgent,review,archive
 
 ### FlexSearch Configuration
 
-The server uses FlexSearch for fast, semantic search capabilities. You can customize the search behavior using these environment variables:
+The server uses FlexSearch for fast, semantic search capabilities. 
+See https://github.com/nextapps-de/flexsearch/blob/master/README.md fo a deeper understanding.
+You can customize the search behavior using these environment variables:
 
 #### Tokenization Options
 - **`FLEXSEARCH_TOKENIZE`** - Tokenization strategy (`strict`, `forward`, `reverse`, `full`, `tolerant`)
@@ -304,7 +287,7 @@ When you add many memories or want to refresh search indexes:
 ### Storage Layer
 - **Memory Store**: File-based storage with markdown + YAML frontmatter
 - **Search Index**: FlexSearch for fast, semantic search capabilities
-- **Database**: SQLite for metadata and relationship management
+- **Database**: SQLite for index storage
 
 ### Tool Layer
 - **Memory Tools**: Core CRUD operations
@@ -404,4 +387,3 @@ This project is licensed under the MIT License - see the [LICENSE](../../LICENSE
 
 - **Issues**: [GitHub Issues](https://github.com/kernpunkt/llm-mem/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/kernpunkt/llm-mem/issues)
-- **Documentation**: [Project Wiki](https://github.com/kernpunkt/llm-mem/wiki)

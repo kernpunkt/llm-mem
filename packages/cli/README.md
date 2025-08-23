@@ -1,38 +1,40 @@
 # @llm-mem/cli
 
-Memory coverage analysis CLI tool for LLM memory management.
+# mem-coverage CLI
 
-## Installation
+Documentation coverage analysis for code, powered by the Memory System. Generates console reports highlighting undocumented files and sections with scoped thresholds.
 
-### From GitHub (Recommended)
-```bash
-# Install the entire monorepo
-pnpm install --save-dev git+ssh://git@github.com:kernpunkt/llm-mem.git#main
-#After installation, build the package**:
-cd node_modules/llm-mem
-pnpm install
-pnpm build
-# Then use the CLI tool
-node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --help
-```
+## ⚠️ Important: MCP Server Integration Required
 
-### From Local Development
-```bash
-git clone git@github.com:kernpunkt/llm-mem.git
-cd llm-mem
-pnpm install
-pnpm build:cli
-pnpm install -g packages/cli
-```
+This CLI tool requires the **@llm-mem/mcp** server to be running for proper functionality. The CLI analyzes code coverage against memories stored and indexed by the MCP server.
+
+### Setup Requirements
+
+1. **Install the MCP Server**: Install the entire monorepo see README.md in [...]/LLM-MEM 
+
+2. **Memory Store**: A memory store must be populated with documentation using the MCP server
+3. **Search Index**: The MCP server must have indexed the memories for search functionality
+
+### Documentation with MCP Server
+
+To create the documentation that this CLI tool analyzes, you must use the **@llm-mem/mcp** server to:
+
+- **Store Memories**: Create and store documentation as memories in the memory store
+- **Index Content**: Build searchable indexes of your documentation
+- **Manage Categories**: Organize memories by type (DOC, ADR, CTX)
+
+The CLI tool then analyzes your code against these stored memories to determine coverage.
 
 ## Usage
+
+the following commands assume, you installed as a dependency to one of your projects:
 
 ```bash
 # Show help (using the installed package)
 node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --help
 
 # Basic coverage analysis
-node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --config=./coverage.config.yaml
+node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --config=./coverage.json
 
 # With custom thresholds
 node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --threshold=80 --categories=docs,code
@@ -48,7 +50,7 @@ Add this to your package.json for easier usage:
 ```json
 {
   "scripts": {
-    "mem-coverage": "node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --config=./coverage.config.yaml"
+    "mem-coverage": "node node_modules/llm-mem/packages/cli/dist/mem-coverage.js --config=./coverage.json"
   }
 }
 ```
@@ -71,7 +73,7 @@ Create a `.coverage.json` file for explicit memory coverage configuration:
   "thresholds": {
     "overall": 80,
     "src": 85,
-    "docs": 90
+    "othersrc": 90
   },
   "exclude": [
     "node_modules/**",
@@ -82,7 +84,7 @@ Create a `.coverage.json` file for explicit memory coverage configuration:
   "include": [
     "src/**/*.ts",
     "src/**/*.js",
-    "docs/**/*.md"
+    "othersrc/**/*.ts"
   ],
   "categories": ["DOC", "ADR", "CTX"],
   "memoryStorePath": "./memories",
@@ -149,17 +151,17 @@ module.exports = {
 
 ### Configuration Parameters
 
-| Parameter | Type | Description | Default |
-|-----------|------|-------------|---------|
-| `thresholds.overall` | `number` | Global coverage threshold (0-100) | `undefined` |
-| `thresholds[scope]` | `number` | Scope-specific threshold (e.g., `src: 85`) | `undefined` |
-| `exclude` | `string[]` | Glob patterns for files to exclude | `["node_modules/**", "dist/**"]` |
-| `include` | `string[]` | Glob patterns for files to include | `["src/**/*.ts", "src/**/*.js"]` |
-| `categories` | `string[]` | Memory categories to analyze | `["DOC", "ADR", "CTX"]` |
-| `memoryStorePath` | `string` | Path to memory store directory | `"./memories"` |
-| `indexPath` | `string` | Path to search index | `"./memories/index"` |
-| `rootDir` | `string` | Root directory for filesystem scanning | `"./"` |
-| `scanSourceFiles` | `boolean` | Enable/disable source file scanning | `true` |
+| Parameter            | Type       | Description                                | Default                          |
+|----------------------|------------|--------------------------------------------|----------------------------------|
+| `thresholds.overall` | `number`   | Global coverage threshold (0-100)          | `undefined`                      |
+| `thresholds[scope]`  | `number`   | Scope-specific threshold (e.g., `src: 85`) | `undefined`                      |
+| `exclude`            | `string[]` | Glob patterns for files to exclude         | `["node_modules/**", "dist/**"]` |
+| `include`            | `string[]` | Glob patterns for files to include         | `["src/**/*.ts", "src/**/*.js"]` |
+| `categories`         | `string[]` | Memory categories to analyze               | `["DOC", "ADR", "CTX"]`          |
+| `memoryStorePath`    | `string`   | Path to memory store directory             | `"./memories"`                   |
+| `indexPath`          | `string`   | Path to search index                       | `"./memories/index"`             |
+| `rootDir`            | `string`   | Root directory for filesystem scanning     | `"./"`                           |
+| `scanSourceFiles`    | `boolean`  | Enable/disable source file scanning        | `true`                           |
 
 ### Command Line Overrides
 
@@ -208,6 +210,21 @@ node mem-coverage.js --config=./coverage.prod.json
 # CI/CD with specific exclusions
 node mem-coverage.js --config=./coverage.ci.json
 ```
+
+## Validation and Error Handling
+
+- CLI options and configuration are validated using Zod
+- Thresholds must be between 0 and 100
+- Categories must be one of `DOC`, `ADR`, `CTX`
+- Source file paths must be project-relative; absolute paths and parent traversal are rejected
+- Glob pattern sanity (include/exclude):
+  - Allowed: relative patterns with `*`, `**`, `?`, `{}`, `[]`
+  - Rejected: absolute paths, parent traversal (`../`), null bytes
+- Invalid memory source entries are skipped with a clear message
+- Failures to read memories produce an empty but valid report (graceful degradation)
+
+## further examples and ci integration
+see /src/_examples/README.md
 
 ## Development
 

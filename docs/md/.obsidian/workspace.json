@@ -1,0 +1,200 @@
+{
+  "main": {
+    "id": "10e81cda2fab1cfa",
+    "type": "split",
+    "children": [
+      {
+        "id": "cec1d9ec65d3a8d7",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "35fb8fa75fa12592",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "(DOC)(memory-data-types-and-validation-schemas)(ac69f5f1-456a-44e3-8e63-cd39c29dd351).md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "(DOC)(memory-data-types-and-validation-schemas)(ac69f5f1-456a-44e3-8e63-cd39c29dd351)"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "0fcc8f50828e4a85",
+    "type": "split",
+    "children": [
+      {
+        "id": "c99dd32bcaea2ede",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e2f45942e9c45e5b",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "48278214f833817c",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "969c294566ef1ae9",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "9b93639fcb51d63e",
+    "type": "split",
+    "children": [
+      {
+        "id": "377530c259444fba",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e87454dc6c3bd8b6",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Internationalization and language support.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Internationalization and language support"
+            }
+          },
+          {
+            "id": "23805ab562bb1325",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Internationalization and language support.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Internationalization and language support"
+            }
+          },
+          {
+            "id": "225692ad25e3e69c",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "e4f40ee77a61d4d4",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Internationalization and language support.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Internationalization and language support"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false
+    }
+  },
+  "active": "35fb8fa75fa12592",
+  "lastOpenFiles": [
+    "(DOC)(fresh-test-memory-c)(8f26877a-3bb8-4cc9-b54f-944858bc9771).md",
+    "(DOC)(fresh-test-memory-b)(126cd8a0-aca7-4677-a8a3-a8e0b3954fc5).md",
+    "(DOC)(fresh-test-memory-a)(fa5e0eb2-7677-4b54-9308-3ca34990bfca).md",
+    "(DOC)(unlink-test-memory-3-multiple-links)(a3d39249-543e-4b1a-9d91-897bd3c2ef2b).md",
+    "(DOC)(unlink-test-memory-2)(94b0bce7-9e90-4b13-9cce-ac1de109a99e).md",
+    "(DOC)(unlink-test-memory-1)(1cf9e804-dc59-46e0-9d76-e7b2de6cf13c).md",
+    "(DOC)(regex-fix-test-memory-3)(4b4abab3-3ccf-4978-a31e-19a2de2a1d36).md",
+    "(DOC)(regex-fix-test-memory-2)(5275e21b-24ae-4605-a799-c8b4e909903f).md",
+    "(DOC)(regex-fix-test-memory-1)(70c40f2b-a771-4cf7-ba3f-7eab046919a1).md",
+    "(DOC)(clean-test-memory-beta)(0bef4a71-0551-4536-b9cb-92927e60e0ef).md",
+    "(DOC)(clean-test-memory-alpha)(df59a50d-599a-49a3-a627-3a7f617d9aee).md",
+    "(DOC)(regex-test-memory-2)(8c9891ee-ab52-4a67-97c1-64cd137f396f).md",
+    "(DOC)(regex-test-memory-1)(1bf6ad10-3960-4a38-8a4f-bce4f02f78e7).md",
+    "(DOC)(corrected-test-memory-2)(6fb176d9-97b6-4ba8-b107-a8ef3a15f84d).md",
+    "(DOC)(corrected-test-memory-1)(f6f11993-3346-42ca-8afd-807d83f2945a).md",
+    "(DOC)(simple-test-memory-b)(7bf2ca2d-8b87-42c7-a509-cf5169a70322).md",
+    "(DOC)(simple-test-memory-a)(55e312a6-a9f5-406a-8433-49d1362c8a24).md",
+    "(DOC)(fresh-test-memory-beta)(f3c8c15e-221d-48c5-9c1a-ba35d7fe79ab).md",
+    "(DOC)(fresh-test-memory-alpha)(7fc7a053-70e9-4186-a46e-97b72da4eba6).md",
+    "(DOC)(position-test-memory-2)(0e91d36e-bc45-4255-ab6f-c26142eadec4).md",
+    "(DOC)(position-test-memory-1)(58817a86-8879-4440-89e6-4dac9e7a31f3).md",
+    "(DOC)(final-test-memory-2)(5d82fe46-e5c2-4f13-bb03-66d18da30cf7).md",
+    "(DOC)(final-test-memory-1)(dd53def7-e5ef-4f30-8f2e-c0f0dcff61e8).md",
+    "(DOC)(clean-test-memory-b)(a6fef3c7-1944-49d9-a1fb-4b2195383423).md",
+    "(DOC)(clean-test-memory-a)(3a2b3324-bf5f-45a5-bf2b-252f6e08692e).md",
+    "(DOC)(target-test-memory)(5023ac8d-525a-4d61-950b-048b53e232a1).md"
+  ]
+}

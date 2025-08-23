@@ -1,10 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from "vitest";
 import { CoverageService } from "../src/coverage-service.js";
 import { MemoryService } from "@llm-mem/shared";
+import { promises as fs } from "node:fs";
+import { join } from "node:path";
 
 describe("CoverageService", () => {
   let memoryService: MemoryService;
   let svc: CoverageService;
+  const tmpDir = join(process.cwd(), "tests/tmp/coverage-service");
+  const createdFiles: string[] = [];
 
   beforeEach(() => {
     memoryService = {
@@ -20,6 +24,27 @@ describe("CoverageService", () => {
       ])
     } as unknown as MemoryService;
     svc = new CoverageService(memoryService);
+  });
+
+  afterEach(async () => {
+    // Clean up individual test files
+    for (const file of createdFiles) {
+      try {
+        await fs.unlink(file);
+      } catch (error) {
+        // Ignore errors if file was already deleted
+      }
+    }
+    createdFiles.length = 0;
+  });
+
+  afterAll(async () => {
+    // Clean up the test-specific tmp directory
+    try {
+      await fs.rm(tmpDir, { recursive: true, force: true });
+    } catch (error) {
+      // Ignore errors if directory was already deleted
+    }
   });
 
   it("builds coverage map from memory sources", async () => {
@@ -65,25 +90,24 @@ describe("CoverageService", () => {
   it("includes function/class granular coverage using AST spans when available", async () => {
     // Add a file path to map and totals
     // @ts-expect-error access private field for test by as any
-    (svc as any).cachedTotals.set("tests/tmp/sample.ts", 10);
+    (svc as any).cachedTotals.set("tests/tmp/coverage-service/sample.ts", 10);
     // @ts-expect-error override populateTotals to no-op
     svc.populateTotals = vi.fn();
     // Mock memory service to point to the sample file
     (memoryService.getAllMemories as any).mockResolvedValueOnce([
       { id: "x", title: "T", content: "", tags: [], category: "DOC", created_at: "", updated_at: "", last_reviewed: "", file_path: "", links: [], sources: [
-        "tests/tmp/sample.ts:1-10"
+        "tests/tmp/coverage-service/sample.ts:1-10"
       ]}
     ]);
 
     // Create a temp file with a function and class
-    const fs = await import("node:fs/promises");
-    const path = await import("node:path");
-    const tmp = path.join(process.cwd(), "tests/tmp/sample.ts");
-    await fs.mkdir(path.dirname(tmp), { recursive: true });
+    const tmp = join(tmpDir, "sample.ts");
+    await fs.mkdir(tmpDir, { recursive: true });
     await fs.writeFile(tmp, `export function a(){}\nexport class C { m(){} }\n`, "utf8");
+    createdFiles.push(tmp);
 
     const report = await svc.generateReport({ scanSourceFiles: false });
-    const fc = report.files.find(f => f.path === "tests/tmp/sample.ts");
+    const fc = report.files.find(f => f.path === "tests/tmp/coverage-service/sample.ts");
     expect(fc?.coveredLines).toBe(10);
     // We do not expose granular arrays in report currently, but ensure no throw occurred
   });

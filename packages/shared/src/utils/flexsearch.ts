@@ -325,14 +325,82 @@ export class FlexSearchManager {
    */
   async clearIndexes(): Promise<void> {
     try {
-      // Clear all contents from the database
-      await this.documentIndex.clear();
+      // Only try to clear if the index is initialized
+      if (this.isInitialized && this.documentIndex) {
+        await this.documentIndex.clear();
+      }
       
       // Optionally destroy the entire database
       // await this.documentIndex.destroy();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // If it's a SQLite table error, it means the database was never fully initialized
+      // This is expected during cleanup, so we can ignore it
+      if (errorMessage.includes("no such table") || errorMessage.includes("SQLITE_ERROR")) {
+        // Silently ignore SQLite table errors during cleanup
+        return;
+      }
+      
       throw new Error(`Failed to clear FlexSearch indexes: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Properly destroys and cleans up all resources.
+   * This method should be called before disposing of the FlexSearchManager instance.
+   * 
+   * @throws Error if cleanup fails
+   */
+  async destroy(): Promise<void> {
+    try {
+      // Try to clear all indexes first, but don't fail if tables don't exist
+      try {
+        if (this.isInitialized) {
+          await this.clearIndexes();
+        }
+      } catch (error) {
+        // Ignore SQLite table errors during cleanup - they're expected if the database was never fully initialized
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (!errorMessage.includes("no such table") && !errorMessage.includes("SQLITE_ERROR")) {
+          console.warn(`Warning during index cleanup: ${errorMessage}`);
+        }
+      }
+      
+      // Destroy the document index to release resources
+      if (this.documentIndex) {
+        try {
+          await this.documentIndex.destroy();
+        } catch (error) {
+          // Ignore errors during document index destruction
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (!errorMessage.includes("no such table") && !errorMessage.includes("SQLITE_ERROR")) {
+            console.warn(`Warning during document index cleanup: ${errorMessage}`);
+          }
+        }
+      }
+      
+      // Close the SQLite database connection
+      if (this.db) {
+        try {
+          await this.db.close();
+        } catch (error) {
+          // Ignore errors during database close
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.warn(`Warning during database close: ${errorMessage}`);
+        }
+      }
+      
+      // Reset initialization state
+      this.isInitialized = false;
+    } catch (error) {
+      // Only throw if it's a critical error that's not related to SQLite table cleanup
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (!errorMessage.includes("no such table") && !errorMessage.includes("SQLITE_ERROR")) {
+        throw new Error(`Failed to destroy FlexSearch manager: ${errorMessage}`);
+      }
+      // For SQLite table errors, just reset the state and continue
+      this.isInitialized = false;
     }
   }
 

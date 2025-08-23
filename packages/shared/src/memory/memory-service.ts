@@ -187,6 +187,23 @@ export class MemoryService {
       title: string;
       unidirectional_link_id: string;
     }>;
+    link_mismatches: Array<{
+      id: string;
+      title: string;
+      missing_in_markdown: string[];
+      missing_in_yaml: string[];
+      yaml_link_count: number;
+      markdown_link_count: number;
+    }>;
+    invalid_links: Array<{
+      id: string;
+      title: string;
+      invalid_links: Array<{
+        link: string;
+        type: 'broken-obsidian' | 'invalid-format' | 'orphaned-link';
+        details: string;
+      }>;
+    }>;
     memories_without_sources: Array<{
       id: string;
       title: string;
@@ -227,6 +244,8 @@ export class MemoryService {
         orphaned_memories: [],
         broken_links: [],
         unidirectional_links: [],
+        link_mismatches: [],
+        invalid_links: [],
         memories_without_sources: [],
         categories: {},
         tags: {},
@@ -299,6 +318,52 @@ export class MemoryService {
       }
     }
 
+    // Detect link mismatches between YAML frontmatter and markdown content
+    const linkMismatches: Array<{
+      id: string;
+      title: string;
+      missing_in_markdown: string[];
+      missing_in_yaml: string[];
+      yaml_link_count: number;
+      markdown_link_count: number;
+    }> = [];
+    
+    for (const memory of allMemories) {
+      const mismatch = this.detectLinkMismatches(memory, allMemories);
+      if (mismatch.hasMismatch) {
+        linkMismatches.push({
+          id: memory.id,
+          title: memory.title,
+          missing_in_markdown: mismatch.missingInMarkdown,
+          missing_in_yaml: mismatch.missingInYaml,
+          yaml_link_count: mismatch.yamlLinks.length,
+          markdown_link_count: mismatch.markdownLinks.length
+        });
+      }
+    }
+
+    // Detect invalid links (not HTTP or valid Obsidian links)
+    const invalidLinks: Array<{
+      id: string;
+      title: string;
+      invalid_links: Array<{
+        link: string;
+        type: 'broken-obsidian' | 'invalid-format' | 'orphaned-link';
+        details: string;
+      }>;
+    }> = [];
+    
+    for (const memory of allMemories) {
+      const invalid = this.detectInvalidLinks(memory, allMemories);
+      if (invalid.hasInvalidLinks) {
+        invalidLinks.push({
+          id: memory.id,
+          title: memory.title,
+          invalid_links: invalid.invalidLinks
+        });
+      }
+    }
+
     // Find memories without sources
     const memoriesWithoutSources = allMemories
       .filter(memory => memory.sources.length === 0)
@@ -367,6 +432,12 @@ export class MemoryService {
     if (unidirectionalLinks.length > 0) {
       recommendations.push(`Review ${unidirectionalLinks.length} unidirectional links for potential bidirectional relationships.`);
     }
+    if (linkMismatches.length > 0) {
+      recommendations.push(`Fix ${linkMismatches.length} link mismatches between YAML frontmatter and markdown content.`);
+    }
+    if (invalidLinks.length > 0) {
+      recommendations.push(`Fix ${invalidLinks.length} memories with invalid links (not HTTP or valid Obsidian links).`);
+    }
     if (memoriesWithoutSources.length > 0) {
       recommendations.push(`Add sources to ${memoriesWithoutSources.length} memories to improve traceability.`);
     }
@@ -389,6 +460,8 @@ export class MemoryService {
       orphaned_memories: orphanedMemories,
       broken_links: brokenLinks,
       unidirectional_links: unidirectionalLinks,
+      link_mismatches: linkMismatches,
+      invalid_links: invalidLinks,
       memories_without_sources: memoriesWithoutSources,
       categories,
       tags,
@@ -506,7 +579,7 @@ export class MemoryService {
     message: string;
   }> {
     await this.initialize();
-    const { source_id, target_id } = params;
+    const { source_id, target_id, link_text } = params;
 
     // Verify both memories exist
     const source = await this.readMemory({ id: source_id });
@@ -520,7 +593,7 @@ export class MemoryService {
     }
 
     // Create bidirectional links
-    await this.linkService.linkMemories({ id: source_id }, { id: target_id });
+    await this.linkService.linkMemories({ id: source_id }, { id: target_id }, link_text);
 
     return {
       source_id,
@@ -668,6 +741,193 @@ export class MemoryService {
       memories: memoriesNeedingReview,
       total: memoriesNeedingReview.length,
     };
+  }
+
+  /**
+   * Detects link mismatches between YAML frontmatter and markdown content
+   */
+  private detectLinkMismatches(memory: Memory, allMemories: Memory[]): {
+    hasMismatch: boolean;
+    yamlLinks: string[];
+    markdownLinks: string[];
+    missingInMarkdown: string[];
+    missingInYaml: string[];
+  } {
+    const yamlLinks = memory.links;
+    
+    // Extract Obsidian links from markdown content using regex
+    // Format: [[(CATEGORY)(title)(ID)|display text]] or [[(CATEGORY)(title)(ID)]]
+    const obsidianLinkRegex = /\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g;
+    const markdownLinks: string[] = [];
+    const matches = memory.content.match(obsidianLinkRegex);
+    
+    if (matches) {
+      for (const match of matches) {
+        // Extract the memory ID from the third group (ID)
+        const idMatch = match.match(/\[\[\([^)]+\)\([^)]+\)\(([^)]+)\)/);
+        if (idMatch && idMatch[1]) {
+          const memoryId = idMatch[1];
+          // Verify the memory ID exists
+          const linkedMemory = allMemories.find(m => m.id === memoryId);
+          if (linkedMemory) {
+            markdownLinks.push(memoryId);
+          }
+        }
+      }
+    }
+    
+    // Find links that are in YAML but not in markdown
+    const missingInMarkdown = yamlLinks.filter(linkId => !markdownLinks.includes(linkId));
+    
+    // Find links that are in markdown but not in YAML
+    const missingInYaml = markdownLinks.filter(linkId => !yamlLinks.includes(linkId));
+    
+    const hasMismatch = missingInMarkdown.length > 0 || missingInYaml.length > 0;
+    
+    return {
+      hasMismatch,
+      yamlLinks,
+      markdownLinks,
+      missingInMarkdown,
+      missingInYaml
+    };
+  }
+
+  /**
+   * Detects invalid links that aren't HTTP links or valid Obsidian links
+   */
+  private detectInvalidLinks(memory: Memory, allMemories: Memory[]): {
+    hasInvalidLinks: boolean;
+    invalidLinks: Array<{
+      link: string;
+      type: 'broken-obsidian' | 'invalid-format' | 'orphaned-link';
+      details: string;
+    }>;
+  } {
+    const invalidLinks: Array<{
+      link: string;
+      type: 'broken-obsidian' | 'invalid-format' | 'orphaned-link';
+      details: string;
+    }> = [];
+    
+    // Check YAML frontmatter links
+    for (const linkId of memory.links) {
+      const linkedMemory = allMemories.find(m => m.id === linkId);
+      if (!linkedMemory) {
+        invalidLinks.push({
+          link: linkId,
+          type: 'orphaned-link',
+          details: 'Link ID does not correspond to any existing memory'
+        });
+      }
+    }
+    
+    // Check markdown content for invalid Obsidian links
+    // Format: [[(CATEGORY)(title)(ID)|display text]] or [[(CATEGORY)(title)(ID)]]
+    const obsidianLinkRegex = /\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g;
+    let match;
+    
+    // Use exec() in a loop to get all matches with capture groups
+    while ((match = obsidianLinkRegex.exec(memory.content)) !== null) {
+      // Extract the memory ID from the third group (ID)
+      if (match[3]) { // Index 3 is the third capture group (ID)
+        const memoryId = match[3];
+        // Check if it's a valid Obsidian link to an existing memory
+        const linkedMemory = allMemories.find(m => m.id === memoryId);
+        
+        if (!linkedMemory) {
+          invalidLinks.push({
+            link: match[0], // Full match
+            type: 'broken-obsidian',
+            details: 'Obsidian link does not point to an existing memory and is not an HTTP link'
+          });
+        }
+      }
+    }
+    
+    // Also check for simple [[text]] format links that might be legacy or invalid
+    // But only if they weren't already handled by the structured format above
+    const simpleObsidianLinkRegex = /\[\[([^\]]+)\]\]/g;
+    const simpleMatches = memory.content.match(simpleObsidianLinkRegex);
+    
+    if (simpleMatches) {
+      for (const match of simpleMatches) {
+        const linkText = match.slice(2, -2);
+        
+        // Check if this is a structured link that was already processed
+        const isStructuredLink = /^\[\[\([^)]+\)\([^)]+\)\([^)]+\)(?:\|[^\]]+)?\]\]$/.test(match);
+        
+        if (!isStructuredLink) {
+          // Check if it's a valid Obsidian link to an existing memory by title
+          const linkedMemory = allMemories.find(m => m.title === linkText);
+          
+          if (!linkedMemory) {
+            // Check if it's an HTTP link
+            const httpRegex = /^https?:\/\/.+/;
+            if (!httpRegex.test(linkText)) {
+              invalidLinks.push({
+                link: match,
+                type: 'broken-obsidian',
+                details: 'Simple Obsidian link does not point to an existing memory and is not an HTTP link'
+              });
+            }
+          }
+        }
+      }
+    }
+    
+    // Check for other invalid link formats
+    const invalidLinkFormats = [
+      /\[\[[^\]]*\]\[[^\]]*\]\]/, // [[text][url]] format (not supported)
+      /\[[^\]]+\]\([^)]+\)/, // Markdown link format (not supported)
+      /<a[^>]*href[^>]*>/, // HTML anchor tags (not supported)
+    ];
+    
+    for (const format of invalidLinkFormats) {
+      const matches = memory.content.match(format);
+      if (matches) {
+        for (const match of matches) {
+          invalidLinks.push({
+            link: match,
+            type: 'invalid-format',
+            details: 'Link format is not supported in this memory system'
+          });
+        }
+      }
+    }
+    
+    return {
+      hasInvalidLinks: invalidLinks.length > 0,
+      invalidLinks
+    };
+  }
+
+  /**
+   * Properly destroys and cleans up all resources.
+   * This method should be called before disposing of the MemoryService instance.
+   * 
+   * @throws Error if cleanup fails
+   */
+  async destroy(): Promise<void> {
+    try {
+      // Destroy the search service to release FlexSearch resources
+      if (this.searchService) {
+        await this.searchService.destroy();
+      }
+      
+      // Destroy the link service if it has cleanup methods
+      if (this.linkService && typeof (this.linkService as any).destroy === 'function') {
+        await (this.linkService as any).destroy();
+      }
+      
+      // Destroy the file service if it has cleanup methods
+      if (this.fileService && typeof (this.fileService as any).destroy === 'function') {
+        await (this.fileService as any).destroy();
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to destroy MemoryService: ${errorMessage}`);
+    }
   }
 }
 

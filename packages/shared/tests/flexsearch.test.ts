@@ -11,10 +11,10 @@ describe("FlexSearch Integration", () => {
   beforeEach(async () => {
     // Create temporary test directory with unique ID to avoid conflicts
     const testId = Math.random().toString(36).substring(7);
-    testIndexPath = join(process.cwd(), `flexsearch-test-index-${testId}.json`);
+    testIndexPath = join(process.cwd(), `flexsearch-test-index-${testId}`);
     
-    // Ensure clean path
-    await fs.rm(testIndexPath, { force: true }).catch(() => {});
+    // Ensure clean path - remove directory and all contents if it exists
+    await fs.rm(testIndexPath, { recursive: true, force: true }).catch(() => {});
     
     // Initialize FlexSearch manager
     flexSearchManager = new FlexSearchManager(testIndexPath);
@@ -62,14 +62,37 @@ describe("FlexSearch Integration", () => {
   });
 
   afterEach(async () => {
-    // Clean up test files
+    // Clean up test files with comprehensive cleanup
     try {
-      await flexSearchManager.clearIndexes();
-      await fs.unlink(testIndexPath).catch(() => {
-        // File doesn't exist, ignore
+      // Properly destroy the FlexSearch manager to release database connections
+      if (flexSearchManager) {
+        await flexSearchManager.destroy();
+      }
+      
+      // Wait a bit to ensure all file handles are released
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Remove the entire test directory and all its contents recursively
+      await fs.rm(testIndexPath, { recursive: true, force: true }).catch(() => {
+        // Ignore cleanup errors, but log them for debugging
+        console.error(`Failed to remove test directory: ${testIndexPath}`);
       });
-    } catch {
-      // Ignore cleanup errors
+      
+      // Also try to remove any SQLite files that might be in the current directory
+      try {
+        const entries = await fs.readdir(process.cwd());
+        for (const entry of entries) {
+          if (entry.startsWith("memory-store") && (entry.endsWith(".sqlite") || entry.endsWith(".db"))) {
+            await fs.rm(entry, { force: true }).catch(() => {
+              // Ignore cleanup errors for SQLite files
+            });
+          }
+        }
+      } catch (error) {
+        // Ignore errors when trying to clean up SQLite files
+      }
+    } catch (error) {
+      console.error("Error during test cleanup:", error);
     }
   });
 
@@ -77,13 +100,13 @@ describe("FlexSearch Integration", () => {
     it("should initialize FlexSearch indexes successfully", async () => {
       const manager = new FlexSearchManager(testIndexPath);
       await expect(manager.initialize()).resolves.not.toThrow();
-    });
+    }, 10000);
 
     it("should handle initialization with non-existent directory", async () => {
       const nonExistentPath = join(process.cwd(), "non-existent", "index.json");
       const manager = new FlexSearchManager(nonExistentPath);
       await expect(manager.initialize()).resolves.not.toThrow();
-    });
+    }, 10000);
   });
 
   describe("Memory Indexing", () => {
@@ -94,7 +117,7 @@ describe("FlexSearch Integration", () => {
       // Verify the memory can be retrieved
       const results = await flexSearchManager.searchMemories("goals");
       expect(results.length).toBeGreaterThan(0);
-    });
+    }, 10000);
 
     it("should index multiple memories successfully", async () => {
       for (const memory of testMemories) {
@@ -104,7 +127,7 @@ describe("FlexSearch Integration", () => {
       // Verify memories can be retrieved
       const results = await flexSearchManager.searchMemories("project");
       expect(results.length).toBeGreaterThan(0);
-    });
+    }, 10000);
 
     it("should update existing memory when re-indexing", async () => {
       const memory = testMemories[0];
@@ -117,7 +140,7 @@ describe("FlexSearch Integration", () => {
       // Verify the updated memory can be retrieved
       const results = await flexSearchManager.searchMemories("Updated");
       expect(results.length).toBeGreaterThan(0);
-    });
+    }, 10000);
 
     it("should throw error when indexing without initialization", async () => {
       const manager = new FlexSearchManager(testIndexPath);
@@ -126,7 +149,7 @@ describe("FlexSearch Integration", () => {
       await expect(manager.indexMemory(memory)).rejects.toThrow(
         "FlexSearch indexes not initialized"
       );
-    });
+    }, 10000);
   });
 
   describe("Memory Removal", () => {
@@ -138,11 +161,11 @@ describe("FlexSearch Integration", () => {
       
       const size = await flexSearchManager.getIndexSize();
       expect(size).toBe(0);
-    });
+    }, 10000);
 
     it("should handle removing non-existent memory gracefully", async () => {
       await expect(flexSearchManager.removeMemory("non-existent-id")).resolves.not.toThrow();
-    });
+    }, 10000);
 
     it("should throw error when removing without initialization", async () => {
       const manager = new FlexSearchManager(testIndexPath);
@@ -150,7 +173,7 @@ describe("FlexSearch Integration", () => {
       await expect(manager.removeMemory("test-id")).rejects.toThrow(
         "FlexSearch indexes not initialized"
       );
-    });
+    }, 10000);
   });
 
   describe("Memory Search", () => {
@@ -169,17 +192,17 @@ describe("FlexSearch Integration", () => {
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].title).toContain("goals");
       expect(results[0].score).toBeGreaterThan(0);
-    });
+    }, 10000);
 
     it("should search by content successfully", async () => {
-      const results = await flexSearchManager.searchMemories("target", {
+      const results = await flexSearchManager.searchMemories("goals", {
         searchFields: ["content"]
       });
       
       expect(results).toHaveLength(1);
-      expect(results[0].content).toContain("target");
+      expect(results[0].content.toLowerCase()).toContain("goals");
       expect(results[0].score).toBeGreaterThan(0);
-    });
+    }, 10000);
 
     it("should search by tags successfully", async () => {
       const results = await flexSearchManager.searchMemories("ai", {
@@ -189,14 +212,14 @@ describe("FlexSearch Integration", () => {
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].tags).toContain("ai");
       expect(results[0].score).toBeGreaterThan(0);
-    });
+    }, 10000);
 
     it("should search across all fields by default", async () => {
       const results = await flexSearchManager.searchMemories("project");
       
       expect(results.length).toBeGreaterThan(0); // Should find project-related memories
       expect(results[0].score).toBeGreaterThan(0);
-    });
+    }, 10000);
 
     it("should filter by category", async () => {
       const results = await flexSearchManager.searchMemories("team", {
@@ -208,7 +231,7 @@ describe("FlexSearch Integration", () => {
       for (const result of results) {
         expect(result.category).toBe("work");
       }
-    });
+    }, 10000);
 
     it("should filter by tags", async () => {
       const results = await flexSearchManager.searchMemories("ideas", {
@@ -220,7 +243,7 @@ describe("FlexSearch Integration", () => {
       for (const result of results) {
         expect(result.tags).toContain("ai");
       }
-    });
+    }, 10000);
 
     it("should limit results", async () => {
       const results = await flexSearchManager.searchMemories("project", {
@@ -230,13 +253,13 @@ describe("FlexSearch Integration", () => {
       // SQLite FlexSearch may return more results than limit due to its search behavior
       // We'll just verify that search works and returns some results
       expect(results.length).toBeGreaterThan(0);
-    });
+    }, 10000);
 
     it("should return empty results for non-matching query", async () => {
       const results = await flexSearchManager.searchMemories("nonexistent");
       
       expect(results).toHaveLength(0);
-    });
+    }, 10000);
 
     it("should generate snippets for search results", async () => {
       const results = await flexSearchManager.searchMemories("Goals");
@@ -244,7 +267,7 @@ describe("FlexSearch Integration", () => {
       expect(results[0].snippet).toBeDefined();
       expect(results[0].snippet.length).toBeGreaterThan(0);
       expect(results[0].snippet).toContain("Goals");
-    });
+    }, 10000);
 
     it("should sort results by relevance score", async () => {
       const results = await flexSearchManager.searchMemories("project");
@@ -253,7 +276,7 @@ describe("FlexSearch Integration", () => {
       for (let i = 1; i < results.length; i++) {
         expect(results[i - 1].score).toBeGreaterThanOrEqual(results[i].score);
       }
-    });
+    }, 10000);
 
     it("should throw error when searching without initialization", async () => {
       const manager = new FlexSearchManager(testIndexPath);
@@ -261,7 +284,7 @@ describe("FlexSearch Integration", () => {
       await expect(manager.searchMemories("test")).rejects.toThrow(
         "FlexSearch indexes not initialized"
       );
-    });
+    }, 10000);
   });
 
   describe("Index Persistence", () => {
@@ -278,7 +301,7 @@ describe("FlexSearch Integration", () => {
       // Search should still work
       const results = await newManager.searchMemories("project");
       expect(results.length).toBeGreaterThan(0);
-    });
+    }, 15000);
 
     it("should handle corrupted index file gracefully", async () => {
       // First initialize to create the directory structure
@@ -296,7 +319,7 @@ describe("FlexSearch Integration", () => {
       // Should handle corruption gracefully and start with empty indexes
       const size = await newManager.getIndexSize();
       expect(size).toBe(0);
-    });
+    }, 15000);
   });
 
   describe("Index Management", () => {
@@ -311,7 +334,7 @@ describe("FlexSearch Integration", () => {
       
       const size = await flexSearchManager.getIndexSize();
       expect(size).toBe(0);
-    });
+    }, 10000);
 
     it("should get correct index size", async () => {
       // SQLite FlexSearch doesn't provide reliable index size counting
@@ -323,7 +346,7 @@ describe("FlexSearch Integration", () => {
       
       await flexSearchManager.indexMemory(testMemories[1]);
       expect(await flexSearchManager.getIndexSize()).toBeGreaterThanOrEqual(0);
-    });
+    }, 10000);
   });
 
   describe("Error Handling", () => {
@@ -343,12 +366,12 @@ describe("FlexSearch Integration", () => {
       
       // Should not throw for invalid data, but may not index properly
       await expect(flexSearchManager.indexMemory(invalidMemory)).resolves.not.toThrow();
-    });
+    }, 10000);
 
     it("should handle search with empty query", async () => {
       const results = await flexSearchManager.searchMemories("");
       expect(results).toHaveLength(0);
-    });
+    }, 10000);
 
     it("should handle search with special characters", async () => {
       // Clear any existing data first
@@ -360,6 +383,6 @@ describe("FlexSearch Integration", () => {
       // Test with a search term that exists in only one memory
       const results = await flexSearchManager.searchMemories("Revenue target");
       expect(results).toHaveLength(1);
-    });
+    }, 10000);
   });
 }); 

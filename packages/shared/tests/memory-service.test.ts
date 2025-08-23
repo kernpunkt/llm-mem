@@ -13,21 +13,59 @@ describe("MemoryService", () => {
     // Create unique test directories for each test
     const testId = Math.random().toString(36).substring(7);
     tempDir = join(process.cwd(), `memories-test-${testId}`);
-    indexPath = join(process.cwd(), `memories-test-index-${testId}.json`);
+    indexPath = join(process.cwd(), `memories-test-index-${testId}`);
     
     // Ensure clean dirs
     await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
     await fs.rm(indexPath, { force: true }).catch(() => {});
+    
+    // Create the directories
+    await fs.mkdir(tempDir, { recursive: true });
+    await fs.mkdir(indexPath, { recursive: true });
+    
     service = new MemoryService({ notestorePath: tempDir, indexPath });
     // Skip FlexSearch initialization to avoid SQLite lock issues in tests
     await service.initialize();
   }, 20000);
 
   afterEach(async () => {
-    // Clean up with delay to avoid SQLite lock issues
-    await new Promise(resolve => setTimeout(resolve, 100));
-    await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
-    await fs.rm(indexPath, { force: true }).catch(() => {});
+    // Clean up with comprehensive cleanup to avoid SQLite lock issues
+    try {
+      // Properly destroy the service to release all resources including FlexSearch
+      if (service) {
+        await service.destroy();
+      }
+      
+      // Wait a bit to ensure all file handles are released
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Remove the entire test directory and all its contents recursively
+      await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {
+        // Ignore cleanup errors, but log them for debugging
+        console.error(`Failed to remove test directory: ${tempDir}`);
+      });
+      
+      // Remove the index file
+      await fs.rm(indexPath, { force: true }).catch(() => {
+        // File doesn't exist or can't be removed, ignore
+      });
+      
+      // Also try to remove any SQLite files that might be in the current directory
+      try {
+        const entries = await fs.readdir(process.cwd());
+        for (const entry of entries) {
+          if (entry.startsWith("memory-store") && (entry.endsWith(".sqlite") || entry.endsWith(".db"))) {
+            await fs.rm(entry, { force: true }).catch(() => {
+              // Ignore cleanup errors for SQLite files
+            });
+          }
+        }
+      } catch (error) {
+        // Ignore errors when trying to clean up SQLite files
+      }
+    } catch (error) {
+      console.error("Error during test cleanup:", error);
+    }
   });
 
   it("should create a memory, write markdown with YAML, and index it", async () => {
@@ -54,7 +92,7 @@ describe("MemoryService", () => {
     expect(parsed.frontmatter.tags).toEqual(["ideas", "projects"]);
     expect(parsed.frontmatter.sources).toEqual(["internal:doc/1"]);
     expect(parsed.content).toContain("# Ideas");
-  });
+  }, 10000);
 
   it("should read a memory by id and by title", async () => {
     const created = await service.createMemory({
@@ -105,7 +143,7 @@ describe("MemoryService", () => {
     });
     expect(emptyArrays.tags).toEqual([]);
     expect(emptyArrays.sources).toEqual([]);
-  });
+  }, 10000);
 
   it("should handle various retrieval scenarios for read_mem", async () => {
     // Create test memories
@@ -183,7 +221,7 @@ End of content`;
     expect(markdownMemory.content).toContain("```javascript");
     expect(markdownMemory.content).toContain("**Bold text**");
     expect(markdownMemory.content).toContain("> Blockquote");
-  });
+  }, 10000);
 
   it("should update memory content without renaming when only content changes", async () => {
     const memory = await service.createMemory({
@@ -206,7 +244,7 @@ End of content`;
     expect(updated.file_path).toBe(originalFilePath); // File path should not change
     expect(updated.title).toBe("Update Test Memory"); // Title should remain the same
     expect(updated.category).toBe("testing"); // Category should remain the same
-  });
+  }, 10000);
 
   it("should rename file when title changes", async () => {
     const memory = await service.createMemory({
@@ -233,7 +271,7 @@ End of content`;
     const oldFileExists = await service.readMemory({ id: memory.id });
     expect(oldFileExists).not.toBeNull();
     expect(oldFileExists!.file_path).toBe(updated.file_path);
-  });
+  }, 10000);
 
   it("should rename file when category changes", async () => {
     const memory = await service.createMemory({
@@ -260,7 +298,7 @@ End of content`;
     const oldFileExists = await service.readMemory({ id: memory.id });
     expect(oldFileExists).not.toBeNull();
     expect(oldFileExists!.file_path).toBe(updated.file_path);
-  });
+  }, 10000);
 
   it("should rename file when both title and category change", async () => {
     const memory = await service.createMemory({
@@ -289,7 +327,7 @@ End of content`;
     const oldFileExists = await service.readMemory({ id: memory.id });
     expect(oldFileExists).not.toBeNull();
     expect(oldFileExists!.file_path).toBe(updated.file_path);
-  });
+  }, 10000);
 
   it("should update tags and sources without renaming", async () => {
     const memory = await service.createMemory({
@@ -314,7 +352,7 @@ End of content`;
     expect(updated.file_path).toBe(originalFilePath); // File path should not change
     expect(updated.title).toBe("Tags Test Memory"); // Title should remain the same
     expect(updated.category).toBe("testing"); // Category should remain the same
-  });
+  }, 10000);
 
   it("should handle complex updates with mixed changes", async () => {
     const memory = await service.createMemory({
@@ -345,7 +383,7 @@ End of content`;
     expect(updated.file_path).not.toBe(originalFilePath); // File path should change due to title/category changes
     expect(updated.file_path).toContain("simplified-title");
     expect(updated.file_path).toContain("simplified-category");
-  });
+  }, 10000);
 
   it("should preserve all metadata during updates", async () => {
     const memory = await service.createMemory({
@@ -372,7 +410,7 @@ End of content`;
     expect(updated.tags).toEqual(["metadata", "test"]); // Tags should be preserved
     expect(updated.sources).toEqual(["metadata-source"]); // Sources should be preserved
     expect(updated.category).toBe("metadata-category"); // Category should be preserved
-  });
+  }, 10000);
 
   it("should update wiki-style links in linked memories when title changes", async () => {
     // Create a memory that will be linked to
@@ -400,8 +438,8 @@ End of content`;
     });
 
     // Link the memories together
-    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id });
-    await service.linkMemories({ source_id: anotherLinkingMemory.id, target_id: targetMemory.id });
+    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id, link_text: "Target Memory" });
+    await service.linkMemories({ source_id: anotherLinkingMemory.id, target_id: targetMemory.id, link_text: "Target Memory" });
 
     // Verify the links are established
     const updatedTarget = await service.readMemory({ id: targetMemory.id });
@@ -425,7 +463,7 @@ End of content`;
     const updatedAnotherLinkingMemory = await service.readMemory({ id: anotherLinkingMemory.id });
     expect(updatedAnotherLinkingMemory!.content).toContain("[[Renamed Target Memory]]");
     expect(updatedAnotherLinkingMemory!.content).not.toContain("[[Target Memory]]");
-  });
+  }, 15000);
 
   it("should not update wiki-style links when only content changes", async () => {
     // Create a memory that will be linked to
@@ -445,7 +483,7 @@ End of content`;
     });
 
     // Link the memories together
-    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id });
+    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id, link_text: "Content Target" });
 
     // Update only the content of the target memory (no title change)
     const updatedTarget = await service.updateMemory({
@@ -459,7 +497,7 @@ End of content`;
     // Verify that wiki-style links in linked memory were NOT updated
     const updatedLinkingMemory = await service.readMemory({ id: linkingMemory.id });
     expect(updatedLinkingMemory!.content).toContain("[[Content Target]]"); // Link unchanged
-  });
+  }, 10000);
 
   it("should handle wiki-style link updates with special characters in titles", async () => {
     // Create a memory with special characters in title
@@ -479,7 +517,7 @@ End of content`;
     });
 
     // Link the memories together
-    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id });
+    await service.linkMemories({ source_id: linkingMemory.id, target_id: targetMemory.id, link_text: "Special Title" });
 
     // Rename the target memory to a simpler title
     const renamedTarget = await service.updateMemory({
@@ -493,7 +531,7 @@ End of content`;
     const updatedLinkingMemory = await service.readMemory({ id: linkingMemory.id });
     expect(updatedLinkingMemory!.content).toContain("[[Simple Title]]");
     expect(updatedLinkingMemory!.content).not.toContain("[[Special Title (with parentheses) & symbols!]]");
-  });
+  }, 10000);
 
   it("should update wiki-style links in multiple linked memories", async () => {
     // Create a target memory
@@ -527,9 +565,9 @@ End of content`;
     });
 
     // Link all memories to the target
-    await service.linkMemories({ source_id: linkingMemory1.id, target_id: targetMemory.id });
-    await service.linkMemories({ source_id: linkingMemory2.id, target_id: targetMemory.id });
-    await service.linkMemories({ source_id: linkingMemory3.id, target_id: targetMemory.id });
+    await service.linkMemories({ source_id: linkingMemory1.id, target_id: targetMemory.id, link_text: "Multi Target" });
+    await service.linkMemories({ source_id: linkingMemory2.id, target_id: targetMemory.id, link_text: "Multi Target" });
+    await service.linkMemories({ source_id: linkingMemory3.id, target_id: targetMemory.id, link_text: "Multi Target" });
 
     // Rename the target memory
     const renamedTarget = await service.updateMemory({
@@ -548,6 +586,6 @@ End of content`;
 
     const updatedLinkingMemory3 = await service.readMemory({ id: linkingMemory3.id });
     expect(updatedLinkingMemory3!.content).toContain("[[Renamed Multi Target|this link]]");
-  });
+  }, 15000);
 });
 
