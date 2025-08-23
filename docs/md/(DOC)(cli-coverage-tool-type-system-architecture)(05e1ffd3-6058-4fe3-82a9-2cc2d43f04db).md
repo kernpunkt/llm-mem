@@ -9,7 +9,7 @@ tags:
   - design-patterns
 category: DOC
 created_at: '2025-08-23T02:21:18.352Z'
-updated_at: '2025-08-23T05:58:48.505Z'
+updated_at: '2025-08-23T11:58:33.855Z'
 last_reviewed: '2025-08-23T02:21:18.352Z'
 links:
   - 3b201e08-784c-4a83-9a0e-05d715882e80
@@ -27,7 +27,7 @@ sources:
 The type system is designed around three main concepts:
 
 1. **Line Coverage** - Tracks which specific lines of code are documented
-2. **Symbol Coverage** - Tracks which functions, classes, and other code elements are documented  
+2. **Symbol Coverage** - Tracks which functions, classes, and other code elements are documented
 3. **Scope Coverage** - Tracks coverage across different project scopes (src, tests, etc.)
 
 ### Key Design Decisions
@@ -118,9 +118,6 @@ Future versions can add:
 - Framework-aware coverage patterns
 - Custom coverage rules per project type
 
-
 ## Related
-- CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management
-- CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management
-- [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]
+
 - [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]

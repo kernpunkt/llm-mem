@@ -9,7 +9,7 @@ tags:
   - file-system
 category: DOC
 created_at: '2025-08-23T02:23:00.860Z'
-updated_at: '2025-08-23T05:58:43.288Z'
+updated_at: '2025-08-23T11:59:36.409Z'
 last_reviewed: '2025-08-23T02:23:00.860Z'
 links:
   - 6b6b39f3-45ef-4205-98b7-460bf0b1c010
@@ -52,7 +52,7 @@ The system implements a **multi-layered cleanup approach**:
 afterEach(async () => {
   // Wait for file handles to be released
   await new Promise(resolve => setTimeout(resolve, 100));
-  
+
   // Clean up SQLite database files
   try {
     const entries = await fs.readdir(process.cwd());
@@ -79,13 +79,13 @@ afterEach(async () => {
 ```typescript
 afterAll(async () => {
   console.log("Running global test cleanup...");
-  
+
   // Wait for all file handles to be released
   await new Promise(resolve => setTimeout(resolve, 1000));
-  
+
   // Clean up test directories and remaining files
   // ... comprehensive cleanup logic
-  
+
 }, 30000); // 30 second timeout for cleanup
 ```
 
@@ -242,11 +242,8 @@ The cleanup system should be **tested itself**:
 - **Performance Metrics:** Monitor cleanup performance over time
 - **Resource Tracking:** Ensure no resource leaks during cleanup
 
-
 - CLI Test Infrastructure: Test Environment Setup and Cleanup Management
-
 
 ## Related
-- CLI Test Infrastructure: Test Environment Setup and Cleanup Management
-- [[(DOC)(cli-test-infrastructure-test-environment-setup-and-cleanup-management)(6b6b39f3-45ef-4205-98b7-460bf0b1c010)|CLI Test Infrastructure: Test Environment Setup and Cleanup Management]]
+
 - [[(DOC)(cli-test-infrastructure-test-environment-setup-and-cleanup-management)(6b6b39f3-45ef-4205-98b7-460bf0b1c010)|CLI Test Infrastructure: Test Environment Setup and Cleanup Management]]

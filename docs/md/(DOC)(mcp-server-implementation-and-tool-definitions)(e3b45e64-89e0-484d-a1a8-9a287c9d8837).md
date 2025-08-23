@@ -10,7 +10,7 @@ tags:
   - error-handling
 category: DOC
 created_at: '2025-08-22T13:52:50.145Z'
-updated_at: '2025-08-23T05:31:27.861Z'
+updated_at: '2025-08-23T11:59:11.534Z'
 last_reviewed: '2025-08-22T13:52:50.145Z'
 links:
   - b1434c95-1c44-440d-8aa1-f41a6c3393e9
@@ -136,9 +136,7 @@ server.tool(
 
 **Related Documentation:** - Validation patterns - Testing approach for MCP server
 
-
 - CLI Tool Architecture and Coverage Analysis
-
 
 ## Related
 

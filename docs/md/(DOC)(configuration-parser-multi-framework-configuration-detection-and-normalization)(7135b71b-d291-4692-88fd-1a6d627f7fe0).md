@@ -12,7 +12,7 @@ tags:
   - jest
 category: DOC
 created_at: '2025-08-23T02:26:23.109Z'
-updated_at: '2025-08-23T05:58:48.501Z'
+updated_at: '2025-08-23T11:58:51.204Z'
 last_reviewed: '2025-08-23T02:26:23.109Z'
 links:
   - 3b201e08-784c-4a83-9a0e-05d715882e80
@@ -64,21 +64,21 @@ The system uses **pattern matching** to identify configuration types:
 ```typescript
 export function detectConfigType(filePath: string): DetectedConfigType {
   if (filePath.endsWith(".coverage.json")) return "coverage";
-  
+
   const lower = filePath.toLowerCase();
-  
+
   // Vitest detection patterns
   if ((/vitest/.test(lower) && /\.config\.(js|ts|cjs|mjs)$/.test(lower)) ||
       lower.endsWith("vitest.config.ts") || lower.endsWith("vitest.config.js")) {
     return "vitest";
   }
-  
+
   // Jest detection patterns
   if ((/jest/.test(lower) && /\.config\.(js|ts|cjs|mjs)$/.test(lower)) ||
       lower.endsWith("jest.config.js") || lower.endsWith("jest.config.ts") || lower.endsWith("jest.config.cjs")) {
     return "jest";
   }
-  
+
   return "coverage";
 }
 ```
@@ -105,7 +105,7 @@ The system handles **different configuration formats**:
 ```typescript
 async parseConfig(filePath: string): Promise<CoverageConfig> {
   const type = this.detectConfigType(filePath);
-  
+
   if (type === "coverage") {
     // JSON-based coverage configuration
     const fs = await import("node:fs/promises");
@@ -113,7 +113,7 @@ async parseConfig(filePath: string): Promise<CoverageConfig> {
     const json = JSON.parse(rawText);
     return this.normalizeConfig(json, type);
   }
-  
+
   // Dynamic import for JS/TS config modules
   const mod = await import(filePath);
   const raw = (mod as any)?.default ?? mod;
@@ -154,11 +154,11 @@ if (type === "vitest") {
   const c = config as any;
   const vitestCoverage = c?.test?.coverage ?? {};
   const thresholdsGlobal = vitestCoverage?.thresholds?.global ?? {};
-  
+
   const overall = ["lines", "functions", "branches", "statements"]
     .map((k) => (typeof thresholdsGlobal[k] === "number" ? thresholdsGlobal[k] : undefined))
     .filter((v) => typeof v === "number") as number[];
-    
+
   return {
     thresholds: overall.length > 0 ? { overall: overall[0] } : undefined,
     exclude: Array.isArray(vitestCoverage.exclude) ? vitestCoverage.exclude : ["node_modules/**", "dist/**"],
@@ -181,17 +181,17 @@ if (type === "vitest") {
 if (type === "jest") {
   const c = config as any;
   const collect = Array.isArray(c?.collectCoverageFrom) ? c.collectCoverageFrom : [];
-  
+
   const include: string[] = collect.filter((p: string) => typeof p === "string" && !p.startsWith("!"));
   const exclude: string[] = collect
     .filter((p: string) => typeof p === "string" && p.startsWith("!"))
     .map((p: string) => p.slice(1));
-    
+
   const globalThresh = c?.coverageThreshold?.global ?? {};
   const overall = ["lines", "functions", "branches", "statements"]
     .map((k) => (typeof globalThresh[k] === "number" ? globalThresh[k] : undefined))
     .filter((v) => typeof v === "number") as number[];
-    
+
   return {
     thresholds: overall.length > 0 ? { overall: overall[0] } : undefined,
     exclude: exclude.length > 0 ? exclude : ["node_modules/**", "dist/**"],
@@ -296,9 +296,6 @@ The system handles **various project sizes**:
 - **Smart Caching:** Intelligent caching strategies
 - **Configuration Optimization:** Optimize configuration for performance
 
-
 ## Related
-- CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management
-- CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management
-- [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]
+
 - [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]

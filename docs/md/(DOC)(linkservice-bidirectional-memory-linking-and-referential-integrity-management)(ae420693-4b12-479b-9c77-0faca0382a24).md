@@ -9,13 +9,13 @@ tags:
   - memory-relationships
 category: DOC
 created_at: '2025-08-23T02:28:37.358Z'
-updated_at: '2025-08-23T05:59:18.467Z'
+updated_at: '2025-08-23T11:59:39.296Z'
 last_reviewed: '2025-08-23T02:28:37.358Z'
 links:
-  - 5ec17d14-bce3-411b-bbda-0945af019338
-  - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
-  - 9642186c-a143-4870-b41f-b900a45acd95
   - c47b13f0-b934-40f2-807b-d301c6d9ed0c
+  - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
+  - 5ec17d14-bce3-411b-bbda-0945af019338
+  - 9642186c-a143-4870-b41f-b900a45acd95
 sources:
   - packages/shared/src/memory/link-service.ts:1-100
   - packages/shared/src/memory/link-service.ts:101-148
@@ -143,13 +143,13 @@ The system manages **organized link sections**:
 private addWikiLinkToContent(content: string, title: string, linkText?: string, targetFilePath?: string): string {
   // Check if content already ends with a newline
   const hasTrailingNewline = content.endsWith('\n');
-  
+
   // Use custom link text if provided, otherwise use the title
   const displayText = linkText || title;
-  
+
   // Create the wiki-style link
   let linkMarkdown: string;
-  
+
   if (targetFilePath) {
     // Extract the filename without extension for Obsidian compatibility
     const filename = basename(targetFilePath, '.md');
@@ -159,135 +159,11 @@ private addWikiLinkToContent(content: string, title: string, linkText?: string, 
     // Fallback to title-based link if no file path available
     linkMarkdown = `- ${displayText}`;
   }
-  
-  // Check if "## Related" section already exists
-  if (content.includes('## Related')) {
-    // Add the link to the existing section
-    if (hasTrailingNewline) {
-      return content + linkMarkdown + '\n';
-    } else {
-      return content + '\n' + linkMarkdown + '\n';
-    }
-  } else {
-    // Create new "## Related" section
-    const sectionHeader = '\n\n## Related\n\n';
-    if (hasTrailingNewline) {
-      return content + sectionHeader + linkMarkdown + '\n';
-    } else {
-      return content + '\n' + sectionHeader + linkMarkdown + '\n';
-    }
-  }
-}
-```
 
-**Content Organization Features:**
-- **Structured Sections:** Links are organized in "## Related" sections
-- **Consistent Formatting:** Uniform link presentation across all memories
-- **Obsidian Compatibility:** Links work with Obsidian note-taking app
-- **Flexible Display Text:** Custom link text or automatic title-based text
+  // Check if "
 
-### Link Cleanup and Maintenance
-The system provides **automatic link cleanup**:
-
-```typescript
-// Clean up existing wiki-style links and add new ones
-let srcContent = this.cleanWikiLinks(src.content);
-let tgtContent = this.cleanWikiLinks(tgt.content);
-```
-
-**Cleanup Benefits:**
-- **Duplicate Prevention:** Prevents multiple links to the same memory
-- **Content Consistency:** Maintains clean, organized content structure
-- **Link Validation:** Ensures links are properly formatted
-- **Performance Optimization:** Efficient link processing and updates
-
-## Performance and Scalability
-
-### Efficient Link Operations
-The system optimizes **link operation performance**:
-
-- **Batch Updates:** Updates both memories in single operations
-- **Minimal File I/O:** Efficient file reading and writing
-- **Memory Management:** Minimal memory allocation during operations
-- **Async Operations:** Non-blocking link operations
-
-### Scalability Considerations
-The system handles **various memory sizes and link counts**:
-
-- **Small Memories:** Fast linking for simple content
-- **Large Memories:** Efficient handling of complex content
-- **Many Links:** Scalable performance with high link counts
-- **Concurrent Operations:** Safe handling of simultaneous link operations
-
-## Error Handling and Resilience
-
-### Comprehensive Error Strategy
-The system implements **robust error handling**:
-
-```typescript
-if (!src || !tgt) {
-  throw new Error("One or both memories not found");
-}
-```
-
-**Error Handling Features:**
-- **Validation Errors:** Clear error messages for missing memories
-- **Operation Safety:** Prevents partial link operations
-- **State Consistency:** Maintains consistent state even during errors
-- **Recovery Support:** Enables recovery from various error conditions
-
-### Atomic Operations
-The system ensures **operation atomicity**:
-
-- **All-or-Nothing:** Link operations either complete fully or fail completely
-- **State Consistency:** No partial link states are created
-- **Rollback Support:** Failed operations don't leave inconsistent state
-- **Data Integrity:** Referential integrity is always maintained
-
-## Integration Points
-
-### File Service Integration
-The service integrates with **file operations**:
-
-- **Memory Reading:** Reads memory content and metadata
-- **Memory Writing:** Updates memory files with new link information
-- **File Management:** Handles file path operations and updates
-- **Content Processing:** Manages markdown content modifications
-
-### Wiki-Link Utility Integration
-The service leverages **wiki-link utilities**:
-
-- **Link Parsing:** Uses utility functions for link processing
-- **Content Cleaning:** Leverages existing link cleanup functionality
-- **Link Validation:** Uses utility functions for link validation
-- **Format Consistency:** Ensures consistent link formatting
-
-## Future Enhancement Opportunities
-
-### Advanced Linking Features
-- **Link Types:** Different types of relationships (references, examples, etc.)
-- **Link Metadata:** Additional information about link relationships
-- **Link Validation:** Enhanced validation of link relationships
-- **Link Analytics:** Track link usage and relationship patterns
-
-### Performance Improvements
-- **Link Caching:** Cache link information for faster access
-- **Batch Operations:** Process multiple link operations simultaneously
-- **Incremental Updates:** Update only changed link information
-- **Parallel Processing:** Parallel link operations for large datasets
-
-### Enhanced Integration
-- **Graph Visualization:** Visual representation of memory relationships
-- **Link Discovery:** Automatic discovery of potential links
-- **Link Recommendations:** Suggest relevant links based on content
-- **Link Migration:** Tools for migrating between different link formats
-- ADR-002: Memory-Based Documentation System with FlexSearch
-- ADR-002: Memory-Based Documentation System with FlexSearch
-- Shared Package Public API: Module Organization and Export Strategy
-- MemoryService: Core Memory Management Architecture and Business Logic
-- Wiki-Link System: Bidirectional Link Management and Content Consistency
-- ADR-002: Memory-Based Documentation System with FlexSearch
-- [[(DOC)(shared-package-public-api-module-organization-and-export-strategy)(5ec17d14-bce3-411b-bbda-0945af019338)|Shared Package Public API: Module Organization and Export Strategy]]
-- [[(DOC)(memoryservice-core-memory-management-architecture-and-business-logic)(cfa621d1-f8be-4065-aa25-2e82aa56e6b6)|MemoryService: Core Memory Management Architecture and Business Logic]]
-- [[(DOC)(wiki-link-system-bidirectional-link-management-and-content-consistency)(9642186c-a143-4870-b41f-b900a45acd95)|Wiki-Link System: Bidirectional Link Management and Content Consistency]]
+## Related
 - [[(ADR)(adr-002-memory-based-documentation-system-with-flexsearch)(c47b13f0-b934-40f2-807b-d301c6d9ed0c)|ADR-002: Memory-Based Documentation System with FlexSearch]]
+- [[(DOC)(memoryservice-core-memory-management-architecture-and-business-logic)(cfa621d1-f8be-4065-aa25-2e82aa56e6b6)|MemoryService: Core Memory Management Architecture and Business Logic]]
+- [[(DOC)(shared-package-public-api-module-organization-and-export-strategy)(5ec17d14-bce3-411b-bbda-0945af019338)|Shared Package Public API: Module Organization and Export Strategy]]
+- [[(DOC)(wiki-link-system-bidirectional-link-management-and-content-consistency)(9642186c-a143-4870-b41f-b900a45acd95)|Wiki-Link System: Bidirectional Link Management and Content Consistency]]

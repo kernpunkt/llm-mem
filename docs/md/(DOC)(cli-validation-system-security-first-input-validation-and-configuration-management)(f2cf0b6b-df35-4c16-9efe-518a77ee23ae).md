@@ -12,7 +12,7 @@ tags:
   - path-security
 category: DOC
 created_at: '2025-08-23T02:25:23.713Z'
-updated_at: '2025-08-23T05:58:48.498Z'
+updated_at: '2025-08-23T11:58:45.117Z'
 last_reviewed: '2025-08-23T02:25:23.713Z'
 links:
   - 0348ba55-8529-4502-ac43-4061524ed7e1
@@ -77,16 +77,16 @@ export function isValidGlobPattern(pattern: string): boolean {
   if (typeof pattern !== "string") return false;
   if (pattern.length === 0) return false;
   if (pattern.includes("\u0000")) return false;
-  
+
   // Disallow absolute paths
   if (path.isAbsolute(pattern)) return false;
-  
+
   // Normalize POSIX separators for consistency
   const normalized = pattern.replace(/\\/g, "/");
-  
+
   // Disallow parent traversal anywhere in pattern
   if (normalized.includes("../") || normalized.startsWith("../") || normalized === "..") return false;
-  
+
   return true;
 }
 ```
@@ -106,10 +106,10 @@ export function isSafeRelativePath(filePath: string): boolean {
   if (filePath.length === 0) return false;
   if (filePath.includes("\u0000")) return false;
   if (path.isAbsolute(filePath)) return false;
-  
+
   const normalized = path.posix.normalize(filePath).replace(/\\/g, "/");
   if (normalized.startsWith("../") || normalized === "..") return false;
-  
+
   return true;
 }
 ```
@@ -249,10 +249,7 @@ export function validateSourceFilePathOrThrow(filePath: string): void;
 - **Progressive Validation:** Validate incrementally with early feedback
 - **Custom Error Messages:** Allow users to customize error descriptions
 
-
 ## Related
-- CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management
-- CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management
-- [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]
+
 - [[(ADR)(adr-004-typescript-first-development-with-strict-type-safety)(0348ba55-8529-4502-ac43-4061524ed7e1)|ADR-004: TypeScript-First Development with Strict Type Safety]]
 - [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]

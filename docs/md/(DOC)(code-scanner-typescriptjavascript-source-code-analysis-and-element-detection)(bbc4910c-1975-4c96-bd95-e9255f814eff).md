@@ -10,7 +10,7 @@ tags:
   - code-analysis
 category: DOC
 created_at: '2025-08-23T02:26:55.672Z'
-updated_at: '2025-08-23T05:58:48.500Z'
+updated_at: '2025-08-23T11:58:48.228Z'
 last_reviewed: '2025-08-23T02:26:55.672Z'
 links:
   - 3b201e08-784c-4a83-9a0e-05d715882e80
@@ -135,7 +135,7 @@ The system implements **sophisticated regex patterns**:
 function regexHeuristics(content: string): LineRange[] {
   const lines = content.split(/\r?\n/);
   const result: LineRange[] = [];
-  
+
   const functionRegex = /(export\s+)?(async\s+)?function\s+([A-Za-z0-9_]+)/;
   const constArrowFnRegex = /(export\s+)?(const|let|var)\s+([A-Za-z0-9_]+)\s*=\s*(async\s+)?\([^)]*\)\s*=>/;
   // ... additional patterns
@@ -276,9 +276,6 @@ The system supports **future enhancements**:
 - **Generics:** Handle generic type parameters
 - **Advanced Patterns:** Support for complex code patterns
 
-
 ## Related
-- CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management
-- CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management
-- [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]
+
 - [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]

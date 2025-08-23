@@ -9,13 +9,13 @@ tags:
   - versioning
 category: DOC
 created_at: '2025-08-23T02:22:34.955Z'
-updated_at: '2025-08-23T05:59:23.955Z'
+updated_at: '2025-08-23T11:59:25.865Z'
 last_reviewed: '2025-08-23T02:22:34.955Z'
 links:
   - d2331290-47d8-4f49-b0ce-4f350a2ad517
-  - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
   - fa995246-7a5b-4649-959f-039e7ccd6205
   - ae420693-4b12-479b-9c77-0faca0382a24
+  - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
   - de696ea4-c10b-462a-84b2-71073e3c97aa
 sources:
   - packages/shared/src/index.ts:1-13
@@ -214,13 +214,10 @@ const memory = await memoryService.createMemory({
 - **Data Isolation:** Memory isolation between users
 - **Audit Logging:** Comprehensive operation logging
 
-## Related- FileService: Memory File System Operations and Content Management- Link Service for Bidirectional Memory Relationships
-- FileService: Memory File System Operations and Content Management
-- SearchService: Full-Text Search Integration and Index Management
+## Related
+
 - [[(ADR)(adr-001-monorepo-architecture-with-pnpm-workspaces)(d2331290-47d8-4f49-b0ce-4f350a2ad517)|ADR-001: Monorepo Architecture with pnpm Workspaces]]
-- [[(ADR)(adr-001-monorepo-architecture-with-pnpm-workspaces)(d2331290-47d8-4f49-b0ce-4f350a2ad517)|ADR-001: Monorepo Architecture with pnpm Workspaces]]
-- [[(ADR)(adr-001-monorepo-architecture-with-pnpm-workspaces)(d2331290-47d8-4f49-b0ce-4f350a2ad517)|ADR-001: Monorepo Architecture with pnpm Workspaces]]
-- [[(DOC)(memoryservice-core-memory-management-architecture-and-business-logic)(cfa621d1-f8be-4065-aa25-2e82aa56e6b6)|MemoryService: Core Memory Management Architecture and Business Logic]]
 - [[(DOC)(fileservice-memory-file-system-operations-and-content-management)(fa995246-7a5b-4649-959f-039e7ccd6205)|FileService: Memory File System Operations and Content Management]]
 - [[(DOC)(linkservice-bidirectional-memory-linking-and-referential-integrity-management)(ae420693-4b12-479b-9c77-0faca0382a24)|LinkService: Bidirectional Memory Linking and Referential Integrity Management]]
+- [[(DOC)(memoryservice-core-memory-management-architecture-and-business-logic)(cfa621d1-f8be-4065-aa25-2e82aa56e6b6)|MemoryService: Core Memory Management Architecture and Business Logic]]
 - [[(DOC)(searchservice-full-text-search-integration-and-index-management)(de696ea4-c10b-462a-84b2-71073e3c97aa)|SearchService: Full-Text Search Integration and Index Management]]

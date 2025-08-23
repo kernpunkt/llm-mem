@@ -9,11 +9,11 @@ tags:
   - content-management
 category: DOC
 created_at: '2025-08-23T02:29:07.162Z'
-updated_at: '2025-08-23T05:59:14.454Z'
+updated_at: '2025-08-23T11:59:25.862Z'
 last_reviewed: '2025-08-23T02:29:07.162Z'
 links:
-  - 5ec17d14-bce3-411b-bbda-0945af019338
   - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
+  - 5ec17d14-bce3-411b-bbda-0945af019338
 sources:
   - packages/shared/src/memory/file-service.ts:1-100
   - packages/shared/src/memory/file-service.ts:101-224
@@ -103,7 +103,7 @@ async writeMemoryFile(params: {
   const markdown = serializeFrontmatter(fmWithSources, content);
   const filePath = generateMemoryFilePath(this.notestorePath, category, title, id);
   await fs.writeFile(filePath, markdown, "utf-8");
-  
+
   return { filePath, markdown };
 }
 ```
@@ -124,7 +124,7 @@ async readMemoryFileById(id: string): Promise<MemoryData | null> {
   const files = await listMemoryFiles(this.notestorePath);
   const match = files.find((path) => parseMemoryFilePath(path)?.id === id);
   if (!match) return null;
-  
+
   const fileContent = await fs.readFile(match, "utf-8");
   const { frontmatter, content } = parseFrontmatter(fileContent);
   return { ...frontmatter, content, file_path: match } as any;
@@ -305,11 +305,6 @@ The service leverages **utility functions**:
 - **File Sharing:** Secure file sharing between users
 - **File Analytics:** Track file usage and access patterns
 
-
 ## Related
-- Shared Package Public API: Module Organization and Export Strategy
-- MemoryService: Core Memory Management Architecture and Business Logic
-- Shared Package Public API: Module Organization and Export Strategy
-- MemoryService: Core Memory Management Architecture and Business Logic
-- [[(DOC)(shared-package-public-api-module-organization-and-export-strategy)(5ec17d14-bce3-411b-bbda-0945af019338)|Shared Package Public API: Module Organization and Export Strategy]]
 - [[(DOC)(memoryservice-core-memory-management-architecture-and-business-logic)(cfa621d1-f8be-4065-aa25-2e82aa56e6b6)|MemoryService: Core Memory Management Architecture and Business Logic]]
+- [[(DOC)(shared-package-public-api-module-organization-and-export-strategy)(5ec17d14-bce3-411b-bbda-0945af019338)|Shared Package Public API: Module Organization and Export Strategy]]

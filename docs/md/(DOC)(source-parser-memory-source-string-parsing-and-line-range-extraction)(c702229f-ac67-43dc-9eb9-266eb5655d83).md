@@ -9,7 +9,7 @@ tags:
   - coverage-analysis
 category: DOC
 created_at: '2025-08-23T02:25:50.341Z'
-updated_at: '2025-08-23T05:58:48.502Z'
+updated_at: '2025-08-23T11:59:31.526Z'
 last_reviewed: '2025-08-23T02:25:50.341Z'
 links:
   - 3b201e08-784c-4a83-9a0e-05d715882e80
@@ -62,7 +62,7 @@ const ranges: LineSpan[] = rangesRaw.split(",").map((segment) => {
   const [startStr, endStr] = segment.split("-").map((s) => s.trim());
   const start = Number(startStr);
   const end = Number(endStr);
-  
+
   // Validation logic
   if (!Number.isInteger(start) || !Number.isInteger(end)) {
     throw new Error(`Invalid range numbers: ${segment} in ${input}`);
@@ -73,7 +73,7 @@ const ranges: LineSpan[] = rangesRaw.split(",").map((segment) => {
   if (end < start) {
     throw new Error(`Range end must be >= start: ${segment} in ${input}`);
   }
-  
+
   return { start, end };
 });
 ```
@@ -235,9 +235,6 @@ The system implements **defensive programming**:
 - **Range Validation:** More sophisticated range validation rules
 - **Custom Validators:** Support for user-defined validation rules
 
-
 ## Related
-- CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management
-- CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management
-- [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]
+
 - [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]
