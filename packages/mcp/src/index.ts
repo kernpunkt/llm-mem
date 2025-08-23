@@ -657,6 +657,112 @@ ${stats.recommendations.join('\n')}`;
     }
   );
 
+  server.tool(
+    "fix_links",
+    "Fixes and recreates proper link structure for a memory by cleaning up broken links and recreating valid ones",
+    {
+      memory_id: z.string().uuid().describe("ID of the memory to fix links for")
+    },
+    async ({ memory_id }) => {
+      try {
+        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        
+        // Read the memory to get current links
+        const memory = await memoryService.readMemory({ id: memory_id });
+        if (!memory) {
+          return {
+            content: [{ type: "text", text: `Memory not found: ${memory_id}` }],
+            isError: true
+          };
+        }
+
+        // Store the current link IDs for later processing
+        const currentLinkIds = [...memory.links];
+        
+        // Step 1: Unlink all current links
+        for (const linkId of currentLinkIds) {
+          try {
+            await memoryService.unlinkMemories({ source_id: memory_id, target_id: linkId });
+          } catch (error) {
+            // Log but continue with other links
+            console.error(`Failed to unlink ${linkId}: ${error}`);
+          }
+        }
+
+        // Step 2: Remove markdown links from content (keep only external HTTP links)
+        let cleanedContent = memory.content;
+        
+        // Remove internal markdown links (e.g., [[Memory Title]] or [[Memory Title|Link Text]])
+        // Keep external HTTP/HTTPS links
+        cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g, (match, linkText, displayText) => {
+          // Check if this is an external HTTP link
+          if (linkText.startsWith('http://') || linkText.startsWith('https://')) {
+            return match; // Keep external links
+          }
+          // Remove internal links, keep the display text if available
+          return displayText || linkText;
+        });
+
+        // Step 3: Update the memory with cleaned content
+        if (cleanedContent !== memory.content) {
+          await memoryService.updateMemory({
+            id: memory_id,
+            content: cleanedContent
+          });
+        }
+
+        // Step 4: Recreate valid links
+        let successfulLinks = 0;
+        let failedLinks = 0;
+        
+        for (const linkId of currentLinkIds) {
+          try {
+            // Verify the target memory still exists
+            const targetMemory = await memoryService.readMemory({ id: linkId });
+            if (targetMemory) {
+              await memoryService.linkMemories({ 
+                source_id: memory_id, 
+                target_id: linkId 
+              });
+              successfulLinks++;
+            } else {
+              failedLinks++;
+            }
+          } catch (error) {
+            failedLinks++;
+            console.error(`Failed to recreate link to ${linkId}: ${error}`);
+          }
+        }
+
+        // Generate summary message
+        const summary = `Link structure fixed for memory "${memory.title}" (ID: ${memory_id}):
+
+✅ **Cleanup completed:**
+- Removed ${currentLinkIds.length} existing links
+- Cleaned markdown content of internal links
+- Preserved external HTTP/HTTPS links
+
+🔗 **Link recreation:**
+- Successfully recreated: ${successfulLinks} links
+- Failed to recreate: ${failedLinks} links
+- Total links processed: ${currentLinkIds.length}
+
+${failedLinks > 0 ? `\n⚠️ **Note:** ${failedLinks} links could not be recreated (target memories may have been deleted or are inaccessible).` : ''}
+
+The memory now has a clean link structure with ${successfulLinks} valid bidirectional links.`;
+
+        return {
+          content: [{ type: "text", text: summary }],
+          isError: false
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        throw new Error(`fix_links failed: ${msg}`);
+      }
+    }
+  );
+
   /**
    * TODO: Add your custom tools here
    * 
@@ -1084,6 +1190,20 @@ export async function runHttp(port: number = 3000): Promise<void> {
                     type: 'object',
                     properties: {}
                   }
+                },
+                {
+                  name: 'fix_links',
+                  description: 'Fixes and recreates proper link structure for a memory by cleaning up broken links and recreating valid ones',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {
+                      memory_id: {
+                        type: 'string',
+                        description: 'ID of the memory to fix links for'
+                      }
+                    },
+                    required: ['memory_id']
+                  }
                 }
               ]
             },
@@ -1504,6 +1624,109 @@ ${stats.recommendations.join('\n')}`;
                     type: "text", 
                     text: `FlexSearch Configuration:\n\n${JSON.stringify(configInfo, null, 2)}` 
                   }],
+                  isError: false
+                };
+                break;
+              }
+
+              case 'fix_links': {
+                const memory_id = toolArgs.memory_id as string;
+                
+                if (!memory_id) {
+                  throw new Error('Missing required parameter: memory_id');
+                }
+
+                const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
+                const { MemoryService } = await import('@llm-mem/shared');
+                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                
+                // Read the memory to get current links
+                const memory = await memoryService.readMemory({ id: memory_id });
+                if (!memory) {
+                  toolResult = {
+                    content: [{ type: 'text', text: `Memory not found: ${memory_id}` }],
+                    isError: true
+                  };
+                  break;
+                }
+
+                // Store the current link IDs for later processing
+                const currentLinkIds = [...memory.links];
+                
+                // Step 1: Unlink all current links
+                for (const linkId of currentLinkIds) {
+                  try {
+                    await memoryService.unlinkMemories({ source_id: memory_id, target_id: linkId });
+                  } catch (error) {
+                    // Log but continue with other links
+                    console.error(`Failed to unlink ${linkId}: ${error}`);
+                  }
+                }
+
+                // Step 2: Remove markdown links from content (keep only external HTTP links)
+                let cleanedContent = memory.content;
+                
+                // Remove internal markdown links (e.g., [[Memory Title]] or [[Memory Title|Link Text]])
+                // Keep external HTTP/HTTPS links
+                cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g, (match, linkText, displayText) => {
+                  // Check if this is an external HTTP link
+                  if (linkText.startsWith('http://') || linkText.startsWith('https://')) {
+                    return match; // Keep external links
+                  }
+                  // Remove internal links, keep the display text if available
+                  return displayText || linkText;
+                });
+
+                // Step 3: Update the memory with cleaned content
+                if (cleanedContent !== memory.content) {
+                  await memoryService.updateMemory({
+                    id: memory_id,
+                    content: cleanedContent
+                  });
+                }
+
+                // Step 4: Recreate valid links
+                let successfulLinks = 0;
+                let failedLinks = 0;
+                
+                for (const linkId of currentLinkIds) {
+                  try {
+                    // Verify the target memory still exists
+                    const targetMemory = await memoryService.readMemory({ id: linkId });
+                    if (targetMemory) {
+                      await memoryService.linkMemories({ 
+                        source_id: memory_id, 
+                        target_id: linkId 
+                      });
+                      successfulLinks++;
+                    } else {
+                      failedLinks++;
+                    }
+                  } catch (error) {
+                    failedLinks++;
+                    console.error(`Failed to recreate link to ${linkId}: ${error}`);
+                  }
+                }
+
+                // Generate summary message
+                const summary = `Link structure fixed for memory "${memory.title}" (ID: ${memory_id}):
+
+✅ **Cleanup completed:**
+- Removed ${currentLinkIds.length} existing links
+- Cleaned markdown content of internal links
+- Preserved external HTTP/HTTPS links
+
+🔗 **Link recreation:**
+- Successfully recreated: ${successfulLinks} links
+- Failed to recreate: ${failedLinks} links
+- Total links processed: ${currentLinkIds.length}
+
+${failedLinks > 0 ? `\n⚠️ **Note:** ${failedLinks} links could not be recreated (target memories may have been deleted or are inaccessible).` : ''}
+
+The memory now has a clean link structure with ${successfulLinks} valid bidirectional links.`;
+
+                toolResult = {
+                  content: [{ type: 'text', text: summary }],
                   isError: false
                 };
                 break;
