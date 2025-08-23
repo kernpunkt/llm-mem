@@ -7,8 +7,7 @@ import {
   parseMemoryFilePath,
   listMemoryFiles,
   fileExists,
-  safeDeleteFile,
-  migrateMemoryFileNames
+  safeDeleteFile
 } from '../src/utils/file-system.js';
 
 // Mock fs module
@@ -166,56 +165,7 @@ describe('File System Utilities', () => {
     });
   });
 
-  describe('migrateMemoryFileNames', () => {
-    it('should migrate old format files to new format', async () => {
-      const mockReaddir = vi.mocked(fs.readdir);
-      const mockRename = vi.mocked(fs.rename);
-      
-      // Mock files in directory - create mock Dirent objects
-      const mockFiles = [
-        { name: 'old-format|file|123e4567-e89b-12d3-a456-426614174000.md' } as any,
-        { name: 'usage.md' } as any,
-        { name: 'new-format.md' } as any
-      ];
-      mockReaddir.mockResolvedValueOnce(mockFiles);
-      
-      await migrateMemoryFileNames('./memories');
-      
-      expect(mockRename).toHaveBeenCalledWith(
-        'memories/old-format|file|123e4567-e89b-12d3-a456-426614174000.md',
-        'memories/(old-format)(file)(123e4567-e89b-12d3-a456-426614174000).md'
-      );
-    });
 
-    it('should skip non-memory files and usage.md', async () => {
-      const mockReaddir = vi.mocked(fs.readdir);
-      const mockRename = vi.mocked(fs.rename);
-      
-      // Mock files in directory - create mock Dirent objects
-      const mockFiles = [
-        { name: 'usage.md' } as any,
-        { name: 'readme.txt' } as any,
-        { name: 'config.json' } as any
-      ];
-      mockReaddir.mockResolvedValueOnce(mockFiles);
-      
-      await migrateMemoryFileNames('./memories');
-      
-      expect(mockRename).not.toHaveBeenCalled();
-    });
-
-    it('should handle migration errors gracefully', async () => {
-      const mockReaddir = vi.mocked(fs.readdir);
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
-      mockReaddir.mockRejectedValueOnce(new Error('Permission denied'));
-      
-      await expect(migrateMemoryFileNames('./memories')).rejects.toThrow('Permission denied');
-      expect(consoleSpy).toHaveBeenCalledWith('Migration failed:', expect.any(Error));
-      
-      consoleSpy.mockRestore();
-    });
-  });
 
   describe('listMemoryFiles', () => {
     it('should return array of memory file paths', async () => {

@@ -351,62 +351,7 @@ export function createServer(): McpServer {
     }
   );
 
-  server.tool(
-    "migrate_memory_files",
-    "Migrates existing memory files from old pipe separator format to new parentheses format",
-    {
-      dry_run: z.boolean().optional().default(false).describe("If true, shows what would be migrated without making changes")
-    },
-    async ({ dry_run = false }) => {
-      try {
-        const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories" };
-        const { migrateMemoryFileNames } = await import("@llm-mem/shared");
-        
-        if (dry_run) {
-          // For dry run, we'll just check what files would be migrated
-          const { promises: fs } = await import("fs");
-          const { join } = await import("path");
-          
-          const files = await fs.readdir(cfg.notestorePath);
-          const oldFormatFiles = files.filter(file => 
-            file.endsWith('.md') && 
-            file !== 'usage.md' && 
-            file.includes('|')
-          );
-          
-          if (oldFormatFiles.length === 0) {
-            return {
-              content: [{ type: "text", text: "No files need migration. All memory files are already in the new format." }],
-              isError: false
-            };
-          }
-          
-          const fileList = oldFormatFiles.map(file => `  - ${file}`).join('\n');
-          return {
-            content: [{ 
-              type: "text", 
-              text: `Dry run: The following ${oldFormatFiles.length} files would be migrated:\n${fileList}\n\nRun without dry_run=true to perform the actual migration.` 
-            }],
-            isError: false
-          };
-        }
-        
-        // Perform actual migration
-        await migrateMemoryFileNames(cfg.notestorePath);
-        
-        return {
-          content: [{ 
-            type: "text", 
-            text: "Memory files migration completed successfully! All files have been renamed to use the new parentheses format." 
-          }],
-          isError: false
-        };
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        throw new Error(`migrate_memory_files failed: ${msg}`);
-      }
-    }
-  );
+
 
   server.tool(
     "unlink_mem",
