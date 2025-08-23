@@ -825,29 +825,28 @@ export class MemoryService {
     // Check markdown content for invalid Obsidian links
     // Format: [[(CATEGORY)(title)(ID)|display text]] or [[(CATEGORY)(title)(ID)]]
     const obsidianLinkRegex = /\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g;
-    const matches = memory.content.match(obsidianLinkRegex);
+    let match;
     
-    if (matches) {
-      for (const match of matches) {
-        // Extract the memory ID from the third group (ID)
-        const idMatch = match.match(/\[\[\([^)]+\)\([^)]+\)\(([^)]+)\)/);
-        if (idMatch && idMatch[1]) {
-          const memoryId = idMatch[1];
-          // Check if it's a valid Obsidian link to an existing memory
-          const linkedMemory = allMemories.find(m => m.id === memoryId);
-          
-          if (!linkedMemory) {
-            invalidLinks.push({
-              link: match,
-              type: 'broken-obsidian',
-              details: 'Obsidian link does not point to an existing memory and is not an HTTP link'
-            });
-          }
+    // Use exec() in a loop to get all matches with capture groups
+    while ((match = obsidianLinkRegex.exec(memory.content)) !== null) {
+      // Extract the memory ID from the third group (ID)
+      if (match[3]) { // Index 3 is the third capture group (ID)
+        const memoryId = match[3];
+        // Check if it's a valid Obsidian link to an existing memory
+        const linkedMemory = allMemories.find(m => m.id === memoryId);
+        
+        if (!linkedMemory) {
+          invalidLinks.push({
+            link: match[0], // Full match
+            type: 'broken-obsidian',
+            details: 'Obsidian link does not point to an existing memory and is not an HTTP link'
+          });
         }
       }
     }
     
     // Also check for simple [[text]] format links that might be legacy or invalid
+    // But only if they weren't already handled by the structured format above
     const simpleObsidianLinkRegex = /\[\[([^\]]+)\]\]/g;
     const simpleMatches = memory.content.match(simpleObsidianLinkRegex);
     
@@ -855,8 +854,10 @@ export class MemoryService {
       for (const match of simpleMatches) {
         const linkText = match.slice(2, -2);
         
-        // Skip if this is already handled by the structured format above
-        if (!obsidianLinkRegex.test(match)) {
+        // Check if this is a structured link that was already processed
+        const isStructuredLink = /^\[\[\([^)]+\)\([^)]+\)\([^)]+\)(?:\|[^\]]+)?\]\]$/.test(match);
+        
+        if (!isStructuredLink) {
           // Check if it's a valid Obsidian link to an existing memory by title
           const linkedMemory = allMemories.find(m => m.title === linkText);
           

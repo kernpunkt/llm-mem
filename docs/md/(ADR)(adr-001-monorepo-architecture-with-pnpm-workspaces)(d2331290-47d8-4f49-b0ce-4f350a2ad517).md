@@ -9,7 +9,7 @@ tags:
   - package-organization
 category: ADR
 created_at: '2025-08-22T13:50:22.926Z'
-updated_at: '2025-08-23T11:59:25.860Z'
+updated_at: '2025-08-23T12:00:09.927Z'
 last_reviewed: '2025-08-22T13:50:22.926Z'
 links:
   - 1cab02b8-2a60-4fad-b3d2-0f51fb7f96ec
@@ -67,6 +67,7 @@ sources:
 - Development Workflow and Best Practices
 
 ## Related
+
 - [[(CTX)(development-workflow-and-best-practices)(1cab02b8-2a60-4fad-b3d2-0f51fb7f96ec)|Development Workflow and Best Practices]]
 - [[(CTX)(llm-memory-management-tools-project-overview)(a91a6906-8f61-4071-a548-15b96967605e)|LLM Memory Management Tools - Project Overview]]
 - [[(DOC)(shared-package-public-api-module-organization-and-export-strategy)(5ec17d14-bce3-411b-bbda-0945af019338)|Shared Package Public API: Module Organization and Export Strategy]]

@@ -10,11 +10,11 @@ tags:
   - collaboration
 category: CTX
 created_at: '2025-08-22T13:53:14.211Z'
-updated_at: '2025-08-23T11:58:27.638Z'
+updated_at: '2025-08-23T12:00:09.925Z'
 last_reviewed: '2025-08-22T13:53:14.211Z'
 links:
-  - d2331290-47d8-4f49-b0ce-4f350a2ad517
   - 59cf7aae-bd8e-44cd-b6a6-70cc7c9f8b5c
+  - d2331290-47d8-4f49-b0ce-4f350a2ad517
 sources:
   - package.json:1-57
   - packages/shared/package.json:1-38
@@ -154,5 +154,5 @@ sources:
 **Related Documentation:** - Package organization patterns - Testing approach and quality standards
 
 ## Related
-- [[(ADR)(adr-001-monorepo-architecture-with-pnpm-workspaces)(d2331290-47d8-4f49-b0ce-4f350a2ad517)|ADR-001: Monorepo Architecture with pnpm Workspaces]]
 - [[(CTX)(testing-strategy-and-quality-assurance)(59cf7aae-bd8e-44cd-b6a6-70cc7c9f8b5c)|Testing Strategy and Quality Assurance]]
+- [[(ADR)(adr-001-monorepo-architecture-with-pnpm-workspaces)(d2331290-47d8-4f49-b0ce-4f350a2ad517)|ADR-001: Monorepo Architecture with pnpm Workspaces]]
