@@ -10,15 +10,15 @@ tags:
   - integration
 category: DOC
 created_at: '2025-08-22T13:51:21.570Z'
-updated_at: '2025-08-23T06:17:40.008Z'
+updated_at: '2025-08-23T06:18:38.545Z'
 last_reviewed: '2025-08-22T13:51:21.570Z'
 links:
   - cfa621d1-f8be-4065-aa25-2e82aa56e6b6
   - f92958ad-882a-4739-9563-3347880830b8
-  - cdd80bbf-3f1e-4984-abed-279a746c00cb
   - ac69f5f1-456a-44e3-8e63-cd39c29dd351
   - 64b2b4b3-c703-4ca0-9f26-1d007af8de39
   - de3c18d8-44c1-469f-b704-ccc3ff384594
+  - cdd80bbf-3f1e-4984-abed-279a746c00cb
 sources:
   - packages/shared/src/memory/memory-service.ts:1-100
   - packages/shared/src/memory/memory-service.ts:101-200
@@ -175,3 +175,4 @@ sources:
 - [[(DOC)(memory-data-types-and-validation-schemas)(ac69f5f1-456a-44e3-8e63-cd39c29dd351)|Memory Data Types and Validation Schemas]]
 - [[(DOC)(file-service-implementation-and-storage-patterns)(64b2b4b3-c703-4ca0-9f26-1d007af8de39)|File Service Implementation and Storage Patterns]]
 - [[(DOC)(link-service-for-bidirectional-memory-relationships)(de3c18d8-44c1-469f-b704-ccc3ff384594)|Link Service for Bidirectional Memory Relationships]]
+- [[(CTX)(memory-system-integration-patterns)(cdd80bbf-3f1e-4984-abed-279a746c00cb)|Memory System Integration Patterns]]

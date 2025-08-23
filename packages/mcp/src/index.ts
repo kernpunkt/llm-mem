@@ -693,6 +693,12 @@ ${stats.recommendations.join('\n')}`;
         // Step 2: Remove ALL markdown links from content (keep only HTTP links)
         let cleanedContent = memory.content;
         
+        // Remove everything after "## Related" section (including the section itself)
+        const relatedSectionIndex = cleanedContent.indexOf('## Related');
+        if (relatedSectionIndex !== -1) {
+          cleanedContent = cleanedContent.substring(0, relatedSectionIndex).trim();
+        }
+        
         // Remove all Obsidian-style links: [[(CATEGORY)(title)(id)|display_text]]
         cleanedContent = cleanedContent.replace(/\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g, '');
         
@@ -706,8 +712,13 @@ ${stats.recommendations.join('\n')}`;
           return '';
         });
         
-        // Clean up any double newlines or empty lines that might result from link removal
-        cleanedContent = cleanedContent.replace(/\n\s*\n\s*\n/g, '\n\n');
+        // Clean up excessive empty lines and whitespace
+        cleanedContent = cleanedContent
+          .replace(/\n\s*\n\s*\n+/g, '\n\n')  // Remove triple+ newlines
+          .replace(/[ \t]+$/gm, '')           // Remove trailing whitespace
+          .replace(/^\s+$/gm, '')             // Remove lines with only whitespace
+          .replace(/\n{3,}/g, '\n\n')         // Limit to max 2 consecutive newlines
+          .trim();                            // Remove leading/trailing whitespace
 
         // Step 3: Update the memory with cleaned content
         if (cleanedContent !== memory.content) {
@@ -1674,6 +1685,12 @@ ${stats.recommendations.join('\n')}`;
                 // Step 2: Remove ALL markdown links from content (keep only HTTP links)
                 let cleanedContent = memory.content;
                 
+                // Remove everything after "## Related" section (including the section itself)
+                const relatedSectionIndex = cleanedContent.indexOf('## Related');
+                if (relatedSectionIndex !== -1) {
+                  cleanedContent = cleanedContent.substring(0, relatedSectionIndex).trim();
+                }
+                
                 // Remove all Obsidian-style links: [[(CATEGORY)(title)(id)|display_text]]
                 cleanedContent = cleanedContent.replace(/\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g, '');
                 
@@ -1687,8 +1704,13 @@ ${stats.recommendations.join('\n')}`;
                   return '';
                 });
                 
-                // Clean up any double newlines or empty lines that might result from link removal
-                cleanedContent = cleanedContent.replace(/\n\s*\n\s*\n/g, '\n\n');
+                // Clean up excessive empty lines and whitespace
+                cleanedContent = cleanedContent
+                  .replace(/\n\s*\n\s*\n+/g, '\n\n')  // Remove triple+ newlines
+                  .replace(/[ \t]+$/gm, '')           // Remove trailing whitespace
+                  .replace(/^\s+$/gm, '')             // Remove lines with only whitespace
+                  .replace(/\n{3,}/g, '\n\n')         // Limit to max 2 consecutive newlines
+                  .trim();                            // Remove leading/trailing whitespace
 
                 // Step 3: Update the memory with cleaned content
                 if (cleanedContent !== memory.content) {
