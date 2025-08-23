@@ -12,6 +12,9 @@ describe("Granular coverage analysis (Step 8)", () => {
   const createdFiles: string[] = [];
 
   beforeEach(async () => {
+    // Ensure the directory exists for all tests
+    await fs.mkdir(tmpDir, { recursive: true });
+    
     // @ts-expect-error partial mock for tests
     memoryService = { getAllMemories: async () => [] } as unknown as MemoryService;
     svc = new CoverageService(memoryService);
@@ -40,7 +43,6 @@ describe("Granular coverage analysis (Step 8)", () => {
 
   it("analyzes function coverage (one of two functions covered)", async () => {
     const file = join(tmpDir, "granular_fn.ts");
-    await fs.mkdir(tmpDir, { recursive: true });
     const content = [
       "export function a() { return 1 }", // line 1
       "",
@@ -68,7 +70,6 @@ describe("Granular coverage analysis (Step 8)", () => {
 
   it("analyzes class coverage (class covered, function not covered)", async () => {
     const file = join(tmpDir, "granular_class.ts");
-    await fs.mkdir(tmpDir, { recursive: true });
     const content = [
       "export class C {",     // 1
       "  m() { return 3 }",   // 2
@@ -97,7 +98,6 @@ describe("Granular coverage analysis (Step 8)", () => {
 
   it("analyzes mixed coverage (two functions covered, class not covered)", async () => {
     const file = join(tmpDir, "granular_mixed.ts");
-    await fs.mkdir(tmpDir, { recursive: true });
     const content = [
       "export function a(){}", // 1
       "",                      // 2
@@ -126,7 +126,6 @@ describe("Granular coverage analysis (Step 8)", () => {
 
   it("treats file-only source as covering all symbols (edge case)", async () => {
     const file = join(tmpDir, "granular_full.ts");
-    await fs.mkdir(tmpDir, { recursive: true });
     const content = [
       "export function a(){}",
       "export class C { m(){} }",
