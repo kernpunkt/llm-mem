@@ -9,7 +9,7 @@ tags:
   - llm-integration
 category: ADR
 created_at: '2025-08-22T13:50:37.006Z'
-updated_at: '2025-08-23T05:41:18.169Z'
+updated_at: '2025-08-23T05:59:18.467Z'
 last_reviewed: '2025-08-22T13:50:37.006Z'
 links:
   - a91a6906-8f61-4071-a548-15b96967605e
@@ -74,4 +74,10 @@ sources:
 ## Related- FlexSearch Configuration and Performance Optimization
 - LinkService: Bidirectional Memory Linking and Referential Integrity Management
 - LLM Memory Management Tools - Project Overview
+- LinkService: Bidirectional Memory Linking and Referential Integrity Management
+- LLM Memory Management Tools - Project Overview
+- [[(DOC)(flexsearch-configuration-and-performance-optimization)(f92958ad-882a-4739-9563-3347880830b8)|FlexSearch Configuration and Performance Optimization]]
+- [[(DOC)(linkservice-bidirectional-memory-linking-and-referential-integrity-management)(ae420693-4b12-479b-9c77-0faca0382a24)|LinkService: Bidirectional Memory Linking and Referential Integrity Management]]
+- [[(CTX)(llm-memory-management-tools-project-overview)(a91a6906-8f61-4071-a548-15b96967605e)|LLM Memory Management Tools - Project Overview]]
+- [[(DOC)(flexsearch-configuration-and-performance-optimization)(f92958ad-882a-4739-9563-3347880830b8)|FlexSearch Configuration and Performance Optimization]]
 - [[(DOC)(linkservice-bidirectional-memory-linking-and-referential-integrity-management)(ae420693-4b12-479b-9c77-0faca0382a24)|LinkService: Bidirectional Memory Linking and Referential Integrity Management]]

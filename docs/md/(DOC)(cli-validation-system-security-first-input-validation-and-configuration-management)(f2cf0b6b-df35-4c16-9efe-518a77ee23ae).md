@@ -12,7 +12,7 @@ tags:
   - path-security
 category: DOC
 created_at: '2025-08-23T02:25:23.713Z'
-updated_at: '2025-08-23T05:41:06.518Z'
+updated_at: '2025-08-23T05:58:48.498Z'
 last_reviewed: '2025-08-23T02:25:23.713Z'
 links:
   - 0348ba55-8529-4502-ac43-4061524ed7e1
@@ -253,4 +253,6 @@ export function validateSourceFilePathOrThrow(filePath: string): void;
 ## Related
 - CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management
 - CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management
+- [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]
+- [[(ADR)(adr-004-typescript-first-development-with-strict-type-safety)(0348ba55-8529-4502-ac43-4061524ed7e1)|ADR-004: TypeScript-First Development with Strict Type Safety]]
 - [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]

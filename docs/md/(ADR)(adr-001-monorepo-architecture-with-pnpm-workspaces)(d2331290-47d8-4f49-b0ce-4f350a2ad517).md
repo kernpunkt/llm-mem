@@ -9,12 +9,12 @@ tags:
   - package-organization
 category: ADR
 created_at: '2025-08-22T13:50:22.926Z'
-updated_at: '2025-08-23T05:50:10.384Z'
+updated_at: '2025-08-23T05:58:25.465Z'
 last_reviewed: '2025-08-22T13:50:22.926Z'
 links:
   - 1cab02b8-2a60-4fad-b3d2-0f51fb7f96ec
-  - a91a6906-8f61-4071-a548-15b96967605e
   - 5ec17d14-bce3-411b-bbda-0945af019338
+  - a91a6906-8f61-4071-a548-15b96967605e
 sources:
   - package.json:1-57
   - pnpm-workspace.yaml
@@ -73,6 +73,10 @@ sources:
 - Shared Package Public API: Module Organization and Export Strategy
 - Shared Package Public API: Module Organization and Export Strategy
 - Development Workflow and Best Practices
+- Development Workflow and Best Practices
+- LLM Memory Management Tools - Project Overview
+- Shared Package Public API: Module Organization and Export Strategy
+- LLM Memory Management Tools - Project Overview
 - [[(CTX)(development-workflow-and-best-practices)(1cab02b8-2a60-4fad-b3d2-0f51fb7f96ec)|Development Workflow and Best Practices]]
-- [[(CTX)(llm-memory-management-tools-project-overview)(a91a6906-8f61-4071-a548-15b96967605e)|LLM Memory Management Tools - Project Overview]]
 - [[(DOC)(shared-package-public-api-module-organization-and-export-strategy)(5ec17d14-bce3-411b-bbda-0945af019338)|Shared Package Public API: Module Organization and Export Strategy]]
+- [[(CTX)(llm-memory-management-tools-project-overview)(a91a6906-8f61-4071-a548-15b96967605e)|LLM Memory Management Tools - Project Overview]]

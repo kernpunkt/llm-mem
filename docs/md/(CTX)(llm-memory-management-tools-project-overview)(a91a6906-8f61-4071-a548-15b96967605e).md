@@ -10,13 +10,13 @@ tags:
   - support
 category: CTX
 created_at: '2025-08-22T13:54:59.155Z'
-updated_at: '2025-08-23T05:50:10.383Z'
+updated_at: '2025-08-23T05:58:58.346Z'
 last_reviewed: '2025-08-22T13:54:59.155Z'
 links:
+  - d2331290-47d8-4f49-b0ce-4f350a2ad517
+  - 0348ba55-8529-4502-ac43-4061524ed7e1
   - c47b13f0-b934-40f2-807b-d301c6d9ed0c
   - d2626445-af61-4664-ba65-5f78b62e12bc
-  - 0348ba55-8529-4502-ac43-4061524ed7e1
-  - d2331290-47d8-4f49-b0ce-4f350a2ad517
 sources:
   - README.md:1-180
   - package.json:1-57
@@ -155,5 +155,13 @@ pnpm test
 ## Related- ADR-002: Memory-Based Documentation System with FlexSearch- ADR-004: TypeScript-First Development with Strict Type Safety
 - ADR-004: TypeScript-First Development with Strict Type Safety
 - ADR-004: TypeScript-First Development with Strict Type Safety
+- ADR-001: Monorepo Architecture with pnpm Workspaces
+- ADR-001: Monorepo Architecture with pnpm Workspaces
+- [[(ADR)(adr-002-memory-based-documentation-system-with-flexsearch)(c47b13f0-b934-40f2-807b-d301c6d9ed0c)|ADR-002: Memory-Based Documentation System with FlexSearch]]
+- [[(ADR)(adr-003-mcp-server-architecture-with-dual-transport-support)(d2626445-af61-4664-ba65-5f78b62e12bc)|ADR-003: MCP Server Architecture with Dual Transport Support]]
+- [[(ADR)(adr-004-typescript-first-development-with-strict-type-safety)(0348ba55-8529-4502-ac43-4061524ed7e1)|ADR-004: TypeScript-First Development with Strict Type Safety]]
 - [[(ADR)(adr-001-monorepo-architecture-with-pnpm-workspaces)(d2331290-47d8-4f49-b0ce-4f350a2ad517)|ADR-001: Monorepo Architecture with pnpm Workspaces]]
 - [[(ADR)(adr-001-monorepo-architecture-with-pnpm-workspaces)(d2331290-47d8-4f49-b0ce-4f350a2ad517)|ADR-001: Monorepo Architecture with pnpm Workspaces]]
+- [[(ADR)(adr-004-typescript-first-development-with-strict-type-safety)(0348ba55-8529-4502-ac43-4061524ed7e1)|ADR-004: TypeScript-First Development with Strict Type Safety]]
+- [[(ADR)(adr-002-memory-based-documentation-system-with-flexsearch)(c47b13f0-b934-40f2-807b-d301c6d9ed0c)|ADR-002: Memory-Based Documentation System with FlexSearch]]
+- [[(ADR)(adr-003-mcp-server-architecture-with-dual-transport-support)(d2626445-af61-4664-ba65-5f78b62e12bc)|ADR-003: MCP Server Architecture with Dual Transport Support]]

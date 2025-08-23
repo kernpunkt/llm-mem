@@ -11,16 +11,16 @@ tags:
   - workflow
 category: DOC
 created_at: '2025-08-23T02:22:15.189Z'
-updated_at: '2025-08-23T05:41:06.518Z'
+updated_at: '2025-08-23T05:58:58.348Z'
 last_reviewed: '2025-08-23T02:22:15.189Z'
 links:
+  - f2cf0b6b-df35-4c16-9efe-518a77ee23ae
   - bbc4910c-1975-4c96-bd95-e9255f814eff
   - 7135b71b-d291-4692-88fd-1a6d627f7fe0
   - c702229f-ac67-43dc-9eb9-266eb5655d83
   - 6b6b39f3-45ef-4205-98b7-460bf0b1c010
   - 05e1ffd3-6058-4fe3-82a9-2cc2d43f04db
   - d2626445-af61-4664-ba65-5f78b62e12bc
-  - f2cf0b6b-df35-4c16-9efe-518a77ee23ae
 sources:
   - packages/cli/src/mem-coverage.ts:1-100
   - packages/cli/src/mem-coverage.ts:101-226
@@ -232,4 +232,17 @@ The tool provides **flexible file system access**:
 ## Related
 - ADR-003: MCP Server Architecture with Dual Transport Support
 - ADR-003: MCP Server Architecture with Dual Transport Support
+- CLI Validation System: Security-First Input Validation and Configuration Management
+- Code Scanner: TypeScript/JavaScript Source Code Analysis and Element Detection
+- Configuration Parser: Multi-Framework Configuration Detection and Normalization
+- Source Parser: Memory Source String Parsing and Line Range Extraction
+- CLI Test Infrastructure: Test Environment Setup and Cleanup Management
+- CLI Coverage Tool Type System Architecture
+- [[(ADR)(adr-003-mcp-server-architecture-with-dual-transport-support)(d2626445-af61-4664-ba65-5f78b62e12bc)|ADR-003: MCP Server Architecture with Dual Transport Support]]
 - [[(DOC)(cli-validation-system-security-first-input-validation-and-configuration-management)(f2cf0b6b-df35-4c16-9efe-518a77ee23ae)|CLI Validation System: Security-First Input Validation and Configuration Management]]
+- [[(DOC)(code-scanner-typescriptjavascript-source-code-analysis-and-element-detection)(bbc4910c-1975-4c96-bd95-e9255f814eff)|Code Scanner: TypeScript/JavaScript Source Code Analysis and Element Detection]]
+- [[(DOC)(configuration-parser-multi-framework-configuration-detection-and-normalization)(7135b71b-d291-4692-88fd-1a6d627f7fe0)|Configuration Parser: Multi-Framework Configuration Detection and Normalization]]
+- [[(DOC)(source-parser-memory-source-string-parsing-and-line-range-extraction)(c702229f-ac67-43dc-9eb9-266eb5655d83)|Source Parser: Memory Source String Parsing and Line Range Extraction]]
+- [[(DOC)(cli-test-infrastructure-test-environment-setup-and-cleanup-management)(6b6b39f3-45ef-4205-98b7-460bf0b1c010)|CLI Test Infrastructure: Test Environment Setup and Cleanup Management]]
+- [[(DOC)(cli-coverage-tool-type-system-architecture)(05e1ffd3-6058-4fe3-82a9-2cc2d43f04db)|CLI Coverage Tool Type System Architecture]]
+- [[(ADR)(adr-003-mcp-server-architecture-with-dual-transport-support)(d2626445-af61-4664-ba65-5f78b62e12bc)|ADR-003: MCP Server Architecture with Dual Transport Support]]

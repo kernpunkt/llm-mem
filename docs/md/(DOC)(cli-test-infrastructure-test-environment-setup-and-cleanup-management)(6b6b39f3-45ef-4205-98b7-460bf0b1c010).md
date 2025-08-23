@@ -9,11 +9,11 @@ tags:
   - cli-testing
 category: DOC
 created_at: '2025-08-23T02:27:26.292Z'
-updated_at: '2025-08-23T05:41:02.801Z'
+updated_at: '2025-08-23T05:58:48.503Z'
 last_reviewed: '2025-08-23T02:27:26.292Z'
 links:
-  - 3b201e08-784c-4a83-9a0e-05d715882e80
   - ef581532-2751-47ae-b2d8-e6ef4a869daf
+  - 3b201e08-784c-4a83-9a0e-05d715882e80
 sources:
   - packages/cli/tests/setup.ts:1-24
 ---
@@ -241,4 +241,7 @@ The test infrastructure should be **tested itself**:
 
 ## Related
 - Test Infrastructure: Global Test Setup and Cleanup Strategy
+- Test Infrastructure: Global Test Setup and Cleanup Strategy
+- [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]
 - [[(DOC)(test-infrastructure-global-test-setup-and-cleanup-strategy)(ef581532-2751-47ae-b2d8-e6ef4a869daf)|Test Infrastructure: Global Test Setup and Cleanup Strategy]]
+- [[(DOC)(cli-coverage-tool-command-line-interface-architecture-and-configuration-management)(3b201e08-784c-4a83-9a0e-05d715882e80)|CLI Coverage Tool: Command-Line Interface Architecture and Configuration Management]]

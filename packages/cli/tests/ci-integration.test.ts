@@ -128,7 +128,11 @@ describe("CI/CD integration", () => {
 
   beforeEach(async () => {
     // Ensure the directory exists (global setup might have cleaned it)
-    await fs.mkdir(tmpDir, { recursive: true });
+    try {
+      await fs.mkdir(tmpDir, { recursive: true });
+    } catch (error) {
+      // Directory might already exist, continue
+    }
     logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 

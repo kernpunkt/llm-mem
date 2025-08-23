@@ -23,6 +23,11 @@ vi.mock("../src/coverage-service.js", () => {
   return { CoverageService: MockCoverageService };
 });
 
+// Mock report-generator to prevent stdout pollution
+vi.mock("../src/report-generator.js", () => ({
+  generateConsoleReport: vi.fn().mockReturnValue("Mock Coverage Report"),
+}));
+
 describe("coverage CLI threshold", () => {
   it("exits with code 1 and prints message when below threshold", async () => {
     const { runCoverageCLI } = await import("../src/mem-coverage.js");

@@ -690,12 +690,24 @@ ${stats.recommendations.join('\n')}`;
           }
         }
 
-        // Step 2: Remove markdown links from content (keep only external HTTP links)
+        // Step 2: Parse Obsidian-style links and extract memory IDs
         let cleanedContent = memory.content;
+        const extractedMemoryIds: string[] = [];
         
-        // Remove internal markdown links (e.g., [[Memory Title]] or [[Memory Title|Link Text]])
-        // Keep external HTTP/HTTPS links
-        cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g, (match, linkText, displayText) => {
+        // Parse Obsidian-style links: [[(CATEGORY)(title)(id)|display_text]]
+        // This regex captures the category, title, id, and optional display text
+        const obsidianLinkRegex = /\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g;
+        
+        cleanedContent = cleanedContent.replace(obsidianLinkRegex, (match, category, title, id, displayText) => {
+          // Extract the memory ID from the link
+          extractedMemoryIds.push(id);
+          // Replace with display text if available, otherwise use title
+          return displayText || title;
+        });
+
+        // Also handle simpler Obsidian links: [[title|display_text]] or [[title]]
+        const simpleObsidianRegex = /\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g;
+        cleanedContent = cleanedContent.replace(simpleObsidianRegex, (match, linkText, displayText) => {
           // Check if this is an external HTTP link
           if (linkText.startsWith('http://') || linkText.startsWith('https://')) {
             return match; // Keep external links
@@ -712,10 +724,12 @@ ${stats.recommendations.join('\n')}`;
           });
         }
 
-        // Step 4: Recreate valid links
+        // Step 4: Create proper bidirectional links using link_mem for extracted IDs
         let successfulLinks = 0;
         let failedLinks = 0;
+        let newLinks = 0;
         
+        // First, recreate links for existing valid link IDs
         for (const linkId of currentLinkIds) {
           try {
             // Verify the target memory still exists
@@ -736,22 +750,45 @@ ${stats.recommendations.join('\n')}`;
           }
         }
 
-        // Generate summary message
+        // Then, create new links for extracted memory IDs from Obsidian syntax
+        for (const extractedId of extractedMemoryIds) {
+          try {
+            // Verify the target memory exists
+            const targetMemory = await memoryService.readMemory({ id: extractedId });
+            if (targetMemory) {
+              // Use link_mem to create proper bidirectional links
+              await memoryService.linkMemories({ 
+                source_id: memory_id, 
+                target_id: extractedId,
+                link_text: targetMemory.title
+              });
+              newLinks++;
+            } else {
+              console.error(`Extracted memory ID not found: ${extractedId}`);
+            }
+          } catch (error) {
+            console.error(`Failed to create link to extracted ID ${extractedId}: ${error}`);
+          }
+        }
+
+        // Generate comprehensive summary message
         const summary = `Link structure fixed for memory "${memory.title}" (ID: ${memory_id}):
 
 ✅ **Cleanup completed:**
 - Removed ${currentLinkIds.length} existing links
-- Cleaned markdown content of internal links
+- Cleaned markdown content of Obsidian-style links
 - Preserved external HTTP/HTTPS links
+- Extracted ${extractedMemoryIds.length} memory IDs from Obsidian syntax
 
 🔗 **Link recreation:**
-- Successfully recreated: ${successfulLinks} links
+- Successfully recreated: ${successfulLinks} existing links
+- Created ${newLinks} new links from extracted IDs
 - Failed to recreate: ${failedLinks} links
-- Total links processed: ${currentLinkIds.length}
+- Total links processed: ${currentLinkIds.length + extractedMemoryIds.length}
 
-${failedLinks > 0 ? `\n⚠️ **Note:** ${failedLinks} links could not be recreated (target memories may have been deleted or are inaccessible).` : ''}
+${failedLinks > 0 ? `\n⚠️ **Note:** ${failedLinks} existing links could not be recreated (target memories may have been deleted or are inaccessible).` : ''}
 
-The memory now has a clean link structure with ${successfulLinks} valid bidirectional links.`;
+The memory now has a clean link structure with ${successfulLinks + newLinks} valid bidirectional links.`;
 
         return {
           content: [{ type: "text", text: summary }],
@@ -1641,7 +1678,7 @@ ${stats.recommendations.join('\n')}`;
                 const { MemoryService } = await import('@llm-mem/shared');
                 const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 
-                // Read the memory to get current links
+                // Read the memory to get current content and links
                 const memory = await memoryService.readMemory({ id: memory_id });
                 if (!memory) {
                   toolResult = {
@@ -1664,12 +1701,24 @@ ${stats.recommendations.join('\n')}`;
                   }
                 }
 
-                // Step 2: Remove markdown links from content (keep only external HTTP links)
+                // Step 2: Parse Obsidian-style links and extract memory IDs
                 let cleanedContent = memory.content;
+                const extractedMemoryIds: string[] = [];
                 
-                // Remove internal markdown links (e.g., [[Memory Title]] or [[Memory Title|Link Text]])
-                // Keep external HTTP/HTTPS links
-                cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g, (match, linkText, displayText) => {
+                // Parse Obsidian-style links: [[(CATEGORY)(title)(id)|display_text]]
+                // This regex captures the category, title, id, and optional display text
+                const obsidianLinkRegex = /\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g;
+                
+                cleanedContent = cleanedContent.replace(obsidianLinkRegex, (match, category, title, id, displayText) => {
+                  // Extract the memory ID from the link
+                  extractedMemoryIds.push(id);
+                  // Replace with display text if available, otherwise use title
+                  return displayText || title;
+                });
+
+                // Also handle simpler Obsidian links: [[title|display_text]] or [[title]]
+                const simpleObsidianRegex = /\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g;
+                cleanedContent = cleanedContent.replace(simpleObsidianRegex, (match, linkText, displayText) => {
                   // Check if this is an external HTTP link
                   if (linkText.startsWith('http://') || linkText.startsWith('https://')) {
                     return match; // Keep external links
@@ -1686,10 +1735,12 @@ ${stats.recommendations.join('\n')}`;
                   });
                 }
 
-                // Step 4: Recreate valid links
+                // Step 4: Create proper bidirectional links using link_mem for extracted IDs
                 let successfulLinks = 0;
                 let failedLinks = 0;
+                let newLinks = 0;
                 
+                // First, recreate links for existing valid link IDs
                 for (const linkId of currentLinkIds) {
                   try {
                     // Verify the target memory still exists
@@ -1710,22 +1761,45 @@ ${stats.recommendations.join('\n')}`;
                   }
                 }
 
-                // Generate summary message
+                // Then, create new links for extracted memory IDs from Obsidian syntax
+                for (const extractedId of extractedMemoryIds) {
+                  try {
+                    // Verify the target memory exists
+                    const targetMemory = await memoryService.readMemory({ id: extractedId });
+                    if (targetMemory) {
+                      // Use link_mem to create proper bidirectional links
+                      await memoryService.linkMemories({ 
+                        source_id: memory_id, 
+                        target_id: extractedId,
+                        link_text: targetMemory.title
+                      });
+                      newLinks++;
+                    } else {
+                      console.error(`Extracted memory ID not found: ${extractedId}`);
+                    }
+                  } catch (error) {
+                    console.error(`Failed to create link to extracted ID ${extractedId}: ${error}`);
+                  }
+                }
+
+                // Generate comprehensive summary message
                 const summary = `Link structure fixed for memory "${memory.title}" (ID: ${memory_id}):
 
 ✅ **Cleanup completed:**
 - Removed ${currentLinkIds.length} existing links
-- Cleaned markdown content of internal links
+- Cleaned markdown content of Obsidian-style links
 - Preserved external HTTP/HTTPS links
+- Extracted ${extractedMemoryIds.length} memory IDs from Obsidian syntax
 
 🔗 **Link recreation:**
-- Successfully recreated: ${successfulLinks} links
+- Successfully recreated: ${successfulLinks} existing links
+- Created ${newLinks} new links from extracted IDs
 - Failed to recreate: ${failedLinks} links
-- Total links processed: ${currentLinkIds.length}
+- Total links processed: ${currentLinkIds.length + extractedMemoryIds.length}
 
-${failedLinks > 0 ? `\n⚠️ **Note:** ${failedLinks} links could not be recreated (target memories may have been deleted or are inaccessible).` : ''}
+${failedLinks > 0 ? `\n⚠️ **Note:** ${failedLinks} existing links could not be recreated (target memories may have been deleted or are inaccessible).` : ''}
 
-The memory now has a clean link structure with ${successfulLinks} valid bidirectional links.`;
+The memory now has a clean link structure with ${successfulLinks + newLinks} valid bidirectional links.`;
 
                 toolResult = {
                   content: [{ type: 'text', text: summary }],

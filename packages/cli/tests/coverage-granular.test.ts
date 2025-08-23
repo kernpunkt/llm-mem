@@ -13,7 +13,11 @@ describe("Granular coverage analysis (Step 8)", () => {
 
   beforeEach(async () => {
     // Ensure the directory exists for all tests
-    await fs.mkdir(tmpDir, { recursive: true });
+    try {
+      await fs.mkdir(tmpDir, { recursive: true });
+    } catch (error) {
+      // Directory might already exist, continue
+    }
     
     // @ts-expect-error partial mock for tests
     memoryService = { getAllMemories: async () => [] } as unknown as MemoryService;

@@ -10,7 +10,7 @@ tags:
   - indexing
 category: DOC
 created_at: '2025-08-22T13:52:04.472Z'
-updated_at: '2025-08-23T05:41:21.570Z'
+updated_at: '2025-08-23T06:08:25.816Z'
 last_reviewed: '2025-08-22T13:52:04.472Z'
 links:
   - c47b13f0-b934-40f2-807b-d301c6d9ed0c
@@ -137,4 +137,13 @@ const germanConfig = {
 
 ## Related
 - ADR-002: Memory-Based Documentation System with FlexSearch
+- Memory Service Architecture and Implementation
+- ADR-002: Memory-Based Documentation System with FlexSearch
+- [[(DOC)(memory-service-architecture-and-implementation)(e5fd798b-e1de-416d-af5a-b8096464f25a)|Memory Service Architecture and Implementation]]
+- [[(ADR)(adr-002-memory-based-documentation-system-with-flexsearch)(c47b13f0-b934-40f2-807b-d301c6d9ed0c)|ADR-002: Memory-Based Documentation System with FlexSearch]]
+- [[(DOC)(memory-service-architecture-and-implementation)(e5fd798b-e1de-416d-af5a-b8096464f25a)|Memory Service Architecture and Implementation]]
+- [[(DOC)(memory-service-architecture-and-implementation)(e5fd798b-e1de-416d-af5a-b8096464f25a)|Memory Service Architecture and Implementation]]
+- [[(DOC)(memory-service-architecture-and-implementation)(e5fd798b-e1de-416d-af5a-b8096464f25a)|Memory Service Architecture and Implementation]]
+- [[(DOC)(memory-service-architecture-and-implementation)(e5fd798b-e1de-416d-af5a-b8096464f25a)|Memory Service Architecture and Implementation]]
+- [[(DOC)(memory-service-architecture-and-implementation)(e5fd798b-e1de-416d-af5a-b8096464f25a)|Memory Service Architecture and Implementation]]
 - [[(DOC)(memory-service-architecture-and-implementation)(e5fd798b-e1de-416d-af5a-b8096464f25a)|Memory Service Architecture and Implementation]]
