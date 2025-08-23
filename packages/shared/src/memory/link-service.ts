@@ -62,9 +62,6 @@ export class LinkService {
    * @returns Updated content with wiki-style link added
    */
   private addWikiLinkToContent(content: string, title: string, linkText?: string, targetFilePath?: string): string {
-    // Check if content already ends with a newline
-    const hasTrailingNewline = content.endsWith('\n');
-    
     // Use custom link text if provided, otherwise use the title
     const displayText = linkText || title;
     
@@ -81,22 +78,21 @@ export class LinkService {
       linkMarkdown = `- [[${title}|${displayText}]]`;
     }
     
+    // First, remove any existing links for this title to avoid duplicates
+    let cleanedContent = this.removeSpecificWikiLink(content, title);
+    
     // Check if "## Related" section already exists
-    if (content.includes('## Related')) {
+    // Look for actual section headers, not just the string anywhere in content
+    // Match: ## Related optionally followed by whitespace and optionally followed by newline
+    const relatedSectionRegex = /\n## Related\s*(?:\n|$)/;
+    const hasRelatedSection = relatedSectionRegex.test(cleanedContent);
+    
+    if (hasRelatedSection) {
       // Add the link to the existing section
-      if (hasTrailingNewline) {
-        return content + linkMarkdown + '\n';
-      } else {
-        return content + '\n' + linkMarkdown + '\n';
-      }
+      return cleanedContent + '\n' + linkMarkdown + '\n';
     } else {
       // Create new "## Related" section
-      const sectionHeader = '\n\n## Related\n\n';
-      if (hasTrailingNewline) {
-        return content + sectionHeader + linkMarkdown + '\n';
-      } else {
-        return content + '\n' + sectionHeader + linkMarkdown + '\n';
-      }
+      return cleanedContent + '\n\n## Related\n\n' + linkMarkdown + '\n';
     }
   }
 
@@ -113,14 +109,7 @@ export class LinkService {
     // Remove the specific wiki-style link (both simple and with display text)
     const linkRegex = new RegExp(`\\n\\s*- \\[\\[${escapedTitle}(\\|[^\\]]*)?\\]\\]\\n?`, 'g');
     let updatedContent = content.replace(linkRegex, '');
-    
-    // Clean up empty "Related" sections
-    updatedContent = updatedContent.replace(/\n## Related\n\n\s*\n/g, '\n');
-    updatedContent = updatedContent.replace(/\n## Related\n\s*\n/g, '\n');
-    
-    // Remove trailing "Related" section if it's empty
-    updatedContent = updatedContent.replace(/\n## Related\n\s*$/g, '');
-    
+        
     return updatedContent;
   }
 
@@ -133,10 +122,6 @@ export class LinkService {
     // Remove all wiki-style links
     const wikiLinkRegex = /\n\s*- \[\[[^\]]+\]\]\n?/g;
     let cleaned = content.replace(wikiLinkRegex, '');
-    
-    // Clean up empty "## Related" sections
-    cleaned = cleaned.replace(/\n## Related\n\s*\n/g, '\n');
-    cleaned = cleaned.replace(/\n## Related\n\s*$/g, '');
     
     // Remove any trailing whitespace
     cleaned = cleaned.trimEnd();
@@ -155,14 +140,11 @@ export class LinkService {
     // Escape special regex characters in title
     const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-    // Remove the specific wiki-style link (both simple and with display text)
-    const linkRegex = new RegExp(`\\n\\s*- \\[\\[${escapedTitle}(\\|[^\\]]*)?\\]\\]\\n?`, 'g');
-    let updatedContent = content.replace(linkRegex, '');
-
-    // Clean up empty "Related" sections that might have been left behind
-    updatedContent = updatedContent.replace(/\n## Related\n\s*\n/g, '\n');
-    updatedContent = updatedContent.replace(/\n## Related\n\s*$/g, '');
-
+    // The actual link format is: [[(CATEGORY)(filename)(id)|display_text]]
+    // We need to match the display text part after the | character
+    // Pattern: newline + whitespace + - + space + [[anything|display_text]]
+    const linkRegex = new RegExp(`\\n\\s*- \\[\\[[^|]*\\|${escapedTitle}\\]\\]\\n?`, 'g');
+    let updatedContent = content.replace(linkRegex, '\n');
     return updatedContent;
   }
 }
