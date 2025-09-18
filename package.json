@@ -10,7 +10,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "postinstall": "pnpm install --ignore-scripts && pnpm build && cd packages/shared && npm rebuild sqlite3",
+    "postinstall": "pnpm install --ignore-workspace --ignore-scripts && pnpm build && cd packages/shared && npm rebuild sqlite3",
     "build": "pnpm -r build",
     "build:shared": "pnpm --filter @llm-mem/shared build",
     "build:cli": "pnpm --filter @llm-mem/cli build",
