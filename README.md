@@ -49,15 +49,15 @@ pnpm install
 pnpm approve-builds
 ```
 
-## 📥 Installation in Other Projects - recommended for using the mcp and cli in your projects
+## 📥 Installation in Other Projects (Optional - for local development)
 
 ### Installing as a Development Dependency
 
-You can install the entire monorepo into any Node.js project to use the CLI and MCP tools:
+You can install the entire monorepo as an optional (since it is only used locally) dependency  into any Node.js project to use the CLI and MCP tools:
 
 ```bash
 # Install the entire monorepo (recommended)
-pnpm install -d git+ssh://git@github.com:kernpunkt/llm-mem.git#main
+pnpm add --save-optional git+ssh://git@github.com:kernpunkt/llm-mem.git#main
 # allow build scripts, this will automatically install all dependencies and build all packages and rebuild sqlite3 for your plattform
 pnpm approve-builds
 ```
