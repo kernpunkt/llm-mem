@@ -116,6 +116,31 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.0.12)(jiti@2.4.2)(terser@5.43.1)(tsx@4.20.3)
 
+  packages/mem-tools:
+    dependencies:
+      '@llm-mem/shared':
+        specifier: workspace:*
+        version: link:../shared
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.12
+        version: 24.5.2
+      '@vitest/coverage-v8':
+        specifier: 3.2.4
+        version: 3.2.4(vitest@3.2.4(@types/node@24.5.2)(jiti@2.4.2)(terser@5.43.1)(tsx@4.20.3))
+      tsx:
+        specifier: ^4.20.3
+        version: 4.20.3
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.2
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/node@24.5.2)(jiti@2.4.2)(terser@5.43.1)(tsx@4.20.3)
+
   packages/shared:
     dependencies:
       flexsearch:

@@ -5,7 +5,21 @@ import { createApp, createRouter, eventHandler, readBody, toNodeListener } from 
 import { createServer as createHttpServer } from "http";
 import { z } from "zod";
 import { MemoryService } from "@llm-mem/shared";
-import { serializeFrontmatter } from "@llm-mem/shared";
+import { 
+  readMem, 
+  searchMem, 
+  linkMem, 
+  unlinkMem, 
+  reindexMems, 
+  needsReview, 
+  listMems, 
+  getMemStats, 
+  fixLinks,
+  formatSearchResults,
+  formatMemoriesList,
+  formatNeedsReview,
+  parseAllowedValues
+} from "@llm-mem/shared";
 import { promises as fs } from "fs";
 import { join } from "path";
 import { fileURLToPath } from "url";
@@ -15,37 +29,10 @@ config({ quiet: true });
 
 /**
  * Validation utilities for categories and tags
+ * 
+ * Note: Validation functions are now imported from @llm-mem/shared
+ * Only parseAllowedValues is used here for the get_allowed_values tool
  */
-function parseAllowedValues(envVar: string | undefined): string[] | null {
-    if (!envVar || envVar.trim() === "") {
-        return null; // No restrictions
-    }
-    return envVar.split(",").map(s => s.trim()).filter(s => s.length > 0);
-}
-
-function validateCategory(category: string | undefined): void {
-    if (category === undefined) return; // Optional field
-    
-    const allowedCategories = parseAllowedValues(process.env.ALLOWED_CATEGORIES);
-    if (allowedCategories && !allowedCategories.includes(category)) {
-        const allowedList = allowedCategories.join(", ");
-        throw new Error(`Category "${category}" is not allowed. Allowed categories: ${allowedList}`);
-    }
-}
-
-function validateTags(tags: string[] | undefined): void {
-    if (tags === undefined) return; // Optional field
-    
-    const allowedTags = parseAllowedValues(process.env.ALLOWED_TAGS);
-    if (allowedTags) {
-        const invalidTags = tags.filter(tag => !allowedTags.includes(tag));
-        if (invalidTags.length > 0) {
-            const allowedList = allowedTags.join(", ");
-            const invalidList = invalidTags.join(", ");
-            throw new Error(`Tags [${invalidList}] are not allowed. Allowed tags: ${allowedList}`);
-        }
-    }
-}
 
 /**
  * MCP Server Template
@@ -138,7 +125,9 @@ export function createServer(): McpServer {
     },
     async ({ title, content, tags = [], category = "general", sources = [] }) => {
       try {
-        // Validate category and tags against allowed values
+        // Note: Validation is now handled within the shared tool functions
+        // For write_mem, we validate manually since it's not yet extracted
+        const { validateCategory, validateTags } = await import("@llm-mem/shared");
         validateCategory(category);
         validateTags(tags);
         
@@ -165,39 +154,14 @@ export function createServer(): McpServer {
     },
     async ({ identifier, format = "markdown" }) => {
       try {
-        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
-        const memory = await memoryService.readMemory(uuidPattern.test(identifier) ? { id: identifier } : { title: identifier });
-        if (!memory) {
-          return {
-            content: [{ type: "text", text: `Memory not found: ${identifier}` }],
-            isError: true
-          };
-        }
-
-        if (format === "plain") {
-          return { content: [{ type: "text", text: memory.content }], isError: false };
-        }
-
-        if (format === "json") {
-          return { content: [{ type: "text", text: JSON.stringify(memory, null, 2) }], isError: false };
-        }
-
-        // markdown
-        const frontmatter = {
-          id: memory.id,
-          title: memory.title,
-          tags: memory.tags,
-          category: memory.category,
-          created_at: memory.created_at,
-          updated_at: memory.updated_at,
-          last_reviewed: memory.last_reviewed,
-          links: memory.links,
-          sources: memory.sources,
+        const result = await readMem(memoryService, { identifier, format });
+        
+        return {
+          content: [{ type: "text", text: result.formatted }],
+          isError: result.isError
         };
-        const markdown = serializeFrontmatter(frontmatter as any, memory.content);
-        return { content: [{ type: "text", text: markdown }], isError: false };
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         throw new Error(`read_mem failed: ${msg}`);
@@ -244,7 +208,9 @@ export function createServer(): McpServer {
     },
     async ({ id, title, content, tags, category, sources }) => {
       try {
-        // Validate category and tags against allowed values
+        // Note: Validation is now handled within the shared tool functions
+        // For edit_mem, we validate manually since it's not yet extracted
+        const { validateCategory, validateTags } = await import("@llm-mem/shared");
         validateCategory(category);
         validateTags(tags);
         
@@ -285,38 +251,24 @@ export function createServer(): McpServer {
     },
     async ({ query, limit = 10, category, tags }) => {
       try {
-        // Validate category and tags against allowed values
-        validateCategory(category);
-        validateTags(tags);
-        
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
-        const searchParams: any = { query, limit };
-        if (category) searchParams.category = category;
-        if (tags) searchParams.tags = tags;
-
-        const results = await memoryService.searchMemories(searchParams);
+        const result = await searchMem(memoryService, { query, limit, category, tags });
         
-        if (results.total === 0) {
+        if (result.total === 0) {
           return {
             content: [{ type: "text", text: "No memories found matching your search criteria." }],
             isError: false
           };
         }
 
-        const formattedResults = results.results.map((result, index) => {
-          const tagsStr = result.tags.length > 0 ? ` [${result.tags.join(", ")}]` : "";
-          const categoryStr = result.category !== "general" ? ` (${result.category})` : "";
-          return `${index + 1}. **${result.title}**${categoryStr}${tagsStr}\n   Score: ${result.score.toFixed(2)}\n   ${result.snippet}\n   ID: ${result.id}\n`;
-        }).join("\n");
-
         return {
           content: [{ 
             type: "text", 
-            text: `Found ${results.total} memory(ies):\n\n${formattedResults}` 
+            text: formatSearchResults(result)
           }],
-          isError: false
+          isError: result.isError
         };
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
@@ -338,11 +290,11 @@ export function createServer(): McpServer {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
-        const result = await memoryService.linkMemories({ source_id, target_id, link_text });
+        const result = await linkMem(memoryService, { source_id, target_id, link_text });
         
         return {
           content: [{ type: "text", text: result.message }],
-          isError: false
+          isError: result.isError
         };
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
@@ -365,11 +317,11 @@ export function createServer(): McpServer {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
-        const result = await memoryService.unlinkMemories({ source_id, target_id });
+        const result = await unlinkMem(memoryService, { source_id, target_id });
         
         return {
           content: [{ type: "text", text: result.message }],
-          isError: false
+          isError: result.isError
         };
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
@@ -387,11 +339,11 @@ export function createServer(): McpServer {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
-        const result = await memoryService.reindexMemories();
+        const result = await reindexMems(memoryService);
         
         return {
           content: [{ type: "text", text: result.message }],
-          isError: false
+          isError: result.isError
         };
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
@@ -411,7 +363,7 @@ export function createServer(): McpServer {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
-        const result = await memoryService.getMemoriesNeedingReview(date);
+        const result = await needsReview(memoryService, { date });
         
         if (result.total === 0) {
           return {
@@ -420,18 +372,12 @@ export function createServer(): McpServer {
           };
         }
 
-        const formattedResults = result.memories.map((memory, index) => {
-          const tagsStr = memory.tags.length > 0 ? ` [${memory.tags.join(", ")}]` : "";
-          const categoryStr = memory.category !== "general" ? ` (${memory.category})` : "";
-          return `${index + 1}. **${memory.title}**${categoryStr}${tagsStr}\n   Last reviewed: ${memory.last_reviewed}\n   Created: ${memory.created_at}\n   ID: ${memory.id}\n`;
-        }).join("\n");
-
         return {
           content: [{ 
             type: "text", 
-            text: `Found ${result.total} memory(ies) needing review:\n\n${formattedResults}` 
+            text: formatNeedsReview(result)
           }],
-          isError: false
+          isError: result.isError
         };
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
@@ -450,40 +396,24 @@ export function createServer(): McpServer {
     },
     async ({ category, tags, limit = 100 }) => {
       try {
-        // Validate category and tags against allowed values
-        validateCategory(category);
-        validateTags(tags);
-        
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
-        const searchParams: any = { limit };
-        if (category) searchParams.category = category;
-        if (tags) searchParams.tags = tags;
-
-        const results = await memoryService.listMemories(searchParams);
+        const result = await listMems(memoryService, { category, tags, limit });
         
-        if (results.total === 0) {
+        if (result.total === 0) {
           return {
             content: [{ type: "text", text: "No memories found matching your filter criteria." }],
             isError: false
           };
         }
 
-        const formattedResults = results.memories.map((memory: any, index: number) => {
-          const tagsStr = memory.tags.length > 0 ? ` [${memory.tags.join(", ")}]` : "";
-          const categoryStr = memory.category !== "general" ? ` (${memory.category})` : "";
-          const sourcesStr = memory.sources.length > 0 ? `\n   Sources: ${memory.sources.join(", ")}` : "";
-          const linksStr = memory.links.length > 0 ? `\n   Links: ${memory.links.length} linked memories` : "";
-          return `${index + 1}. **${memory.title}**${categoryStr}${tagsStr}${sourcesStr}${linksStr}\n   Created: ${memory.created_at}\n   Updated: ${memory.updated_at}\n   Last reviewed: ${memory.last_reviewed}\n   ID: ${memory.id}\n`;
-        }).join("\n");
-
         return {
           content: [{ 
             type: "text", 
-            text: `Found ${results.total} memory(ies):\n\n${formattedResults}` 
+            text: formatMemoriesList(result)
           }],
-          isError: false
+          isError: result.isError
         };
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
@@ -501,76 +431,14 @@ export function createServer(): McpServer {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
-        const stats = await memoryService.getMemoryStatistics();
+        const result = await getMemStats(memoryService);
         
-        const formattedStats = `Memory Store Statistics:
-
-📊 **Overview**
-- Total Memories: ${stats.total_memories}
-- Average Time Since Last Verification: ${stats.average_time_since_verification}
-- Average Links per Memory: ${stats.average_links_per_memory}
-- Average Tags per Memory: ${stats.average_tags_per_memory}
-- Average Memory Length: ${stats.average_memory_length_words} words
-
-🔗 **Link Analysis**
-- Orphaned Memories (no links): ${stats.orphaned_memories.length}
-- Memories with Few Links: ${stats.memories_with_few_links.length}
-- Broken Links: ${stats.broken_links.length}
-- Unidirectional Links: ${stats.unidirectional_links.length}
-- Link Mismatches (YAML vs Markdown): ${stats.link_mismatches.length}
-- Invalid Links: ${stats.invalid_links.length}
-
-${stats.orphaned_memories.length > 0 ? `\n📋 **Orphaned Memories (No Links):**
-${stats.orphaned_memories.map(m => `  - ${m.title} (ID: ${m.id})`).join('\n')}` : ''}
-
-${stats.memories_with_few_links.length > 0 ? `\n📋 **Memories with Few Links (< ${stats.average_links_per_memory}):**
-${stats.memories_with_few_links.map(m => `  - ${m.title} (${m.link_count} links)`).join('\n')}` : ''}
-
-${stats.broken_links.length > 0 ? `\n📋 **Broken Links:**
-${stats.broken_links.map(m => `  - ${m.title} → broken link ID: ${m.broken_link_id}`).join('\n')}` : ''}
-
-${stats.unidirectional_links.length > 0 ? `\n📋 **Unidirectional Links:**
-${stats.unidirectional_links.map(m => `  - ${m.title} → unidirectional link to: ${m.unidirectional_link_id}`).join('\n')}` : ''}
-
-${stats.link_mismatches.length > 0 ? `\n📋 **Link Mismatches (YAML vs Markdown):**
-${stats.link_mismatches.map(m => `  - ${m.title}:
-    YAML links: ${m.yaml_link_count}, Markdown links: ${m.markdown_link_count}
-    Missing in markdown: ${m.missing_in_markdown.length > 0 ? m.missing_in_markdown.join(', ') : 'none'}
-    Missing in YAML: ${m.missing_in_yaml.length > 0 ? m.missing_in_yaml.join(', ') : 'none'}`).join('\n')}` : ''}
-
-${stats.invalid_links.length > 0 ? `\n📋 **Invalid Links:**
-${stats.invalid_links.map(m => `  - ${m.title}:
-${m.invalid_links.map(il => `    • ${il.link} (${il.type}): ${il.details}`).join('\n')}`).join('\n')}` : ''}
-
-📁 **Category Distribution**
-${Object.entries(stats.categories).map(([cat, count]) => `  - ${cat}: ${count}`).join('\n')}
-
-🏷️ **Tag Usage**
-${Object.entries(stats.tags).map(([tag, count]) => `  - ${tag}: ${count} uses`).join('\n')}
-
-📝 **Content Analysis**
-- Shortest Memories (10%): ${stats.shortest_memories.length}
-- Longest Memories (10%): ${stats.longest_memories.length}
-
-⚠️ **Memories Needing Attention**
-- Without Sources: ${stats.memories_without_sources.length}
-- Needing Verification: ${stats.memories_needing_verification.length}
-
-${stats.memories_without_sources.length > 0 ? `\n📋 **Memories Without Sources:**
-${stats.memories_without_sources.map(m => `  - ${m.title} (ID: ${m.id})`).join('\n')}` : ''}
-
-${stats.memories_needing_verification.length > 0 ? `\n📋 **Memories Needing Verification:**
-${stats.memories_needing_verification.map(m => `  - ${m.title} (${m.days_since_verification} days since last review)`).join('\n')}` : ''}
-
-💡 **Recommendations**
-${stats.recommendations.join('\n')}`;
-
         return {
           content: [{ 
             type: "text", 
-            text: formattedStats 
+            text: result.formatted
           }],
-          isError: false
+          isError: result.isError
         };
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
@@ -668,112 +536,11 @@ ${stats.recommendations.join('\n')}`;
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
-        // Read the memory to get current links
-        const memory = await memoryService.readMemory({ id: memory_id });
-        if (!memory) {
-          return {
-            content: [{ type: "text", text: `Memory not found: ${memory_id}` }],
-            isError: true
-          };
-        }
-
-        // Store the current link IDs for later processing
-        const currentLinkIds = [...memory.links];
+        const result = await fixLinks(memoryService, { memory_id });
         
-        // Step 1: Unlink all current links
-        for (const linkId of currentLinkIds) {
-          try {
-            await memoryService.unlinkMemories({ source_id: memory_id, target_id: linkId });
-          } catch (error) {
-            // Log but continue with other links
-            console.error(`Failed to unlink ${linkId}: ${error}`);
-          }
-        }
-
-        // Step 2: Remove ALL markdown links from content (keep only HTTP links)
-        let cleanedContent = memory.content;
-        
-        // Remove everything after "## Related" section (including the section itself)
-        const relatedSectionIndex = cleanedContent.indexOf('## Related');
-        if (relatedSectionIndex !== -1) {
-          cleanedContent = cleanedContent.substring(0, relatedSectionIndex).trim();
-        }
-        
-        // Remove all Obsidian-style links: [[(CATEGORY)(title)(id)|display_text]]
-        cleanedContent = cleanedContent.replace(/\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g, '');
-        
-        // Remove all simple markdown links: [[title|display_text]] or [[title]] (except HTTP links)
-        cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g, (match, linkText, displayText) => {
-          // Check if this is an external HTTP link
-          if (linkText.startsWith('http://') || linkText.startsWith('https://')) {
-            return match; // Keep external links
-          }
-          // Remove internal links completely
-          return '';
-        });
-        
-        // Clean up excessive empty lines and whitespace
-        cleanedContent = cleanedContent
-          .replace(/\n\s*\n\s*\n+/g, '\n\n')  // Remove triple+ newlines
-          .replace(/[ \t]+$/gm, '')           // Remove trailing whitespace
-          .replace(/^\s+$/gm, '')             // Remove lines with only whitespace
-          .replace(/\n{3,}/g, '\n\n')         // Limit to max 2 consecutive newlines
-          .trim();                            // Remove leading/trailing whitespace
-
-        // Step 3: Update the memory with cleaned content
-        if (cleanedContent !== memory.content) {
-          await memoryService.updateMemory({
-            id: memory_id,
-            content: cleanedContent
-          });
-        }
-
-        // Step 4: Recreate links using IDs from YAML frontmatter (as if link_mem was called for each)
-        let successfulLinks = 0;
-        let failedLinks = 0;
-        
-        // Recreate links for all IDs in the YAML frontmatter
-        for (const linkId of currentLinkIds) {
-          try {
-            // Verify the target memory still exists
-            const targetMemory = await memoryService.readMemory({ id: linkId });
-            if (targetMemory) {
-              // Use link_mem to create proper bidirectional links and Obsidian-style content
-              await memoryService.linkMemories({ 
-                source_id: memory_id, 
-                target_id: linkId,
-                link_text: targetMemory.title
-              });
-              successfulLinks++;
-            } else {
-              failedLinks++;
-            }
-          } catch (error) {
-            failedLinks++;
-            console.error(`Failed to recreate link to ${linkId}: ${error}`);
-          }
-        }
-
-        // Generate summary message
-        const summary = `Link structure fixed for memory "${memory.title}" (ID: ${memory_id}):
-
-✅ **Cleanup completed:**
-- Removed ${currentLinkIds.length} existing links
-- Cleaned markdown content of all Obsidian-style links
-- Preserved external HTTP/HTTPS links
-
-🔗 **Link recreation:**
-- Successfully recreated: ${successfulLinks} links
-- Failed to recreate: ${failedLinks} links
-- Total links processed: ${currentLinkIds.length}
-
-${failedLinks > 0 ? `\n⚠️ **Note:** ${failedLinks} links could not be recreated (target memories may have been deleted or are inaccessible).` : ''}
-
-The memory now has a clean link structure with ${successfulLinks} valid bidirectional links.`;
-
         return {
-          content: [{ type: "text", text: summary }],
-          isError: false
+          content: [{ type: "text", text: result.message }],
+          isError: result.isError
         };
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
