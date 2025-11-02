@@ -4,7 +4,6 @@ import { config } from "dotenv";
 import { createApp, createRouter, eventHandler, readBody, toNodeListener } from "h3";
 import { createServer as createHttpServer } from "http";
 import { z } from "zod";
-import { MemoryService } from "@llm-mem/shared";
 import { 
   readMem, 
   searchMem, 
@@ -23,6 +22,7 @@ import {
 import { promises as fs } from "fs";
 import { join } from "path";
 import { fileURLToPath } from "url";
+import { memoryServiceManager } from "./memory-service-manager.js";
 
 // Load environment variables from .env file (quiet mode to avoid stdout interference)
 config({ quiet: true });
@@ -133,8 +133,10 @@ export function createServer(): McpServer {
         validateTags(tags);
         
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         const mem = await memoryService.createMemory({ title, content, tags, category, sources, abstract });
+        // Refresh tracked DB mtime after index-modifying operation
+        await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         return {
           content: [{ type: "text", text: `id: ${mem.id}\nfile: ${mem.file_path}\ncreated_at: ${mem.created_at}` }],
           isError: false
@@ -156,7 +158,7 @@ export function createServer(): McpServer {
     async ({ identifier, format = "markdown" }) => {
       try {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         const result = await readMem(memoryService, { identifier, format });
         
         return {
@@ -217,7 +219,7 @@ export function createServer(): McpServer {
         validateTags(tags);
         
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
         const updates: any = { id };
         if (title !== undefined) updates.title = title;
@@ -228,6 +230,8 @@ export function createServer(): McpServer {
         if (abstract !== undefined) updates.abstract = abstract;
 
         const updated = await memoryService.updateMemory(updates);
+        // Refresh tracked DB mtime after index-modifying operation
+        await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
         return {
           content: [{ 
@@ -255,7 +259,7 @@ export function createServer(): McpServer {
     async ({ query, limit = 10, category, tags }) => {
       try {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
         const result = await searchMem(memoryService, { query, limit, category, tags });
         
@@ -291,9 +295,11 @@ export function createServer(): McpServer {
     async ({ source_id, target_id, link_text }) => {
       try {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
         const result = await linkMem(memoryService, { source_id, target_id, link_text });
+        // Refresh tracked DB mtime after index-modifying operation
+        await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
         return {
           content: [{ type: "text", text: result.message }],
@@ -318,9 +324,11 @@ export function createServer(): McpServer {
     async ({ source_id, target_id }) => {
       try {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
         const result = await unlinkMem(memoryService, { source_id, target_id });
+        // Refresh tracked DB mtime after index-modifying operation
+        await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
         return {
           content: [{ type: "text", text: result.message }],
@@ -340,9 +348,11 @@ export function createServer(): McpServer {
     async () => {
       try {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
         const result = await reindexMems(memoryService);
+        // Refresh tracked DB mtime after reindexing
+        await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
         return {
           content: [{ type: "text", text: result.message }],
@@ -364,7 +374,7 @@ export function createServer(): McpServer {
     async ({ date }) => {
       try {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
         const result = await needsReview(memoryService, { date });
         
@@ -400,7 +410,7 @@ export function createServer(): McpServer {
     async ({ category, tags, limit = 100 }) => {
       try {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
         const result = await listMems(memoryService, { category, tags, limit });
         
@@ -432,7 +442,7 @@ export function createServer(): McpServer {
     async () => {
       try {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
         const result = await getMemStats(memoryService);
         
@@ -537,9 +547,11 @@ export function createServer(): McpServer {
     async ({ memory_id }) => {
       try {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-        const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+        const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
         const result = await fixLinks(memoryService, { memory_id });
+        // Refresh tracked DB mtime after index-modifying operation
+        await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
         return {
           content: [{ type: "text", text: result.message }],
@@ -641,6 +653,11 @@ export async function runStdio(): Promise<void> {
   // Graceful shutdown handling
   process.on('SIGINT', async () => {
     console.error('Shutting down STDIO server...');
+    try {
+      await memoryServiceManager.destroyAll();
+    } catch (error) {
+      console.error(`Error during cleanup: ${error}`);
+    }
     console.error('Server shutdown complete');
     process.exit(0);
   });
@@ -1049,9 +1066,10 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 }
                 
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-                const { MemoryService } = await import('@llm-mem/shared');
-                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 const mem = await memoryService.createMemory({ title, content, tags, category, sources, abstract });
+                // Refresh tracked DB mtime after index-modifying operation
+                await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 
                 toolResult = {
                   content: [{ type: 'text', text: `id: ${mem.id}\nfile: ${mem.file_path}\ncreated_at: ${mem.created_at}` }],
@@ -1070,8 +1088,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 
                 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-                const { MemoryService } = await import('@llm-mem/shared');
-                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 const memory = await memoryService.readMemory(uuidPattern.test(identifier) ? { id: identifier } : { title: identifier });
                 
                 if (!memory) {
@@ -1136,9 +1153,10 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 }
 
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-                const { MemoryService } = await import('@llm-mem/shared');
-                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 const updated = await memoryService.updateMemory({ id, title, content, tags, category, sources, abstract });
+                // Refresh tracked DB mtime after index-modifying operation
+                await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
 
                 toolResult = {
                   content: [{ 
@@ -1161,8 +1179,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 }
 
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-                const { MemoryService } = await import('@llm-mem/shared');
-                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 const results = await memoryService.searchMemories({ query, limit, category, tags });
 
                 if (results.total === 0) {
@@ -1198,9 +1215,10 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 }
 
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-                const { MemoryService } = await import('@llm-mem/shared');
-                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 const result = await memoryService.linkMemories({ source_id, target_id, link_text });
+                // Refresh tracked DB mtime after index-modifying operation
+                await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
 
                 toolResult = {
                   content: [{ type: 'text', text: result.message }],
@@ -1218,9 +1236,10 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 }
 
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-                const { MemoryService } = await import('@llm-mem/shared');
-                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 const result = await memoryService.unlinkMemories({ source_id, target_id });
+                // Refresh tracked DB mtime after index-modifying operation
+                await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
 
                 toolResult = {
                   content: [{ type: 'text', text: result.message }],
@@ -1231,9 +1250,10 @@ export async function runHttp(port: number = 3000): Promise<void> {
 
               case 'reindex_mems': {
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-                const { MemoryService } = await import('@llm-mem/shared');
-                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 const result = await memoryService.reindexMemories();
+                // Refresh tracked DB mtime after reindexing
+                await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
 
                 toolResult = {
                   content: [{ type: 'text', text: result.message }],
@@ -1249,8 +1269,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 }
 
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-                const { MemoryService } = await import('@llm-mem/shared');
-                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 const result = await memoryService.getMemoriesNeedingReview(date);
 
                 if (result.total === 0) {
@@ -1282,8 +1301,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 const limit = toolArgs.limit as number || 100;
 
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-                const { MemoryService } = await import('@llm-mem/shared');
-                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 const results = await memoryService.listMemories({ limit, category, tags });
 
                 if (results.total === 0) {
@@ -1312,8 +1330,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
 
               case 'get_mem_stats': {
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-                const { MemoryService } = await import('@llm-mem/shared');
-                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 const stats = await memoryService.getMemoryStatistics();
 
                 const formattedStats = `Memory Store Statistics:
@@ -1433,8 +1450,7 @@ ${stats.recommendations.join('\n')}`;
                 }
 
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
-                const { MemoryService } = await import('@llm-mem/shared');
-                const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 
                 // Read the memory to get current content and links
                 const memory = await memoryService.readMemory({ id: memory_id });
@@ -1540,13 +1556,16 @@ ${failedLinks > 0 ? `\n⚠️ **Note:** ${failedLinks} links could not be recrea
 
 The memory now has a clean link structure with ${successfulLinks} valid bidirectional links.`;
 
+                // Refresh tracked DB mtime after all index-modifying operations
+                await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+
                 toolResult = {
                   content: [{ type: 'text', text: summary }],
                   isError: false
                 };
                 break;
               }
-                
+
               default: {
                  const errorResponse = {
                    jsonrpc: '2.0',
@@ -1687,6 +1706,11 @@ The memory now has a clean link structure with ${successfulLinks} valid bidirect
     // Graceful shutdown handling
     process.on('SIGINT', async () => {
       console.log('Shutting down HTTP server...');
+      try {
+        await memoryServiceManager.destroyAll();
+      } catch (error) {
+        console.error(`Error during cleanup: ${error}`);
+      }
       httpServer.close();
       console.log('Server shutdown complete');
       process.exit(0);

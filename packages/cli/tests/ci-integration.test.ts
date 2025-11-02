@@ -296,6 +296,8 @@ describe("CI/CD integration", () => {
   });
 
   it("parses jest config thresholds", async () => {
+    // Ensure directory exists before writing
+    await fs.mkdir(tmpDir, { recursive: true });
     const configPath = join(tmpDir, "jest.config.cjs");
     await fs.writeFile(configPath, `
       module.exports = {
