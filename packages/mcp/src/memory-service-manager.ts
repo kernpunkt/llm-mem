@@ -16,6 +16,17 @@ class MemoryServiceManager {
   private instances: Map<string, MemoryService> = new Map();
   private dbFileMtimes: Map<string, number> = new Map();
   private indexCheckTimes: Map<string, number> = new Map();
+  
+  /**
+   * Tolerance threshold for timestamp comparisons (in milliseconds).
+   * Differences smaller than this are ignored to prevent false positives from:
+   * - File system timestamp precision
+   * - Race conditions between DB updates and file checks
+   * - Clock skew
+   * 
+   * Set to 5 seconds (5000ms) to handle typical timing variations.
+   */
+  private readonly TIMESTAMP_TOLERANCE_MS = 5000;
 
   /**
    * Gets or creates a MemoryService instance for the given configuration.
@@ -58,8 +69,11 @@ class MemoryServiceManager {
    * 
    * An index is considered out of sync if:
    * 1. The database file doesn't exist but memory files do
-   * 2. The database file is older than the newest memory file
+   * 2. The database file is older than the newest memory file (by more than the tolerance threshold)
    * 3. The database file's modification time changed since last check (git pull scenario)
+   * 
+   * Small timestamp differences (< 5 seconds) are ignored to prevent false positives from
+   * file system precision, race conditions, or clock skew.
    * 
    * @param config - MemoryService configuration
    * @returns True if index needs to be rebuilt
@@ -118,12 +132,23 @@ class MemoryServiceManager {
       // Don't trigger rebuild on first initialization
       
       // Case 2: DB exists but is older than newest memory file
+      // Only trigger if the difference exceeds the tolerance threshold to avoid false positives
+      // from file system timestamp precision and race conditions
       if (dbMtime !== null && newestMemoryMtime > dbMtime) {
-        const dbAge = new Date(dbMtime);
-        const fileAge = new Date(newestMemoryMtime);
-        const ageDiff = Math.round((newestMemoryMtime - dbMtime) / 1000); // seconds
-        console.error(`[MemoryServiceManager] 🔍 Index sync check: DB file (${dbAge.toISOString()}) is ${ageDiff}s older than newest memory file (${fileAge.toISOString()}). Reindexing needed.`);
-        return true;
+        const ageDiffMs = newestMemoryMtime - dbMtime;
+        const ageDiffSeconds = Math.round(ageDiffMs / 1000);
+        
+        // Only trigger reindex if the difference exceeds tolerance threshold
+        if (ageDiffMs > this.TIMESTAMP_TOLERANCE_MS) {
+          const dbAge = new Date(dbMtime);
+          const fileAge = new Date(newestMemoryMtime);
+          console.error(`[MemoryServiceManager] 🔍 Index sync check: DB file (${dbAge.toISOString()}) is ${ageDiffSeconds}s older than newest memory file (${fileAge.toISOString()}). Reindexing needed.`);
+          return true;
+        }
+        // Otherwise, ignore small differences (< tolerance) as they're likely due to:
+        // - File system timestamp precision
+        // - Race conditions between DB updates and file checks
+        // - Clock skew
       }
       
       // Case 3: DB file mtime changed since last check (git pull scenario)
