@@ -107,3 +107,6 @@ mcp_config.json
 
 # pnpm
 pnpm-lock.yaml
+
+#obsidian
+.obsidian/
