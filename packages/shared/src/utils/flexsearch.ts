@@ -102,6 +102,11 @@ export class FlexSearchManager {
    * @throws Error if initialization fails
    */
   async initialize(): Promise<void> {
+    if (this.isInitialized) {
+      // Already initialized, skip
+      return;
+    }
+    
     try {
       // Log the database path for debugging (use stderr to avoid interfering with MCP protocol)
       console.error(`FlexSearch database will be created as: memory-store in current directory`);
@@ -123,9 +128,10 @@ export class FlexSearchManager {
       this.isInitialized = true;
       
       // Log configuration for debugging (use stderr to avoid interfering with MCP protocol)
+      // FlexSearch creates database as "flexsearch-{name}.sqlite" when given name "memory-store"
       console.error("FlexSearch initialized with configuration:", {
         indexPath: this.indexPath,
-        databasePath: join(this.indexPath, "memory-store.sqlite"),
+        databasePath: join(this.indexPath, "flexsearch-memorystore.sqlite"),
         tokenize: this.config.tokenize,
         resolution: this.config.resolution,
         depth: this.config.depth,
