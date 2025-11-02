@@ -4,10 +4,11 @@ A comprehensive suite of tools for managing and analyzing LLM memory systems, bu
 
 ## 🏗️ Project Structure
 
-This project is organized as a monorepo with three main packages:
+This project is organized as a monorepo with four main packages:
 
 - **`@llm-mem/shared`** - Core utilities, memory services, and types
 - **`@llm-mem/cli`** - Command-line interface for memory coverage analysis
+- **`@llm-mem/mem-tools`** - CLI tools for memory management operations
 - **`@llm-mem/mcp`** - MCP server for LLM integration
 
 ## 🔧 Package Configuration
@@ -100,6 +101,21 @@ packages/cli/
 └── README.md            # Package documentation
 ```
 
+### Mem-Tools Package
+```
+packages/mem-tools/
+├── src/
+│   ├── cli.ts           # Main CLI entry point
+│   ├── commands/        # Command implementations
+│   ├── config.ts        # Configuration handling
+│   ├── config-parser.ts # Config file parsing
+│   └── types.ts         # Type definitions
+├── dist/                # Built CLI executable
+├── package.json         # Package configuration
+├── tsconfig.json        # TypeScript configuration
+└── README.md            # Package documentation
+```
+
 ### MCP Package
 ```
 packages/mcp/
@@ -117,7 +133,8 @@ packages/mcp/
 ### Build Order
 1. **Shared Package**: Core utilities and services
 2. **CLI Package**: Depends on shared package
-3. **MCP Package**: Depends on shared package
+3. **Mem-Tools Package**: Depends on shared package
+4. **MCP Package**: Depends on shared package
 
 ### Build Artifacts
 - **TypeScript Compilation**: All packages compile to individual `dist/` directories
@@ -135,6 +152,7 @@ pnpm build
 # Build specific package
 pnpm build:shared
 pnpm build:cli
+pnpm build:mem-tools
 pnpm build:mcp
 
 # Development mode (watch for changes)
@@ -150,6 +168,7 @@ pnpm test
 # Run tests for specific package
 pnpm test:shared
 pnpm test:cli
+pnpm test:mem-tools
 pnpm test:mcp
 
 # Watch mode

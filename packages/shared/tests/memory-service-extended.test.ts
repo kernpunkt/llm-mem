@@ -87,6 +87,7 @@ describe("MemoryService Extended Coverage", () => {
       expect(stats.link_mismatches).toEqual([]);
       expect(stats.invalid_links).toEqual([]);
       expect(stats.memories_without_sources).toEqual([]);
+      expect(stats.memories_without_abstract).toEqual([]);
       expect(stats.categories).toEqual({});
       expect(stats.tags).toEqual({});
       expect(stats.average_tags_per_memory).toBe(0);
@@ -121,6 +122,9 @@ describe("MemoryService Extended Coverage", () => {
       expect(stats.link_mismatches).toEqual([]);
       expect(stats.invalid_links).toEqual([]);
       expect(stats.memories_without_sources).toEqual([]);
+      expect(stats.memories_without_abstract).toEqual([
+        { id: memory.id, title: memory.title }
+      ]);
       expect(stats.categories).toEqual({ testing: 1 });
       expect(stats.tags).toEqual({ test: 1, example: 1 });
       expect(stats.average_tags_per_memory).toBe(2);
@@ -162,7 +166,53 @@ describe("MemoryService Extended Coverage", () => {
       expect(stats.memories_without_sources).toEqual([
         { id: memory2.id, title: memory2.title }
       ]);
+      expect(stats.memories_without_abstract).toEqual([
+        { id: memory1.id, title: memory1.title },
+        { id: memory2.id, title: memory2.title }
+      ]);
       expect(stats.recommendations).toContain("Add sources to 1 memories to improve traceability.");
+    });
+
+    it("should detect memories without abstract", async () => {
+      const memoryWithoutAbstract = await memoryService.createMemory({
+        title: "Memory Without Abstract",
+        content: "This memory has no abstract field.",
+        tags: ["test"],
+        category: "testing",
+      });
+
+      const memoryWithEmptyAbstract = await memoryService.createMemory({
+        title: "Memory With Empty Abstract",
+        content: "This memory has an empty abstract.",
+        tags: ["test"],
+        category: "testing",
+        abstract: "",
+      });
+
+      const memoryWithWhitespaceAbstract = await memoryService.createMemory({
+        title: "Memory With Whitespace Abstract",
+        content: "This memory has a whitespace-only abstract.",
+        tags: ["test"],
+        category: "testing",
+        abstract: "   ",
+      });
+
+      const memoryWithValidAbstract = await memoryService.createMemory({
+        title: "Memory With Valid Abstract",
+        content: "This memory has a valid abstract.",
+        tags: ["test"],
+        category: "testing",
+        abstract: "This is a valid abstract",
+      });
+
+      const stats = await memoryService.getMemoryStatistics();
+
+      expect(stats.memories_without_abstract).toHaveLength(3);
+      expect(stats.memories_without_abstract.map(m => m.id)).toContain(memoryWithoutAbstract.id);
+      expect(stats.memories_without_abstract.map(m => m.id)).toContain(memoryWithEmptyAbstract.id);
+      expect(stats.memories_without_abstract.map(m => m.id)).toContain(memoryWithWhitespaceAbstract.id);
+      expect(stats.memories_without_abstract.map(m => m.id)).not.toContain(memoryWithValidAbstract.id);
+      expect(stats.recommendations).toContain("Add abstracts to 3 memories to improve searchability and summaries.");
     });
 
     it("should detect link mismatches between YAML and markdown", async () => {

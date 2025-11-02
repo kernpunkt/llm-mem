@@ -214,6 +214,10 @@ export class MemoryService {
       id: string;
       title: string;
     }>;
+    memories_without_abstract: Array<{
+      id: string;
+      title: string;
+    }>;
     categories: Record<string, number>;
     tags: Record<string, number>;
     average_tags_per_memory: number;
@@ -253,6 +257,7 @@ export class MemoryService {
         link_mismatches: [],
         invalid_links: [],
         memories_without_sources: [],
+        memories_without_abstract: [],
         categories: {},
         tags: {},
         average_tags_per_memory: 0,
@@ -378,6 +383,14 @@ export class MemoryService {
         title: memory.title
       }));
 
+    // Find memories without abstract
+    const memoriesWithoutAbstract = allMemories
+      .filter(memory => !memory.abstract || memory.abstract.trim().length === 0)
+      .map(memory => ({
+        id: memory.id,
+        title: memory.title
+      }));
+
     // Calculate category distribution
     const categories: Record<string, number> = {};
     for (const memory of allMemories) {
@@ -447,6 +460,9 @@ export class MemoryService {
     if (memoriesWithoutSources.length > 0) {
       recommendations.push(`Add sources to ${memoriesWithoutSources.length} memories to improve traceability.`);
     }
+    if (memoriesWithoutAbstract.length > 0) {
+      recommendations.push(`Add abstracts to ${memoriesWithoutAbstract.length} memories to improve searchability and summaries.`);
+    }
     if (memoriesNeedingVerification.length > 0) {
       recommendations.push(`Review ${memoriesNeedingVerification.length} memories that haven't been verified recently.`);
     }
@@ -469,6 +485,7 @@ export class MemoryService {
       link_mismatches: linkMismatches,
       invalid_links: invalidLinks,
       memories_without_sources: memoriesWithoutSources,
+      memories_without_abstract: memoriesWithoutAbstract,
       categories,
       tags,
       average_tags_per_memory: Math.round(averageTagsPerMemory * 100) / 100,

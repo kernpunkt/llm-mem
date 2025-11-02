@@ -139,22 +139,22 @@ ${stats.orphaned_memories.length > 0 ? `\n📋 **Orphaned Memories (No Links):**
 ${stats.orphaned_memories.map(m => `  - ${m.title} (ID: ${m.id})`).join('\n')}` : ''}
 
 ${stats.memories_with_few_links.length > 0 ? `\n📋 **Memories with Few Links (< ${stats.average_links_per_memory}):**
-${stats.memories_with_few_links.map(m => `  - ${m.title} (${m.link_count} links)`).join('\n')}` : ''}
+${stats.memories_with_few_links.map(m => `  - ${m.title} (ID: ${m.id}, ${m.link_count} links)`).join('\n')}` : ''}
 
 ${stats.broken_links.length > 0 ? `\n📋 **Broken Links:**
-${stats.broken_links.map(m => `  - ${m.title} → broken link ID: ${m.broken_link_id}`).join('\n')}` : ''}
+${stats.broken_links.map(m => `  - ${m.title} (ID: ${m.id}) → broken link ID: ${m.broken_link_id}`).join('\n')}` : ''}
 
 ${stats.unidirectional_links.length > 0 ? `\n📋 **Unidirectional Links:**
-${stats.unidirectional_links.map(m => `  - ${m.title} → unidirectional link to: ${m.unidirectional_link_id}`).join('\n')}` : ''}
+${stats.unidirectional_links.map(m => `  - ${m.title} (ID: ${m.id}) → unidirectional link to: ${m.unidirectional_link_id}`).join('\n')}` : ''}
 
 ${stats.link_mismatches.length > 0 ? `\n📋 **Link Mismatches (YAML vs Markdown):**
-${stats.link_mismatches.map(m => `  - ${m.title}:
+${stats.link_mismatches.map(m => `  - ${m.title} (ID: ${m.id}):
     YAML links: ${m.yaml_link_count}, Markdown links: ${m.markdown_link_count}
     Missing in markdown: ${m.missing_in_markdown.length > 0 ? m.missing_in_markdown.join(', ') : 'none'}
     Missing in YAML: ${m.missing_in_yaml.length > 0 ? m.missing_in_yaml.join(', ') : 'none'}`).join('\n')}` : ''}
 
 ${stats.invalid_links.length > 0 ? `\n📋 **Invalid Links:**
-${stats.invalid_links.map(m => `  - ${m.title}:
+${stats.invalid_links.map(m => `  - ${m.title} (ID: ${m.id}):
 ${m.invalid_links.map(il => `    • ${il.link} (${il.type}): ${il.details}`).join('\n')}`).join('\n')}` : ''}
 
 📁 **Category Distribution**
@@ -167,17 +167,21 @@ ${Object.entries(stats.tags).map(([tag, count]) => `  - ${tag}: ${count} uses`).
 - Shortest Memories (10%): ${stats.shortest_memories.length}
 - Longest Memories (10%): ${stats.longest_memories.length}
 ${stats.memories_with_few_tags.length > 0 ? `\n📋 **Memories with Few Tags (< ${stats.average_tags_per_memory}):**
-${stats.memories_with_few_tags.map(m => `  - ${m.title} (${m.tag_count} tags)`).join('\n')}` : ''}
+${stats.memories_with_few_tags.map(m => `  - ${m.title} (ID: ${m.id}, ${m.tag_count} tags)`).join('\n')}` : ''}
 
 ⚠️ **Memories Needing Attention**
 - Without Sources: ${stats.memories_without_sources.length}
+- Without Abstract: ${stats.memories_without_abstract.length}
 - Needing Verification: ${stats.memories_needing_verification.length}
 
 ${stats.memories_without_sources.length > 0 ? `\n📋 **Memories Without Sources:**
 ${stats.memories_without_sources.map(m => `  - ${m.title} (ID: ${m.id})`).join('\n')}` : ''}
 
+${stats.memories_without_abstract.length > 0 ? `\n📋 **Memories Without Abstract:**
+${stats.memories_without_abstract.map(m => `  - ${m.title} (ID: ${m.id})`).join('\n')}` : ''}
+
 ${stats.memories_needing_verification.length > 0 ? `\n📋 **Memories Needing Verification:**
-${stats.memories_needing_verification.map(m => `  - ${m.title} (${m.days_since_verification} days since last review)`).join('\n')}` : ''}
+${stats.memories_needing_verification.map(m => `  - ${m.title} (ID: ${m.id}, ${m.days_since_verification} days since last review)`).join('\n')}` : ''}
 
 💡 **Recommendations**
 ${stats.recommendations.join('\n')}`;
