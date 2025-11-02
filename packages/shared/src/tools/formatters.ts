@@ -161,8 +161,8 @@ ${Object.entries(stats.categories).map(([cat, count]) => `  - ${cat}: ${count}`)
 ${Object.entries(stats.tags).map(([tag, count]) => `  - ${tag}: ${count} uses`).join('\n')}
 
 📝 **Content Analysis**
-- Shortest Memories (bottom 10%): ${stats.shortest_memories.length}
-- Longest Memories (top 10%): ${stats.longest_memories.length}
+- Shortest Memories (10%): ${stats.shortest_memories.length}
+- Longest Memories (10%): ${stats.longest_memories.length}
 ${stats.memories_with_few_tags.length > 0 ? `\n📋 **Memories with Few Tags (< ${stats.average_tags_per_memory}):**
 ${stats.memories_with_few_tags.map(m => `  - ${m.title} (${m.tag_count} tags)`).join('\n')}` : ''}
 
