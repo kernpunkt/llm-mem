@@ -190,7 +190,7 @@ export async function runCLI(): Promise<void> {
     
     // Create memory service
     const memoryService = new MemoryService({
-      notestorePath: config.memoryStorePath,
+      noteStorePath: config.memoryStorePath,
       indexPath: config.indexPath,
     });
     
