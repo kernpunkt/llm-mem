@@ -32,12 +32,14 @@ export class MemoryService {
     tags?: string[];
     category?: string;
     sources?: string[];
+    abstract?: string;
   }): Promise<Memory> {
     await this.initialize();
     const id = uuidv4();
     const category = params.category || "general";
     const tags = params.tags || [];
     const sources = params.sources || [];
+    const abstract = params.abstract;
 
     const { filePath } = await this.fileService.writeMemoryFile({
       id,
@@ -46,6 +48,7 @@ export class MemoryService {
       tags,
       category,
       sources,
+      abstract,
     });
 
     // Parse frontmatter back to construct Memory object
@@ -65,6 +68,7 @@ export class MemoryService {
       last_reviewed: parsed.last_reviewed,
       links: parsed.links,
       sources: parsed.sources,
+      abstract: parsed.abstract,
       file_path: filePath,
     };
 
@@ -79,6 +83,7 @@ export class MemoryService {
       last_reviewed: memory.last_reviewed,
       links: memory.links,
       sources: memory.sources,
+      abstract: memory.abstract,
     });
 
     return memory;
@@ -103,6 +108,7 @@ export class MemoryService {
       last_reviewed: parsed.last_reviewed,
       links: parsed.links,
       sources: parsed.sources,
+      abstract: parsed.abstract,
       file_path: parsed.file_path,
     };
   }
@@ -489,6 +495,7 @@ export class MemoryService {
     if (updates.tags !== undefined) frontmatterUpdates.tags = updates.tags;
     if (updates.category !== undefined) frontmatterUpdates.category = updates.category;
     if (updates.sources !== undefined) frontmatterUpdates.sources = updates.sources;
+    if (updates.abstract !== undefined) frontmatterUpdates.abstract = updates.abstract;
     frontmatterUpdates.updated_at = new Date().toISOString();
 
     // Update the file with potential renaming and wiki-style link updates
@@ -522,6 +529,7 @@ export class MemoryService {
       last_reviewed: updated.last_reviewed,
       links: updated.links,
       sources: updated.sources,
+      abstract: updated.abstract,
     });
 
     return updated;
@@ -539,6 +547,7 @@ export class MemoryService {
       last_reviewed: string;
       links: string[];
       sources: string[];
+      abstract?: string;
       score: number;
       snippet: string;
     }>;

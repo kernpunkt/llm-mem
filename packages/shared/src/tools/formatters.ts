@@ -31,6 +31,7 @@ export function formatMemory(memory: Memory, format: "markdown" | "plain" | "jso
     last_reviewed: memory.last_reviewed,
     links: memory.links,
     sources: memory.sources,
+    abstract: memory.abstract,
   };
   return serializeFrontmatter(frontmatter as any, memory.content);
 }
@@ -47,6 +48,7 @@ export function formatSearchResults(result: {
     tags: string[];
     score: number;
     snippet: string;
+    abstract?: string;
   }>;
 }): string {
   if (result.total === 0) {
@@ -56,7 +58,8 @@ export function formatSearchResults(result: {
   const formattedResults = result.results.map((item, index) => {
     const tagsStr = item.tags.length > 0 ? ` [${item.tags.join(", ")}]` : "";
     const categoryStr = item.category !== "general" ? ` (${item.category})` : "";
-    return `${index + 1}. **${item.title}**${categoryStr}${tagsStr}\n   Score: ${item.score.toFixed(2)}\n   ${item.snippet}\n   ID: ${item.id}\n`;
+    const abstractStr = item.abstract ? `\n   Abstract: ${item.abstract}` : "";
+    return `${index + 1}. **${item.title}**${categoryStr}${tagsStr}${abstractStr}\n   Score: ${item.score.toFixed(2)}\n   ${item.snippet}\n   ID: ${item.id}\n`;
   }).join("\n");
 
   return `Found ${result.total} memory(ies):\n\n${formattedResults}`;

@@ -144,6 +144,45 @@ sources: "single-source"
       expect(result.frontmatter.links).toEqual([]);
       expect(result.frontmatter.sources).toEqual([]);
     });
+
+    it("should parse frontmatter with abstract field", () => {
+      const markdownWithAbstract = `---
+id: 550e8400-e29b-41d4-a716-446655440000
+title: Test Memory
+category: test
+abstract: This is a short summary of the memory content
+tags: []
+links: []
+sources: []
+---
+
+# Test Content`;
+
+      const result = parseFrontmatter(markdownWithAbstract);
+      
+      expect(result.frontmatter.abstract).toBe("This is a short summary of the memory content");
+      expect(result.frontmatter.id).toBe("550e8400-e29b-41d4-a716-446655440000");
+      expect(result.frontmatter.title).toBe("Test Memory");
+    });
+
+    it("should handle frontmatter without abstract field (backward compatibility)", () => {
+      const markdownWithoutAbstract = `---
+id: 550e8400-e29b-41d4-a716-446655440000
+title: Test Memory
+category: test
+tags: []
+links: []
+sources: []
+---
+
+# Test Content`;
+
+      const result = parseFrontmatter(markdownWithoutAbstract);
+      
+      expect(result.frontmatter.abstract).toBeUndefined();
+      expect(result.frontmatter.id).toBe("550e8400-e29b-41d4-a716-446655440000");
+      expect(result.frontmatter.title).toBe("Test Memory");
+    });
   });
 
   describe("serializeFrontmatter", () => {
@@ -184,6 +223,28 @@ sources: "single-source"
       expect(result.endsWith("\n\n")).toBe(true);
     });
 
+    it("should serialize frontmatter with abstract field", () => {
+      const frontmatterWithAbstract = {
+        ...sampleFrontmatter,
+        abstract: "Short summary of the meeting discussion"
+      };
+      
+      const result = serializeFrontmatter(frontmatterWithAbstract, sampleContent);
+      
+      expect(result).toContain("abstract: Short summary of the meeting discussion");
+      expect(result).toContain("id: 550e8400-e29b-41d4-a716-446655440000");
+      expect(result).toContain("title: Meeting with John about Q4 goals");
+    });
+
+    it("should serialize frontmatter without abstract field", () => {
+      const result = serializeFrontmatter(sampleFrontmatter, sampleContent);
+      
+      // Abstract should not appear in serialized output if not present
+      const hasAbstract = result.match(/^abstract:/m);
+      expect(hasAbstract).toBeNull();
+      expect(result).toContain("id: 550e8400-e29b-41d4-a716-446655440000");
+    });
+
     it("should handle content with special characters", () => {
       const specialContent = `# Test Content
 
@@ -221,6 +282,22 @@ With special characters: $2M, 100%, & symbols
       
       // Should always update updated_at timestamp
       expect(parsed.frontmatter.updated_at).not.toBe("2024-01-15T10:30:00Z");
+      
+      // Content should remain unchanged
+      expect(parsed.content).toBe(sampleContent);
+    });
+
+    it("should update abstract field in frontmatter", () => {
+      const updates = {
+        abstract: "Updated abstract summary"
+      };
+      
+      const result = updateFrontmatter(sampleMarkdown, updates);
+      const parsed = parseFrontmatter(result);
+      
+      expect(parsed.frontmatter.abstract).toBe("Updated abstract summary");
+      // Original fields should remain unchanged
+      expect(parsed.frontmatter.title).toBe("Meeting with John about Q4 goals");
       
       // Content should remain unchanged
       expect(parsed.content).toBe(sampleContent);
@@ -357,6 +434,30 @@ With special characters: $2M, 100%, & symbols
       );
       
       expect(result.tags).toEqual(tags);
+    });
+
+    it("should create frontmatter with abstract field", () => {
+      const frontmatter = createFrontmatter(
+        "550e8400-e29b-41d4-a716-446655440000",
+        "Test Memory",
+        "test",
+        [],
+        "Short abstract of the memory"
+      );
+      
+      expect(frontmatter.id).toBe("550e8400-e29b-41d4-a716-446655440000");
+      expect(frontmatter.title).toBe("Test Memory");
+      expect(frontmatter.abstract).toBe("Short abstract of the memory");
+    });
+
+    it("should create frontmatter without abstract field", () => {
+      const frontmatter = createFrontmatter(
+        "550e8400-e29b-41d4-a716-446655440000",
+        "Test Memory",
+        "test"
+      );
+      
+      expect(frontmatter.abstract).toBeUndefined();
     });
 
     it("should create valid frontmatter that passes validation", () => {

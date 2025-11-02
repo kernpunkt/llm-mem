@@ -121,9 +121,10 @@ export function createServer(): McpServer {
       content: z.string().min(1).describe("Content in markdown format"),
       tags: z.array(z.string()).optional().describe("Tags for categorization"),
       category: z.string().optional().describe("Category for organization"),
-      sources: z.array(z.string()).optional().describe("References/sources for the memory")
+      sources: z.array(z.string()).optional().describe("References/sources for the memory"),
+      abstract: z.string().optional().describe("Short abstract/summary of the memory content (recommended: 1-2 sentences)")
     },
-    async ({ title, content, tags = [], category = "general", sources = [] }) => {
+    async ({ title, content, tags = [], category = "general", sources = [], abstract }) => {
       try {
         // Note: Validation is now handled within the shared tool functions
         // For write_mem, we validate manually since it's not yet extracted
@@ -133,7 +134,7 @@ export function createServer(): McpServer {
         
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
-        const mem = await memoryService.createMemory({ title, content, tags, category, sources });
+        const mem = await memoryService.createMemory({ title, content, tags, category, sources, abstract });
         return {
           content: [{ type: "text", text: `id: ${mem.id}\nfile: ${mem.file_path}\ncreated_at: ${mem.created_at}` }],
           isError: false
@@ -197,16 +198,17 @@ export function createServer(): McpServer {
   // Phase 3 Memory Tools
   server.tool(
     "edit_mem",
-    "Updates an existing memory's content, title, tags, category, or sources",
+    "Updates an existing memory's content, title, tags, category, sources, or abstract",
     {
       id: z.string().uuid().describe("Memory ID to edit"),
       title: z.string().optional().describe("New title"),
       content: z.string().optional().describe("New content in markdown format"),
       tags: z.array(z.string()).optional().describe("New tags for categorization"),
       category: z.string().optional().describe("New category for organization"),
-      sources: z.array(z.string()).optional().describe("Updated references/sources for the memory")
+      sources: z.array(z.string()).optional().describe("Updated references/sources for the memory"),
+      abstract: z.string().optional().describe("Updated short abstract/summary of the memory content (recommended: 1-2 sentences)")
     },
-    async ({ id, title, content, tags, category, sources }) => {
+    async ({ id, title, content, tags, category, sources, abstract }) => {
       try {
         // Note: Validation is now handled within the shared tool functions
         // For edit_mem, we validate manually since it's not yet extracted
@@ -223,6 +225,7 @@ export function createServer(): McpServer {
         if (tags !== undefined) updates.tags = tags;
         if (category !== undefined) updates.category = category;
         if (sources !== undefined) updates.sources = sources;
+        if (abstract !== undefined) updates.abstract = abstract;
 
         const updated = await memoryService.updateMemory(updates);
         
@@ -1039,6 +1042,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 const tags = toolArgs.tags as string[] || [];
                 const category = toolArgs.category as string || 'general';
                 const sources = toolArgs.sources as string[] || [];
+                const abstract = toolArgs.abstract as string;
                 
                 if (!title || !content) {
                   throw new Error('Missing required parameters: title and content');
@@ -1047,7 +1051,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
                 const { MemoryService } = await import('@llm-mem/shared');
                 const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
-                const mem = await memoryService.createMemory({ title, content, tags, category, sources });
+                const mem = await memoryService.createMemory({ title, content, tags, category, sources, abstract });
                 
                 toolResult = {
                   content: [{ type: 'text', text: `id: ${mem.id}\nfile: ${mem.file_path}\ncreated_at: ${mem.created_at}` }],
@@ -1125,6 +1129,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 const tags = toolArgs.tags as string[] || [];
                 const category = toolArgs.category as string || 'general';
                 const sources = toolArgs.sources as string[] || [];
+                const abstract = toolArgs.abstract as string;
 
                 if (!id) {
                   throw new Error('Missing required parameter: id');
@@ -1133,7 +1138,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
                 const { MemoryService } = await import('@llm-mem/shared');
                 const memoryService = new MemoryService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
-                const updated = await memoryService.updateMemory({ id, title, content, tags, category, sources });
+                const updated = await memoryService.updateMemory({ id, title, content, tags, category, sources, abstract });
 
                 toolResult = {
                   content: [{ 
@@ -1169,7 +1174,8 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   const formattedResults = results.results.map((result, index) => {
                     const tagsStr = result.tags.length > 0 ? ` [${result.tags.join(", ")}]` : "";
                     const categoryStr = result.category !== "general" ? ` (${result.category})` : "";
-                    return `${index + 1}. **${result.title}**${categoryStr}${tagsStr}\n   Score: ${result.score.toFixed(2)}\n   ${result.snippet}\n   ID: ${result.id}\n`;
+                    const abstractStr = result.abstract ? `\n   Abstract: ${result.abstract}` : "";
+                    return `${index + 1}. **${result.title}**${categoryStr}${tagsStr}${abstractStr}\n   Score: ${result.score.toFixed(2)}\n   ${result.snippet}\n   ID: ${result.id}\n`;
                   }).join("\n");
                   toolResult = {
                     content: [{ 

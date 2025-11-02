@@ -16,6 +16,7 @@ export interface Memory {
   file_path: string;
   links: string[];
   sources: string[];
+  abstract?: string;
 }
 
 export const MemoryCreateRequestSchema = z.object({
@@ -24,6 +25,7 @@ export const MemoryCreateRequestSchema = z.object({
   tags: z.array(z.string()).optional().default([]).describe("Tags for categorization"),
   category: z.string().optional().default("general").describe("Category for organization"),
   sources: z.array(z.string()).optional().default([]).describe("References/sources for the memory"),
+  abstract: z.string().optional().describe("Short abstract/summary of the memory content"),
 });
 
 export type MemoryCreateRequest = z.infer<typeof MemoryCreateRequestSchema>;
@@ -35,6 +37,7 @@ export const MemoryUpdateRequestSchema = z.object({
   tags: z.array(z.string()).optional(),
   category: z.string().optional(),
   sources: z.array(z.string()).optional(),
+  abstract: z.string().optional().describe("Updated abstract/summary of the memory content"),
 });
 
 export type MemoryUpdateRequest = z.infer<typeof MemoryUpdateRequestSchema>;
