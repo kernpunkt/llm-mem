@@ -138,6 +138,7 @@ export interface GetMemStatsResult {
     }>;
   }>;
   memories_without_sources: Array<{ id: string; title: string }>;
+  memories_without_abstract: Array<{ id: string; title: string }>;
   categories: Record<string, number>;
   tags: Record<string, number>;
   average_tags_per_memory: number;
