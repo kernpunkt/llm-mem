@@ -56,7 +56,8 @@ describe("FlexSearch Integration", () => {
         updated_at: "2024-01-17T09:15:00Z",
         last_reviewed: "2024-01-17T09:15:00Z",
         links: [],
-        sources: []
+        sources: [],
+        abstract: "Team retrospective meeting discussing communication improvements"
       }
     ];
   });
@@ -129,6 +130,34 @@ describe("FlexSearch Integration", () => {
       expect(results.length).toBeGreaterThan(0);
     }, 10000);
 
+    it("should index memory with abstract field", async () => {
+      const memoryWithAbstract: MemoryIndexDocument = {
+        ...testMemories[0],
+        abstract: "Short summary of Q4 goals meeting discussion"
+      };
+      
+      await flexSearchManager.indexMemory(memoryWithAbstract);
+      
+      // Verify the memory can be retrieved
+      const results = await flexSearchManager.searchMemories("goals");
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].abstract).toBe("Short summary of Q4 goals meeting discussion");
+    }, 10000);
+
+    it("should index memory without abstract field (backward compatibility)", async () => {
+      const memoryWithoutAbstract: MemoryIndexDocument = {
+        ...testMemories[0],
+        abstract: undefined
+      };
+      
+      await flexSearchManager.indexMemory(memoryWithoutAbstract);
+      
+      // Verify the memory can be retrieved
+      const results = await flexSearchManager.searchMemories("goals");
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].abstract).toBeUndefined();
+    }, 10000);
+
     it("should update existing memory when re-indexing", async () => {
       const memory = testMemories[0];
       await flexSearchManager.indexMemory(memory);
@@ -192,6 +221,45 @@ describe("FlexSearch Integration", () => {
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].title).toContain("goals");
       expect(results[0].score).toBeGreaterThan(0);
+    }, 10000);
+
+    it("should search by abstract field successfully", async () => {
+      const memoryWithAbstract: MemoryIndexDocument = {
+        ...testMemories[0],
+        abstract: "Summary about quarterly goals and revenue targets"
+      };
+      await flexSearchManager.indexMemory(memoryWithAbstract);
+      
+      const results = await flexSearchManager.searchMemories("quarterly goals");
+      
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].abstract).toBe("Summary about quarterly goals and revenue targets");
+      expect(results[0].score).toBeGreaterThan(0);
+    }, 10000);
+
+    it("should retrieve abstract in search results", async () => {
+      const memoryWithAbstract: MemoryIndexDocument = {
+        id: "test-abstract-001",
+        title: "Test Memory with Abstract",
+        content: "Full content here",
+        tags: ["test"],
+        category: "test",
+        created_at: "2024-01-15T10:00:00Z",
+        updated_at: "2024-01-15T10:00:00Z",
+        last_reviewed: "2024-01-15T10:00:00Z",
+        links: [],
+        sources: [],
+        abstract: "This is a test abstract for verification"
+      };
+      
+      await flexSearchManager.indexMemory(memoryWithAbstract);
+      
+      const results = await flexSearchManager.searchMemories("test memory");
+      
+      expect(results.length).toBeGreaterThan(0);
+      const found = results.find(r => r.id === "test-abstract-001");
+      expect(found).toBeDefined();
+      expect(found!.abstract).toBe("This is a test abstract for verification");
     }, 10000);
 
     it("should search by content successfully", async () => {

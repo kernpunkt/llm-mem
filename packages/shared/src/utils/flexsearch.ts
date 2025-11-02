@@ -20,6 +20,7 @@ export interface MemoryIndexDocument {
   last_reviewed: string;
   links: string[];
   sources: string[];
+  abstract?: string;
   [key: string]: any; // Add index signature for FlexSearch compatibility
 }
 
@@ -34,6 +35,7 @@ export interface SearchResult {
   last_reviewed: string;
   links: string[];
   sources: string[];
+  abstract?: string;
   score: number;
   snippet: string;
 }
@@ -68,7 +70,8 @@ export class FlexSearchManager {
         "content", 
         "tags",
         "tags_index",
-        "category"
+        "category",
+        "abstract"
       ],
       store: [
         "id",
@@ -80,7 +83,8 @@ export class FlexSearchManager {
         "updated_at",
         "last_reviewed",
         "links",
-        "sources"
+        "sources",
+        "abstract"
       ],
       // Apply configuration from environment variables
       ...createIndexConfig(this.config),

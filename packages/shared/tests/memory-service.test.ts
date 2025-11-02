@@ -145,6 +145,41 @@ describe("MemoryService", () => {
     expect(emptyArrays.sources).toEqual([]);
   }, 10000);
 
+  it("should create a memory with abstract field", async () => {
+    const memory = await service.createMemory({
+      title: "Memory with Abstract",
+      content: "# Content\n\nFull content here",
+      abstract: "Short summary of the memory",
+      tags: ["test"],
+      category: "test"
+    });
+
+    expect(memory.abstract).toBe("Short summary of the memory");
+    expect(memory.title).toBe("Memory with Abstract");
+
+    // Verify abstract is stored in file
+    const md = await fs.readFile(memory.file_path, "utf-8");
+    const parsed = parseFrontmatter(md);
+    expect(parsed.frontmatter.abstract).toBe("Short summary of the memory");
+  }, 10000);
+
+  it("should create a memory without abstract field (backward compatibility)", async () => {
+    const memory = await service.createMemory({
+      title: "Memory without Abstract",
+      content: "# Content\n\nFull content here",
+      tags: ["test"],
+      category: "test"
+    });
+
+    expect(memory.abstract).toBeUndefined();
+    expect(memory.title).toBe("Memory without Abstract");
+
+    // Verify abstract is not in file
+    const md = await fs.readFile(memory.file_path, "utf-8");
+    const parsed = parseFrontmatter(md);
+    expect(parsed.frontmatter.abstract).toBeUndefined();
+  }, 10000);
+
   it("should handle various retrieval scenarios for read_mem", async () => {
     // Create test memories
     const memory1 = await service.createMemory({
@@ -221,6 +256,51 @@ End of content`;
     expect(markdownMemory.content).toContain("```javascript");
     expect(markdownMemory.content).toContain("**Bold text**");
     expect(markdownMemory.content).toContain("> Blockquote");
+  }, 10000);
+
+  it("should update memory abstract field", async () => {
+    const memory = await service.createMemory({
+      title: "Memory for Abstract Update",
+      content: "# Content\n\nFull content here",
+      abstract: "Original abstract",
+      tags: ["test"],
+      category: "test"
+    });
+
+    expect(memory.abstract).toBe("Original abstract");
+
+    // Update abstract
+    const updated = await service.updateMemory({
+      id: memory.id,
+      abstract: "Updated abstract summary"
+    });
+
+    expect(updated.abstract).toBe("Updated abstract summary");
+    expect(updated.title).toBe("Memory for Abstract Update"); // Title should remain unchanged
+
+    // Verify abstract is updated in file
+    const md = await fs.readFile(updated.file_path, "utf-8");
+    const parsed = parseFrontmatter(md);
+    expect(parsed.frontmatter.abstract).toBe("Updated abstract summary");
+  }, 10000);
+
+  it("should update memory abstract when memory initially has no abstract", async () => {
+    const memory = await service.createMemory({
+      title: "Memory without Abstract",
+      content: "# Content\n\nFull content here",
+      tags: ["test"],
+      category: "test"
+    });
+
+    expect(memory.abstract).toBeUndefined();
+
+    // Add abstract via update
+    const updated = await service.updateMemory({
+      id: memory.id,
+      abstract: "Newly added abstract"
+    });
+
+    expect(updated.abstract).toBe("Newly added abstract");
   }, 10000);
 
   it("should update memory content without renaming when only content changes", async () => {

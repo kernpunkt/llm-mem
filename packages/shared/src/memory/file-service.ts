@@ -25,11 +25,12 @@ export class FileService {
     tags: string[];
     category: string;
     sources?: string[];
+    abstract?: string;
   }): Promise<{ filePath: string; markdown: string }> {
-    const { id, title, content, tags, category, sources = [] } = params;
+    const { id, title, content, tags, category, sources = [], abstract } = params;
     await this.initialize();
 
-    const frontmatter = createFrontmatter(id, title, category, tags);
+    const frontmatter = createFrontmatter(id, title, category, tags, abstract);
     // include sources if provided
     const fmWithSources = { ...frontmatter, sources };
     const markdown = serializeFrontmatter(fmWithSources, content);
@@ -49,6 +50,7 @@ export class FileService {
     last_reviewed: string;
     links: string[];
     sources: string[];
+    abstract?: string;
     file_path: string;
   } | null> {
     const files = await listMemoryFiles(this.notestorePath);
@@ -70,6 +72,7 @@ export class FileService {
     last_reviewed: string;
     links: string[];
     sources: string[];
+    abstract?: string;
     file_path: string;
   } | null> {
     const targetSlug = slugify(title);
@@ -98,6 +101,7 @@ export class FileService {
       sources: string[];
       last_reviewed: string;
       links: string[];
+      abstract?: string;
     }>,
     memoryId: string,
     newContent?: string
@@ -201,6 +205,7 @@ export class FileService {
     sources: string[];
     last_reviewed: string;
     links: string[];
+    abstract?: string;
   }>, newContent?: string): Promise<string> {
     const existing = await fs.readFile(filePath, "utf-8");
     const updatedMarkdown = updateFrontmatter(existing, updates as any);

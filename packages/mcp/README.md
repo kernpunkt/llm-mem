@@ -25,10 +25,10 @@ The `@llm-mem/mcp` server transforms how AI assistants work with long-term memor
 ## 🛠️ Available Tools
 
 ### Core Memory Operations
-- **`write_mem`** - Create new memories with metadata and content
+- **`write_mem`** - Create new memories with metadata, content, and optional abstract
 - **`read_mem`** - Retrieve memories by ID or title
-- **`edit_mem`** - Update existing memory content and metadata
-- **`search_mem`** - Full-text search with filters and relevance scoring
+- **`edit_mem`** - Update existing memory content, metadata, and abstract
+- **`search_mem`** - Full-text search with filters and relevance scoring (searches title, content, and abstract)
 - **`list_mems`** - Browse memories with filtering and pagination
 
 ### Advanced Features
@@ -195,8 +195,9 @@ title: "Memory Title"
 category: "DOC"
 tags: ["tag1", "tag2"]
 sources: ["source1", "source2"]
-created: "2024-01-15T10:00:00Z"
-last_modified: "2024-01-15T10:00:00Z"
+abstract: "Short summary of the memory content (optional)"
+created_at: "2024-01-15T10:00:00Z"
+updated_at: "2024-01-15T10:00:00Z"
 last_reviewed: "2024-01-15T10:00:00Z"
 ---
 
@@ -209,6 +210,21 @@ Can include:
 - Code blocks
 - Lists
 - And more...
+```
+
+### Abstract Field
+
+The `abstract` field is an optional short summary of the memory content, typically 1-2 sentences (150-200 characters recommended). When provided:
+
+- **Searchable**: The abstract is indexed and searchable alongside title and content
+- **Visible in Results**: Abstract appears in search results for quick context
+- **LLM-Generated**: The calling LLM should generate the abstract when creating or editing memories
+
+Example:
+```markdown
+---
+abstract: "Discussed Q4 revenue targets, product launch timeline, and team expansion plans."
+---
 ```
 
 ## 🔍 Search Capabilities

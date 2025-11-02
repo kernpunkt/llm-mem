@@ -15,6 +15,7 @@ export interface MemoryFrontmatter {
   last_reviewed: string;
   links: string[];
   sources: string[];
+  abstract?: string;
 }
 
 /**
@@ -68,7 +69,8 @@ export function parseFrontmatter(content: string): {
         updated_at: frontmatter.updated_at ? new Date(frontmatter.updated_at).toISOString() : new Date().toISOString(),
         last_reviewed: frontmatter.last_reviewed ? new Date(frontmatter.last_reviewed).toISOString() : new Date().toISOString(),
         links: Array.isArray(frontmatter.links) ? frontmatter.links : [],
-        sources: Array.isArray(frontmatter.sources) ? frontmatter.sources : []
+        sources: Array.isArray(frontmatter.sources) ? frontmatter.sources : [],
+        abstract: frontmatter.abstract ? String(frontmatter.abstract) : undefined
       },
       content: markdownContent.trim()
     };
@@ -207,13 +209,15 @@ export function validateFrontmatter(frontmatter: any): frontmatter is MemoryFron
  * @param title - Memory title
  * @param category - Memory category
  * @param tags - Memory tags (optional)
+ * @param abstract - Short abstract/summary (optional)
  * @returns New frontmatter object
  */
 export function createFrontmatter(
   id: string,
   title: string,
   category: string,
-  tags: string[] = []
+  tags: string[] = [],
+  abstract?: string
 ): MemoryFrontmatter {
   const now = new Date().toISOString();
   
@@ -226,6 +230,7 @@ export function createFrontmatter(
     updated_at: now,
     last_reviewed: now,
     links: [],
-    sources: []
+    sources: [],
+    abstract
   };
 } 
