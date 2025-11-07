@@ -99,11 +99,26 @@ describe("Validation Functions", () => {
             });
         });
 
-        it("should reject invalid categories", () => {
+        it("should accept custom categories", () => {
+            const customCategories = [
+                { categories: ["CUSTOM"] },
+                { categories: ["DOC", "CUSTOM", "ANOTHER"] },
+                { categories: ["MY_CATEGORY"] },
+            ];
+
+            customCategories.forEach(options => {
+                const result = CoverageOptionsSchema.safeParse(options);
+                expect(result.success).toBe(true);
+            });
+        });
+
+        it("should reject invalid category values", () => {
             const invalidCategories = [
-                { categories: ["INVALID"] },
-                { categories: ["DOC", "INVALID"] },
                 { categories: [123] },
+                { categories: [""] },
+                { categories: ["VALID", ""] },
+                { categories: [null] },
+                { categories: [undefined] },
             ];
 
             invalidCategories.forEach(options => {
@@ -179,7 +194,7 @@ describe("Validation Functions", () => {
 
         it("should provide detailed error messages", () => {
             const invalidOptions: CoverageOptions = {
-                categories: ["INVALID" as any],
+                categories: ["" as any],
             };
 
             const result = validateOptionsStrict(invalidOptions);
@@ -239,6 +254,32 @@ describe("Validation Functions", () => {
 
             const result = CoverageConfigSchema.safeParse(validNestedThresholds);
             expect(result.success).toBe(true);
+        });
+
+        it("should accept custom categories in config", () => {
+            const customCategoryConfigs = [
+                { categories: ["CUSTOM"] },
+                { categories: ["DOC", "CUSTOM", "ANOTHER"] },
+                { categories: ["MY_CATEGORY", "OTHER_CATEGORY"] },
+            ];
+
+            customCategoryConfigs.forEach(config => {
+                const result = CoverageConfigSchema.safeParse(config);
+                expect(result.success).toBe(true);
+            });
+        });
+
+        it("should reject invalid category values in config", () => {
+            const invalidCategoryConfigs = [
+                { categories: [123] },
+                { categories: [""] },
+                { categories: ["VALID", ""] },
+            ];
+
+            invalidCategoryConfigs.forEach(config => {
+                const result = CoverageConfigSchema.safeParse(config);
+                expect(result.success).toBe(false);
+            });
         });
     });
 

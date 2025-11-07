@@ -71,6 +71,27 @@ describe("config-parser", () => {
     createdFiles.push(file);
     await expect(parser.parseConfig(file)).rejects.toBeTruthy();
   });
+
+  it("parses config with custom categories and validates successfully", async () => {
+    const parser = new BasicConfigParser();
+    const file = join(tmpdir(), `.coverage_${Date.now()}.json`);
+    const cfg = {
+      thresholds: { overall: 80 },
+      exclude: ["node_modules/**"],
+      include: ["src/**/*.ts"],
+      categories: ["CUSTOM_CATEGORY", "ANOTHER_CATEGORY", "DOC"]
+    };
+    await fs.writeFile(file, JSON.stringify(cfg), "utf8");
+    createdFiles.push(file);
+
+    const parsed = await parser.parseConfig(file);
+    expect(parsed.categories).toEqual(["CUSTOM_CATEGORY", "ANOTHER_CATEGORY", "DOC"]);
+    
+    // Verify the parsed config can be validated
+    const { validateCoverageConfig } = await import("../src/validation.js");
+    const validation = validateCoverageConfig(parsed);
+    expect(validation.ok).toBe(true);
+  });
 });
 
 

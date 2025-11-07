@@ -121,11 +121,12 @@ describe("Granular coverage analysis (Step 8)", () => {
     }]);
 
     const report = await svc.generateReport({ scanSourceFiles: false });
-    const fr = report.files.find(f => f.path === "tests/tmp/granular/granular_mixed.ts")!;
-    expect(fr.functionsTotal).toBe(2);
-    expect(fr.functionsCovered).toBe(2);
-    expect(fr.classesTotal).toBe(1);
-    expect(fr.classesCovered).toBe(0);
+    const fr = report.files.find(f => f.path === "tests/tmp/granular/granular_mixed.ts");
+    expect(fr).toBeDefined();
+    expect(fr?.functionsTotal).toBe(2);
+    expect(fr?.functionsCovered).toBe(2);
+    expect(fr?.classesTotal).toBe(1);
+    expect(fr?.classesCovered).toBe(0);
   });
 
   it("treats file-only source as covering all symbols (edge case)", async () => {

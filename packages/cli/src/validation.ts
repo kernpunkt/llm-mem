@@ -2,7 +2,12 @@ import path from "node:path";
 import { z } from "zod";
 import { CoverageConfig, CoverageOptions } from "./types.js";
 
-export const allowedCategories = ["DOC", "ADR", "CTX"] as const;
+/**
+ * Default categories used when no categories are specified.
+ * This is kept for documentation and default value purposes only.
+ * Custom categories are allowed via configuration files.
+ */
+export const defaultCategories = ["DOC", "ADR", "CTX"] as const;
 
 const NonEmptyString = z.string().min(1, "must be a non-empty string");
 
@@ -30,7 +35,7 @@ const GlobArray = z
 
 export const CoverageOptionsSchema = z.object({
     config: NonEmptyString.optional(),
-    categories: z.array(z.enum(allowedCategories)).optional(),
+    categories: z.array(NonEmptyString).optional(),
     threshold: z.number().min(0).max(100).optional(),
     exclude: GlobArray,
     include: GlobArray,
@@ -63,7 +68,7 @@ export const CoverageConfigSchema = z.object({
     thresholds: ThresholdsSchema,
     exclude: GlobArray,
     include: GlobArray,
-    categories: z.array(z.enum(allowedCategories)).optional(),
+    categories: z.array(NonEmptyString).optional(),
     memoryStorePath: NonEmptyString.optional(),
     indexPath: NonEmptyString.optional(),
 });
