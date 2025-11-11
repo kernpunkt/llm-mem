@@ -1534,7 +1534,7 @@ ${stats.recommendations.join('\n')}`;
                 cleanedContent = cleanedContent.replace(/\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g, '');
                 
                 // Remove all simple markdown links: [[title|display_text]] or [[title]] (except HTTP links)
-                cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g, (match, linkText) => {
+                cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|[^\]]+)?\]\]/g, (match, linkText) => {
                   // Check if this is an external HTTP link
                   if (linkText.startsWith('http://') || linkText.startsWith('https://')) {
                     return match; // Keep external links

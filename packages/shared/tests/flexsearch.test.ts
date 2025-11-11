@@ -230,6 +230,9 @@ describe("FlexSearch Integration", () => {
       };
       await flexSearchManager.indexMemory(memoryWithAbstract);
       
+      // Small delay to ensure index is fully ready for searching
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const results = await flexSearchManager.searchMemories("quarterly goals");
       
       expect(results.length).toBeGreaterThan(0);
