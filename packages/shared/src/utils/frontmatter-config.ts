@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import { z } from "zod";
 import { load } from "js-yaml";
+import { KNOWN_FRONTMATTER_FIELDS } from "./constants.js";
 
 /**
  * Template configuration schema for category-based frontmatter templates
@@ -28,18 +29,25 @@ const MemoryConfigSchema = z.object({
 export type MemoryConfig = z.infer<typeof MemoryConfigSchema>;
 
 /**
+ * Set of frontmatter fields that can be overridden by templates.
+ * These are optional or user-configurable fields that templates may modify.
+ */
+const OVERRIDABLE_FRONTMATTER_FIELDS = new Set([
+  "tags",
+  "sources",
+  "abstract",
+  // Note: 'content' and 'file_path' are not frontmatter fields, so they're excluded
+]);
+
+/**
  * List of essential frontmatter fields that cannot be overridden by templates.
  * These fields are managed by the system and must not be modified via templates.
+ * 
+ * Derived from KNOWN_FRONTMATTER_FIELDS by excluding overridable fields and non-frontmatter fields.
  */
-export const PROTECTED_FRONTMATTER_FIELDS = [
-  "id",
-  "title",
-  "category",
-  "created_at",
-  "updated_at",
-  "last_reviewed",
-  "links",
-] as const;
+export const PROTECTED_FRONTMATTER_FIELDS = Array.from(KNOWN_FRONTMATTER_FIELDS).filter(
+  (field) => !OVERRIDABLE_FRONTMATTER_FIELDS.has(field) && field !== "content" && field !== "file_path"
+) as readonly string[];
 
 /**
  * Validates that a template does not contain any protected frontmatter fields.
@@ -58,8 +66,9 @@ export function validateTemplateFields(
   template: Record<string, unknown>,
   context?: string
 ): void {
+  const protectedFieldsSet = new Set(PROTECTED_FRONTMATTER_FIELDS);
   const protectedFields = template ? Object.keys(template).filter(key =>
-    PROTECTED_FRONTMATTER_FIELDS.includes(key as any)
+    protectedFieldsSet.has(key)
   ) : [];
 
   if (protectedFields.length > 0) {
@@ -193,5 +202,33 @@ export function mergeTemplateFrontmatter<T extends Record<string, unknown>>(
     ...base,
     ...template,
   };
+}
+
+/**
+ * Merges category template and user-provided template in order of precedence.
+ * 
+ * This is a convenience function that combines category template lookup with user template merging.
+ * The merging order (later sources override earlier ones):
+ * 1. Category template (from config file) - base defaults for the category
+ * 2. User-provided template (from tool parameter) - overrides category template
+ * 
+ * @param config - Memory configuration (may be null/undefined if no config loaded)
+ * @param category - Category name to get template for
+ * @param userTemplate - Optional user-provided template to merge on top of category template
+ * @returns Merged template object with all fields combined
+ * 
+ * @example
+ * ```typescript
+ * const finalTemplate = mergeTemplates(memoryConfig, "DOC", { author: "John" });
+ * // Returns: { ...categoryTemplate, author: "John" }
+ * ```
+ */
+export function mergeTemplates(
+  config: MemoryConfig | null | undefined,
+  category: string,
+  userTemplate?: Record<string, unknown>
+): Record<string, unknown> {
+  const categoryTemplate = getCategoryTemplate(config, category);
+  return userTemplate ? { ...categoryTemplate, ...userTemplate } : categoryTemplate;
 }
 

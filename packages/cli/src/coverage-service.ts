@@ -4,6 +4,7 @@ import { parseSourceString } from "./source-parser.js";
 import { scanTypescriptOrJavascriptFile, toInitialFileCoverage } from "./code-scanner.js";
 import { promises as fs } from "node:fs";
 import { createReadStream } from "node:fs";
+import path from "node:path";
 import { validateSourceFilePathOrThrow } from "./validation.js";
 import { FileScanner } from "./file-scanner.js";
 
@@ -57,7 +58,10 @@ export class CoverageService {
 
     // Granular analysis via AST scan - ALWAYS performed
     try {
-      const scan = await scanTypescriptOrJavascriptFile(filePath);
+      // Resolve file path to absolute path for scanning
+      // This handles cases where filePath is relative (e.g., from memory sources)
+      const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
+      const scan = await scanTypescriptOrJavascriptFile(resolvedPath);
       const functions: FunctionCoverage[] = [];
       const classes: ClassCoverage[] = [];
       for (const el of scan.elements) {
@@ -286,12 +290,17 @@ export class CoverageService {
   private async populateTotals(filePaths: string[]): Promise<void> {
     for (const filePath of filePaths) {
       try {
-        const total = await countLinesStream(filePath);
+        // Resolve file path to absolute path for reading
+        // This handles cases where filePath is relative (e.g., from memory sources)
+        const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
+        const total = await countLinesStream(resolvedPath);
         this.cachedTotals.set(filePath, total);
       } catch {
         // Fallback to buffered read so tests that mock fs.readFile still work
         try {
-          const content = await fs.readFile(filePath, "utf8");
+          // Resolve file path to absolute path for reading
+          const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
+          const content = await fs.readFile(resolvedPath, "utf8");
           const total = content.split(/\r?\n/).length;
           this.cachedTotals.set(filePath, total);
         } catch {

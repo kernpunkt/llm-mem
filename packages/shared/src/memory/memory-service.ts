@@ -51,7 +51,7 @@ export class MemoryService {
     const customFields: string[] = [];
     
     for (const key in parsed) {
-      if (!KNOWN_FRONTMATTER_FIELDS.has(key)) {
+      if (!KNOWN_FRONTMATTER_FIELDS.has(key as any)) {
         const value = parsed[key];
         if (value !== null && value !== undefined) {
           // Convert value to string representation
@@ -144,7 +144,7 @@ export class MemoryService {
     // Use type-safe approach: collect custom fields first, then assign
     const customFields: Record<string, unknown> = {};
     for (const key in parsed) {
-      if (!KNOWN_FRONTMATTER_FIELDS.has(key)) {
+      if (!KNOWN_FRONTMATTER_FIELDS.has(key as any)) {
         customFields[key] = parsed[key];
       }
     }
@@ -183,7 +183,7 @@ export class MemoryService {
     // Preserve all custom fields that aren't in the Memory interface
     const result: Memory & Record<string, unknown> = { ...memory };
     for (const key in parsed) {
-      if (!KNOWN_FRONTMATTER_FIELDS.has(key)) {
+      if (!KNOWN_FRONTMATTER_FIELDS.has(key as any)) {
         result[key] = parsed[key];
       }
     }
@@ -645,7 +645,7 @@ export class MemoryService {
     // Use type-safe approach: collect custom fields first, then assign
     const customFields: Record<string, unknown> = {};
     for (const key in parsed) {
-      if (!KNOWN_FRONTMATTER_FIELDS.has(key)) {
+      if (!KNOWN_FRONTMATTER_FIELDS.has(key as any)) {
         customFields[key] = parsed[key];
       }
     }
@@ -812,9 +812,8 @@ export class MemoryService {
         };
         
         // Add any custom fields that might be present (MemoryIndexDocument supports [key: string]: any)
-        const knownFields = new Set(['id', 'title', 'content', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'file_path']);
         for (const key in parsedFile) {
-          if (!knownFields.has(key)) {
+          if (!KNOWN_FRONTMATTER_FIELDS.has(key as any)) {
             (indexData as any)[key] = parsedFile[key];
           }
         }

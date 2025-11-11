@@ -38,7 +38,7 @@ export function formatMemory(memory: Memory | (Memory & Record<string, unknown>)
   
   // Add all custom fields to frontmatter
   for (const key in memory) {
-    if (!KNOWN_FRONTMATTER_FIELDS.has(key)) {
+    if (!KNOWN_FRONTMATTER_FIELDS.has(key as any)) {
       frontmatter[key] = (memory as Record<string, unknown>)[key];
     }
   }
