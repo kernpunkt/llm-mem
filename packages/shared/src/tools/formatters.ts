@@ -1,6 +1,7 @@
 import { Memory } from "../memory/types.js";
 import { serializeFrontmatter } from "../utils/yaml.js";
 import type { GetMemStatsResult } from "./types.js";
+import { KNOWN_FRONTMATTER_FIELDS } from "../utils/constants.js";
 
 /**
  * Formatting utilities for memory tool operations
@@ -22,7 +23,6 @@ export function formatMemory(memory: Memory | (Memory & Record<string, unknown>)
 
   // markdown format (default) - include all fields (known + custom)
   // Extract known fields and preserve all custom fields
-  const knownFields = new Set(['id', 'title', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'content', 'file_path']);
   const frontmatter: Record<string, unknown> = {
     id: memory.id,
     title: memory.title,
@@ -38,8 +38,8 @@ export function formatMemory(memory: Memory | (Memory & Record<string, unknown>)
   
   // Add all custom fields to frontmatter
   for (const key in memory) {
-    if (!knownFields.has(key)) {
-      frontmatter[key] = (memory as any)[key];
+    if (!KNOWN_FRONTMATTER_FIELDS.has(key)) {
+      frontmatter[key] = (memory as Record<string, unknown>)[key];
     }
   }
   

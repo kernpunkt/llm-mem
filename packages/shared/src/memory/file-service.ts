@@ -131,6 +131,7 @@ export class FileService {
     if (!needsRename) {
       // No rename needed, just update content
       // Merge template with updates if template is provided
+      // Template merging order: template (base) -> updates (override)
       const updatesWithTemplate = template 
         ? { ...template, ...updates }
         : updates;
@@ -197,6 +198,7 @@ export class FileService {
     
     // Create updated content
     // Merge template with updates if template is provided
+    // Template merging order: template (base) -> updates (override)
     const updatesWithTemplate = template 
       ? { ...template, ...updates }
       : updates;

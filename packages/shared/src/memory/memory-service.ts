@@ -5,6 +5,7 @@ import { LinkService } from "./link-service.js";
 import { Memory, MemoryUpdateRequest, MemorySearchRequest, LinkRequest } from "./types.js";
 import { parseMemoryFilePath } from "../utils/file-system.js";
 import type { MemoryIndexDocument } from "../utils/flexsearch.js";
+import { KNOWN_FRONTMATTER_FIELDS } from "../utils/constants.js";
 
 export interface MemoryServiceConfig {
   notestorePath: string;
@@ -31,15 +32,26 @@ export class MemoryService {
    * Converts custom frontmatter fields to searchable text.
    * This allows template fields to be searchable through the content index.
    * 
+   * The format includes both field names and values as searchable terms:
+   * - Field names are prefixed with "field:" to allow searching for specific fields
+   * - Values are included as-is for content search
+   * 
+   * Example: For `{ author: "John Doe", status: "draft" }`, the searchable text would be:
+   * "field:author John Doe field:status draft"
+   * 
+   * This allows searching for:
+   * - "John Doe" (finds by value - primary use case)
+   * - "field:author" (finds specifically by field name prefix)
+   * - "author" (may find by field name if tokenized separately)
+   * 
    * @param parsed - Parsed memory object with all frontmatter fields
    * @returns Searchable text representation of custom fields
    */
   private createSearchableCustomFieldsText(parsed: Record<string, unknown>): string {
-    const knownFields = new Set(['id', 'title', 'content', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'file_path']);
     const customFields: string[] = [];
     
     for (const key in parsed) {
-      if (!knownFields.has(key)) {
+      if (!KNOWN_FRONTMATTER_FIELDS.has(key)) {
         const value = parsed[key];
         if (value !== null && value !== undefined) {
           // Convert value to string representation
@@ -51,9 +63,9 @@ export class MemoryService {
           } else {
             valueStr = String(value);
           }
-          // Include both key and value as separate searchable terms for better searchability
-          // This allows searching for either the key name or the value
-          customFields.push(`${key} ${valueStr}`);
+          // Include field name with prefix and value for better searchability
+          // Format: "field:keyname value" allows searching by value and field name prefix
+          customFields.push(`field:${key} ${valueStr}`);
         }
       }
     }
@@ -129,12 +141,15 @@ export class MemoryService {
     };
     
     // Add any custom fields that might be present (MemoryIndexDocument supports [key: string]: any)
-    const knownFields = new Set(['id', 'title', 'content', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'file_path']);
+    // Use type-safe approach: collect custom fields first, then assign
+    const customFields: Record<string, unknown> = {};
     for (const key in parsed) {
-      if (!knownFields.has(key)) {
-        (indexData as any)[key] = parsed[key];
+      if (!KNOWN_FRONTMATTER_FIELDS.has(key)) {
+        customFields[key] = parsed[key];
       }
     }
+    // Assign custom fields to indexData (MemoryIndexDocument supports index signature)
+    Object.assign(indexData, customFields);
     
     await this.searchService.indexMemory(indexData);
 
@@ -166,10 +181,9 @@ export class MemoryService {
     };
 
     // Preserve all custom fields that aren't in the Memory interface
-    const knownFields = new Set(['id', 'title', 'content', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'file_path']);
     const result: Memory & Record<string, unknown> = { ...memory };
     for (const key in parsed) {
-      if (!knownFields.has(key)) {
+      if (!KNOWN_FRONTMATTER_FIELDS.has(key)) {
         result[key] = parsed[key];
       }
     }
@@ -628,12 +642,15 @@ export class MemoryService {
     };
     
     // Add any custom fields that might be present (MemoryIndexDocument supports [key: string]: any)
-    const knownFields = new Set(['id', 'title', 'content', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'file_path']);
+    // Use type-safe approach: collect custom fields first, then assign
+    const customFields: Record<string, unknown> = {};
     for (const key in parsed) {
-      if (!knownFields.has(key)) {
-        (indexData as any)[key] = parsed[key];
+      if (!KNOWN_FRONTMATTER_FIELDS.has(key)) {
+        customFields[key] = parsed[key];
       }
     }
+    // Assign custom fields to indexData (MemoryIndexDocument supports index signature)
+    Object.assign(indexData, customFields);
     
     await this.searchService.indexMemory(indexData);
 

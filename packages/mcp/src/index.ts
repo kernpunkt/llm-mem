@@ -20,7 +20,7 @@ import {
   parseAllowedValues
 } from "@llm-mem/shared";
 import { promises as fs } from "fs";
-import { join } from "path";
+import { join, resolve } from "path";
 import { fileURLToPath } from "url";
 import { memoryServiceManager } from "./memory-service-manager.js";
 import { loadMemoryConfig, type MemoryConfig, getCategoryTemplate } from "@llm-mem/shared";
@@ -137,7 +137,9 @@ export function createServer(): McpServer {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
-        // Get template for this category if config is available, then merge with user-provided template
+        // Get final template by merging in order of precedence (later sources override earlier ones):
+        // 1. Category template (from config file) - base defaults for the category
+        // 2. User-provided template (from tool parameter) - overrides category template
         const categoryTemplate = getCategoryTemplate(cfg.memoryConfig, category);
         const finalTemplate = template 
           ? { ...categoryTemplate, ...template } 
@@ -240,7 +242,9 @@ export function createServer(): McpServer {
         // Use the new category if provided, otherwise use existing category
         const targetCategory = category !== undefined ? category : existing.category;
         
-        // Get template for the target category if config is available, then merge with user-provided template
+        // Get final template by merging in order of precedence (later sources override earlier ones):
+        // 1. Category template (from config file) - base defaults for the category
+        // 2. User-provided template (from tool parameter) - overrides category template
         const categoryTemplate = getCategoryTemplate(cfg.memoryConfig, targetCategory);
         const finalTemplate = template 
           ? { ...categoryTemplate, ...template } 
@@ -1094,7 +1098,9 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
                 const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 
-                // Get template for this category if config is available, then merge with user-provided template
+                // Get final template by merging in order of precedence (later sources override earlier ones):
+                // 1. Category template (from config file) - base defaults for the category
+                // 2. User-provided template (from tool parameter) - overrides category template
                 const categoryTemplate = getCategoryTemplate(cfg.memoryConfig, category);
                 const finalTemplate = template 
                   ? { ...categoryTemplate, ...template } 
@@ -1198,7 +1204,9 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 // Use the new category if provided, otherwise use existing category
                 const targetCategory = category !== undefined ? category : existing.category;
                 
-                // Get template for the target category if config is available, then merge with user-provided template
+                // Get final template by merging in order of precedence (later sources override earlier ones):
+                // 1. Category template (from config file) - base defaults for the category
+                // 2. User-provided template (from tool parameter) - overrides category template
                 const categoryTemplate = getCategoryTemplate(cfg.memoryConfig, targetCategory);
                 const finalTemplate = template 
                   ? { ...categoryTemplate, ...template } 
@@ -1823,8 +1831,10 @@ export async function main(): Promise<void> {
   const memoryConfigPath = process.env.MEMORY_CONFIG_PATH;
   if (memoryConfigPath) {
     try {
-      memoryConfig = await loadMemoryConfig(memoryConfigPath);
-      console.error(`[MCP] Loaded memory configuration from ${memoryConfigPath}`);
+      // Resolve path to handle both absolute and relative paths
+      const resolvedPath = resolve(memoryConfigPath);
+      memoryConfig = await loadMemoryConfig(resolvedPath);
+      console.error(`[MCP] Loaded memory configuration from ${resolvedPath}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error(`[MCP] Warning: Failed to load memory configuration: ${errorMessage}`);

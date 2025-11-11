@@ -1,5 +1,6 @@
 import { load, dump } from "js-yaml";
 import { validateTemplateFields } from "./frontmatter-config.js";
+import { KNOWN_FRONTMATTER_FIELDS_WITHOUT_CONTENT } from "./constants.js";
 
 /**
  * YAML frontmatter utilities for memory file operations.
@@ -74,9 +75,8 @@ export function parseFrontmatter(content: string): {
     };
 
     // Preserve all custom fields that aren't in the known fields
-    const knownFields = new Set(['id', 'title', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract']);
     for (const key in rawFrontmatter) {
-      if (!knownFields.has(key)) {
+      if (!KNOWN_FRONTMATTER_FIELDS_WITHOUT_CONTENT.has(key)) {
         normalizedFrontmatter[key] = rawFrontmatter[key];
       }
     }
@@ -253,6 +253,7 @@ export function createFrontmatter(
     validateTemplateFields(template);
     
     // Merge template, but preserve base fields (template can't override required fields)
+    // Note: Template values override base values, but undefined template values don't override base values
     return {
       ...base,
       ...template,
@@ -264,10 +265,10 @@ export function createFrontmatter(
       updated_at: base.updated_at,
       last_reviewed: base.last_reviewed,
       links: base.links,
-      // Allow template to override tags, sources, abstract
-      tags: (template.tags as string[]) ?? base.tags,
-      sources: (template.sources as string[]) ?? base.sources,
-      abstract: (template.abstract as string) ?? base.abstract,
+      // Allow template to override tags, sources, abstract, but only if explicitly provided
+      tags: template.tags !== undefined ? (template.tags as string[]) : base.tags,
+      sources: template.sources !== undefined ? (template.sources as string[]) : base.sources,
+      abstract: template.abstract !== undefined ? (template.abstract as string) : base.abstract,
     };
   }
   
