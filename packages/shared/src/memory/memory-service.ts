@@ -27,6 +27,40 @@ export class MemoryService {
     await this.searchService.initialize();
   }
 
+  /**
+   * Converts custom frontmatter fields to searchable text.
+   * This allows template fields to be searchable through the content index.
+   * 
+   * @param parsed - Parsed memory object with all frontmatter fields
+   * @returns Searchable text representation of custom fields
+   */
+  private createSearchableCustomFieldsText(parsed: Record<string, unknown>): string {
+    const knownFields = new Set(['id', 'title', 'content', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'file_path']);
+    const customFields: string[] = [];
+    
+    for (const key in parsed) {
+      if (!knownFields.has(key)) {
+        const value = parsed[key];
+        if (value !== null && value !== undefined) {
+          // Convert value to string representation
+          let valueStr: string;
+          if (Array.isArray(value)) {
+            valueStr = value.join(' ');
+          } else if (typeof value === 'object') {
+            valueStr = JSON.stringify(value);
+          } else {
+            valueStr = String(value);
+          }
+          // Include both key and value as separate searchable terms for better searchability
+          // This allows searching for either the key name or the value
+          customFields.push(`${key} ${valueStr}`);
+        }
+      }
+    }
+    
+    return customFields.length > 0 ? ` ${customFields.join(' ')}` : '';
+  }
+
   async createMemory(params: {
     title: string;
     content: string;
@@ -75,11 +109,15 @@ export class MemoryService {
       file_path: filePath,
     };
 
-    // Extract only the fields needed for indexing (exclude custom fields)
+    // Create searchable text from custom template fields
+    const customFieldsText = this.createSearchableCustomFieldsText(parsed);
+    
+    // Extract only the fields needed for indexing
+    // Include custom fields in the content for searchability
     const indexData: MemoryIndexDocument = {
       id: memory.id,
       title: memory.title,
-      content: memory.content,
+      content: memory.content + customFieldsText, // Append custom fields as searchable text
       tags: memory.tags,
       category: memory.category,
       created_at: memory.created_at,
@@ -92,9 +130,9 @@ export class MemoryService {
     
     // Add any custom fields that might be present (MemoryIndexDocument supports [key: string]: any)
     const knownFields = new Set(['id', 'title', 'content', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'file_path']);
-    for (const key in memory) {
+    for (const key in parsed) {
       if (!knownFields.has(key)) {
-        (indexData as any)[key] = (memory as any)[key];
+        (indexData as any)[key] = parsed[key];
       }
     }
     
@@ -564,11 +602,21 @@ export class MemoryService {
       throw new Error("Failed to read updated memory");
     }
 
+    // Read the raw parsed file to get all frontmatter fields including custom template fields
+    const parsed = await this.fileService.readMemoryFileById(id);
+    if (!parsed) {
+      throw new Error("Failed to read memory file after update");
+    }
+
+    // Create searchable text from custom template fields
+    const customFieldsText = this.createSearchableCustomFieldsText(parsed);
+
     // Update search index - extract only the fields needed for indexing
+    // Include custom fields in the content for searchability
     const indexData: MemoryIndexDocument = {
       id: updated.id,
       title: updated.title,
-      content: updated.content,
+      content: updated.content + customFieldsText, // Append custom fields as searchable text
       tags: updated.tags,
       category: updated.category,
       created_at: updated.created_at,
@@ -581,9 +629,9 @@ export class MemoryService {
     
     // Add any custom fields that might be present (MemoryIndexDocument supports [key: string]: any)
     const knownFields = new Set(['id', 'title', 'content', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'file_path']);
-    for (const key in updated) {
+    for (const key in parsed) {
       if (!knownFields.has(key)) {
-        (indexData as any)[key] = (updated as any)[key];
+        (indexData as any)[key] = parsed[key];
       }
     }
     
@@ -723,11 +771,19 @@ export class MemoryService {
         const memory = await this.readMemory({ id: parsed.id });
         if (!memory) continue;
         
-        // Extract only the fields needed for indexing (exclude custom fields)
+        // Read the raw parsed file to get all frontmatter fields including custom template fields
+        const parsedFile = await this.fileService.readMemoryFileById(parsed.id);
+        if (!parsedFile) continue;
+        
+        // Create searchable text from custom template fields
+        const customFieldsText = this.createSearchableCustomFieldsText(parsedFile);
+        
+        // Extract only the fields needed for indexing
+        // Include custom fields in the content for searchability
         const indexData: MemoryIndexDocument = {
           id: memory.id,
           title: memory.title,
-          content: memory.content,
+          content: memory.content + customFieldsText, // Append custom fields as searchable text
           tags: memory.tags,
           category: memory.category,
           created_at: memory.created_at,
@@ -740,9 +796,9 @@ export class MemoryService {
         
         // Add any custom fields that might be present (MemoryIndexDocument supports [key: string]: any)
         const knownFields = new Set(['id', 'title', 'content', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'file_path']);
-        for (const key in memory) {
+        for (const key in parsedFile) {
           if (!knownFields.has(key)) {
-            (indexData as any)[key] = (memory as any)[key];
+            (indexData as any)[key] = parsedFile[key];
           }
         }
         
