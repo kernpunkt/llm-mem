@@ -4,6 +4,7 @@ import { SearchService } from "./search-service.js";
 import { LinkService } from "./link-service.js";
 import { Memory, MemoryUpdateRequest, MemorySearchRequest, LinkRequest } from "./types.js";
 import { parseMemoryFilePath } from "../utils/file-system.js";
+import type { MemoryIndexDocument } from "../utils/flexsearch.js";
 
 export interface MemoryServiceConfig {
   notestorePath: string;
@@ -74,7 +75,8 @@ export class MemoryService {
       file_path: filePath,
     };
 
-    await this.searchService.indexMemory({
+    // Extract only the fields needed for indexing (exclude custom fields)
+    const indexData: MemoryIndexDocument = {
       id: memory.id,
       title: memory.title,
       content: memory.content,
@@ -86,7 +88,17 @@ export class MemoryService {
       links: memory.links,
       sources: memory.sources,
       abstract: memory.abstract,
-    });
+    };
+    
+    // Add any custom fields that might be present (MemoryIndexDocument supports [key: string]: any)
+    const knownFields = new Set(['id', 'title', 'content', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'file_path']);
+    for (const key in memory) {
+      if (!knownFields.has(key)) {
+        (indexData as any)[key] = (memory as any)[key];
+      }
+    }
+    
+    await this.searchService.indexMemory(indexData);
 
     return memory;
   }
@@ -552,8 +564,8 @@ export class MemoryService {
       throw new Error("Failed to read updated memory");
     }
 
-    // Update search index
-    await this.searchService.indexMemory({
+    // Update search index - extract only the fields needed for indexing
+    const indexData: MemoryIndexDocument = {
       id: updated.id,
       title: updated.title,
       content: updated.content,
@@ -565,7 +577,17 @@ export class MemoryService {
       links: updated.links,
       sources: updated.sources,
       abstract: updated.abstract,
-    });
+    };
+    
+    // Add any custom fields that might be present (MemoryIndexDocument supports [key: string]: any)
+    const knownFields = new Set(['id', 'title', 'content', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'file_path']);
+    for (const key in updated) {
+      if (!knownFields.has(key)) {
+        (indexData as any)[key] = (updated as any)[key];
+      }
+    }
+    
+    await this.searchService.indexMemory(indexData);
 
     return updated;
   }
@@ -701,7 +723,8 @@ export class MemoryService {
         const memory = await this.readMemory({ id: parsed.id });
         if (!memory) continue;
         
-        await this.searchService.indexMemory({
+        // Extract only the fields needed for indexing (exclude custom fields)
+        const indexData: MemoryIndexDocument = {
           id: memory.id,
           title: memory.title,
           content: memory.content,
@@ -712,7 +735,18 @@ export class MemoryService {
           last_reviewed: memory.last_reviewed,
           links: memory.links,
           sources: memory.sources,
-        });
+          abstract: memory.abstract,
+        };
+        
+        // Add any custom fields that might be present (MemoryIndexDocument supports [key: string]: any)
+        const knownFields = new Set(['id', 'title', 'content', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'file_path']);
+        for (const key in memory) {
+          if (!knownFields.has(key)) {
+            (indexData as any)[key] = (memory as any)[key];
+          }
+        }
+        
+        await this.searchService.indexMemory(indexData);
         
         indexedCount++;
       } catch (error) {

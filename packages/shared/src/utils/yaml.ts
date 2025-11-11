@@ -1,4 +1,5 @@
 import { load, dump } from "js-yaml";
+import { validateTemplateFields } from "./frontmatter-config.js";
 
 /**
  * YAML frontmatter utilities for memory file operations.
@@ -248,6 +249,9 @@ export function createFrontmatter(
   
   // Merge template if provided
   if (template) {
+    // Validate that template doesn't contain protected fields
+    validateTemplateFields(template);
+    
     // Merge template, but preserve base fields (template can't override required fields)
     return {
       ...base,

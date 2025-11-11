@@ -111,6 +111,12 @@ export class FileService {
     newContent?: string,
     template?: Record<string, unknown>
   ): Promise<{ newFilePath: string; markdown: string; updatedLinkedMemories: string[] }> {
+    // Validate template if provided
+    if (template) {
+      const { validateTemplateFields } = await import("../utils/frontmatter-config.js");
+      validateTemplateFields(template);
+    }
+    
     // Read current file to get existing metadata
     const existing = await fs.readFile(currentFilePath, "utf-8");
     const { frontmatter: currentFrontmatter } = parseFrontmatter(existing);
@@ -227,6 +233,12 @@ export class FileService {
   ): Promise<string> {
     const existing = await fs.readFile(filePath, "utf-8");
     const { frontmatter: existingFrontmatter } = parseFrontmatter(existing);
+    
+    // Validate template if provided
+    if (template) {
+      const { validateTemplateFields } = await import("../utils/frontmatter-config.js");
+      validateTemplateFields(template);
+    }
     
     // Merge template with updates if template is provided
     const updatesWithTemplate = template 

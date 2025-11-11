@@ -284,19 +284,252 @@ End of content`;
     expect(parsed.frontmatter.abstract).toBe("Updated abstract summary");
   }, 10000);
 
-  it("should update memory abstract when memory initially has no abstract", async () => {
-    const memory = await service.createMemory({
-      title: "Memory without Abstract",
-      content: "# Content\n\nFull content here",
-      tags: ["test"],
-      category: "test"
+    it("should create memory with template fields", async () => {
+      const template = {
+        author: "John Doe",
+        status: "draft",
+        version: "1.0",
+      };
+
+      const memory = await service.createMemory({
+        title: "Memory with Template",
+        content: "# Content\n\nFull content here",
+        tags: ["test"],
+        category: "test",
+        template,
+      });
+
+      // Read the file to verify custom fields are written
+      const md = await fs.readFile(memory.file_path, "utf-8");
+      const parsed = parseFrontmatter(md);
+
+      expect((parsed.frontmatter as any).author).toBe("John Doe");
+      expect((parsed.frontmatter as any).status).toBe("draft");
+      expect((parsed.frontmatter as any).version).toBe("1.0");
     });
 
-    expect(memory.abstract).toBeUndefined();
+    it("should preserve custom fields when reading memory", async () => {
+      const template = {
+        author: "Jane Smith",
+        status: "published",
+        metadata: {
+          department: "engineering",
+          priority: "high",
+        },
+      };
 
-    // Add abstract via update
-    const updated = await service.updateMemory({
-      id: memory.id,
+      const memory = await service.createMemory({
+        title: "Memory with Custom Fields",
+        content: "# Content\n\nFull content here",
+        tags: ["test"],
+        category: "test",
+        template,
+      });
+
+      // Read memory back
+      const readMemory = await service.readMemory({ id: memory.id });
+
+      expect(readMemory).not.toBeNull();
+      expect((readMemory as any).author).toBe("Jane Smith");
+      expect((readMemory as any).status).toBe("published");
+      expect((readMemory as any).metadata).toEqual({
+        department: "engineering",
+        priority: "high",
+      });
+    });
+
+    it("should update memory with template fields", async () => {
+      const memory = await service.createMemory({
+        title: "Memory to Update",
+        content: "# Content\n\nFull content here",
+        tags: ["test"],
+        category: "test",
+      });
+
+      const template = {
+        author: "Updated Author",
+        status: "updated",
+        version: "2.0",
+      };
+
+      const updated = await service.updateMemory(
+        {
+          id: memory.id,
+          title: "Updated Title",
+        },
+        template
+      );
+
+      // Read the file to verify custom fields
+      const md = await fs.readFile(updated.file_path, "utf-8");
+      const parsed = parseFrontmatter(md);
+
+      expect(parsed.frontmatter.title).toBe("Updated Title");
+      expect((parsed.frontmatter as any).author).toBe("Updated Author");
+      expect((parsed.frontmatter as any).status).toBe("updated");
+      expect((parsed.frontmatter as any).version).toBe("2.0");
+    });
+
+    it("should preserve existing custom fields when updating", async () => {
+      const initialTemplate = {
+        author: "Original Author",
+        status: "draft",
+        version: "1.0",
+      };
+
+      const memory = await service.createMemory({
+        title: "Memory with Existing Fields",
+        content: "# Content\n\nFull content here",
+        tags: ["test"],
+        category: "test",
+        template: initialTemplate,
+      });
+
+      // Update with new template that adds fields
+      const updateTemplate = {
+        status: "published", // Override existing
+        reviewer: "Reviewer Name", // Add new
+      };
+
+      const updated = await service.updateMemory(
+        {
+          id: memory.id,
+        },
+        updateTemplate
+      );
+
+      // Read back to verify
+      const readMemory = await service.readMemory({ id: memory.id });
+
+      expect((readMemory as any).author).toBe("Original Author"); // Preserved
+      expect((readMemory as any).status).toBe("published"); // Overridden
+      expect((readMemory as any).version).toBe("1.0"); // Preserved
+      expect((readMemory as any).reviewer).toBe("Reviewer Name"); // Added
+    });
+
+    it("should throw error when creating memory with template containing protected 'id' field", async () => {
+      const invalidTemplate = {
+        id: "should-not-be-allowed",
+        author: "John Doe",
+      };
+
+      await expect(
+        service.createMemory({
+          title: "Test Memory",
+          content: "# Content",
+          tags: ["test"],
+          category: "test",
+          template: invalidTemplate,
+        })
+      ).rejects.toThrow("Template cannot override protected frontmatter fields: id");
+    });
+
+    it("should throw error when creating memory with template containing protected 'title' field", async () => {
+      const invalidTemplate = {
+        title: "should-not-be-allowed",
+        author: "John Doe",
+      };
+
+      await expect(
+        service.createMemory({
+          title: "Test Memory",
+          content: "# Content",
+          tags: ["test"],
+          category: "test",
+          template: invalidTemplate,
+        })
+      ).rejects.toThrow("Template cannot override protected frontmatter fields: title");
+    });
+
+    it("should throw error when creating memory with template containing protected 'category' field", async () => {
+      const invalidTemplate = {
+        category: "should-not-be-allowed",
+        author: "John Doe",
+      };
+
+      await expect(
+        service.createMemory({
+          title: "Test Memory",
+          content: "# Content",
+          tags: ["test"],
+          category: "test",
+          template: invalidTemplate,
+        })
+      ).rejects.toThrow("Template cannot override protected frontmatter fields: category");
+    });
+
+    it("should throw error when creating memory with template containing protected timestamp fields", async () => {
+      for (const field of ["created_at", "updated_at", "last_reviewed"] as const) {
+        const invalidTemplate = {
+          [field]: "2024-01-01T00:00:00Z",
+          author: "John Doe",
+        };
+
+        await expect(
+          service.createMemory({
+            title: "Test Memory",
+            content: "# Content",
+            tags: ["test"],
+            category: "test",
+            template: invalidTemplate,
+          })
+        ).rejects.toThrow(`Template cannot override protected frontmatter fields: ${field}`);
+      }
+    });
+
+    it("should throw error when creating memory with template containing protected 'links' field", async () => {
+      const invalidTemplate = {
+        links: ["should-not-be-allowed"],
+        author: "John Doe",
+      };
+
+      await expect(
+        service.createMemory({
+          title: "Test Memory",
+          content: "# Content",
+          tags: ["test"],
+          category: "test",
+          template: invalidTemplate,
+        })
+      ).rejects.toThrow("Template cannot override protected frontmatter fields: links");
+    });
+
+    it("should throw error when updating memory with template containing protected fields", async () => {
+      const memory = await service.createMemory({
+        title: "Test Memory",
+        content: "# Content",
+        tags: ["test"],
+        category: "test",
+      });
+
+      const invalidTemplate = {
+        id: "should-not-be-allowed",
+        author: "John Doe",
+      };
+
+      await expect(
+        service.updateMemory(
+          {
+            id: memory.id,
+          },
+          invalidTemplate
+        )
+      ).rejects.toThrow("Template cannot override protected frontmatter fields: id");
+    });
+
+    it("should update memory abstract when memory initially has no abstract", async () => {
+      const memory = await service.createMemory({
+        title: "Memory without Abstract",
+        content: "# Content\n\nFull content here",
+        tags: ["test"],
+        category: "test"
+      });
+
+      expect(memory.abstract).toBeUndefined();
+
+      // Add abstract via update
+      const updated = await service.updateMemory({
+        id: memory.id,
       abstract: "Newly added abstract"
     });
 

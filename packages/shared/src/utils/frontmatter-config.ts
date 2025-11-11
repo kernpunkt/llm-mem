@@ -28,6 +28,50 @@ const MemoryConfigSchema = z.object({
 export type MemoryConfig = z.infer<typeof MemoryConfigSchema>;
 
 /**
+ * List of essential frontmatter fields that cannot be overridden by templates.
+ * These fields are managed by the system and must not be modified via templates.
+ */
+export const PROTECTED_FRONTMATTER_FIELDS = [
+  "id",
+  "title",
+  "category",
+  "created_at",
+  "updated_at",
+  "last_reviewed",
+  "links",
+] as const;
+
+/**
+ * Validates that a template does not contain any protected frontmatter fields.
+ * 
+ * @param template - Template object to validate
+ * @param context - Optional context string for error messages (e.g., category name)
+ * @throws Error if template contains protected fields
+ * 
+ * @example
+ * ```typescript
+ * validateTemplateFields({ author: "John" }); // OK
+ * validateTemplateFields({ id: "123" }); // Throws error
+ * ```
+ */
+export function validateTemplateFields(
+  template: Record<string, unknown>,
+  context?: string
+): void {
+  const protectedFields = template ? Object.keys(template).filter(key =>
+    PROTECTED_FRONTMATTER_FIELDS.includes(key as any)
+  ) : [];
+
+  if (protectedFields.length > 0) {
+    const contextMsg = context ? ` for category "${context}"` : "";
+    throw new Error(
+      `Template${contextMsg} cannot override protected frontmatter fields: ${protectedFields.join(", ")}. ` +
+      `Protected fields are: ${PROTECTED_FRONTMATTER_FIELDS.join(", ")}`
+    );
+  }
+}
+
+/**
  * Loads and validates memory configuration from a file path.
  * 
  * Supports both JSON and YAML formats.
@@ -58,6 +102,13 @@ export async function loadMemoryConfig(configPath: string): Promise<MemoryConfig
     
     // Validate with Zod schema
     const validated = MemoryConfigSchema.parse(parsed);
+    
+    // Validate that templates don't contain protected fields
+    if (validated.templates) {
+      for (const [category, template] of Object.entries(validated.templates)) {
+        validateTemplateFields(template, category);
+      }
+    }
     
     return validated;
   } catch (error) {
@@ -91,7 +142,12 @@ export function getCategoryTemplate(
     return {};
   }
   
-  return config.templates[category] || {};
+  const template = config.templates[category] || {};
+  
+  // Validate template doesn't contain protected fields (defensive check)
+  validateTemplateFields(template, category);
+  
+  return template;
 }
 
 /**
