@@ -266,9 +266,16 @@ export function createFrontmatter(
       last_reviewed: base.last_reviewed,
       links: base.links,
       // Allow template to override tags, sources, abstract, but only if explicitly provided
-      tags: template.tags !== undefined ? (template.tags as string[]) : base.tags,
-      sources: template.sources !== undefined ? (template.sources as string[]) : base.sources,
-      abstract: template.abstract !== undefined ? (template.abstract as string) : base.abstract,
+      // Validate types before using to prevent unsafe type assertions
+      tags: template.tags !== undefined 
+        ? (Array.isArray(template.tags) ? template.tags : base.tags)
+        : base.tags,
+      sources: template.sources !== undefined
+        ? (Array.isArray(template.sources) ? template.sources : base.sources)
+        : base.sources,
+      abstract: template.abstract !== undefined
+        ? (typeof template.abstract === 'string' ? template.abstract : base.abstract)
+        : base.abstract,
     };
   }
   
