@@ -124,14 +124,31 @@ export async function loadMemoryConfig(configPath: string): Promise<MemoryConfig
 /**
  * Gets the frontmatter template for a specific category.
  * 
- * @param config - Memory configuration
- * @param category - Category name
+ * This function retrieves the category-specific template from the memory configuration.
+ * Templates are validated to ensure they don't contain protected fields.
+ * 
+ * **Template Merging Order:**
+ * When templates are merged with base frontmatter, the order of precedence is:
+ * 1. Base frontmatter (required fields: id, title, category, etc.)
+ * 2. Category template (from config file) - adds default fields for the category
+ * 3. User-provided template (from tool parameters) - overrides category template
+ * 4. Direct updates (from edit_mem parameters) - highest precedence
+ * 
+ * Later sources override earlier ones, but protected fields cannot be overridden.
+ * 
+ * @param config - Memory configuration (may be null/undefined if no config loaded)
+ * @param category - Category name to get template for
  * @returns Template object with additional frontmatter fields, or empty object if no template exists
+ * @throws Error if template contains protected fields (defensive validation)
  * 
  * @example
  * ```typescript
  * const template = getCategoryTemplate(config, "DOC");
  * // Returns: { author: "default", status: "draft" } or {}
+ * 
+ * // When creating a memory, templates are merged:
+ * // Base + Category Template + User Template = Final Frontmatter
+ * const final = { ...base, ...categoryTemplate, ...userTemplate };
  * ```
  */
 export function getCategoryTemplate(
@@ -145,6 +162,8 @@ export function getCategoryTemplate(
   const template = config.templates[category] || {};
   
   // Validate template doesn't contain protected fields (defensive check)
+  // Note: Templates are also validated on config load, but this provides an additional
+  // safety net in case config objects are constructed manually or modified at runtime
   validateTemplateFields(template, category);
   
   return template;

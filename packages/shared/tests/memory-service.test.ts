@@ -602,12 +602,22 @@ End of content`;
         template: initialTemplate,
       });
 
-      // Verify initial template is searchable
+      // Verify initial template values are searchable (new format: "field:author Original Author")
+      // Values are still searchable because they're included in the searchable text
       const initialResults = await service.searchMemories({
         query: "Original Author",
         limit: 10,
       });
       expect(initialResults.results.length).toBeGreaterThan(0);
+      expect(initialResults.results[0].id).toBe(memory.id);
+
+      // Verify field prefix format is searchable
+      const fieldAuthorResults = await service.searchMemories({
+        query: "field:author",
+        limit: 10,
+      });
+      expect(fieldAuthorResults.results.length).toBeGreaterThan(0);
+      expect(fieldAuthorResults.results[0].id).toBe(memory.id);
 
       // Update with new template
       const updatedTemplate = {
@@ -623,7 +633,7 @@ End of content`;
         updatedTemplate
       );
 
-      // Verify new template fields are searchable
+      // Verify new template field values are searchable (new format: "field:author Updated Author")
       const updatedResults = await service.searchMemories({
         query: "Updated Author",
         limit: 10,
@@ -631,6 +641,15 @@ End of content`;
       expect(updatedResults.results.length).toBeGreaterThan(0);
       expect(updatedResults.results[0].id).toBe(memory.id);
 
+      // Verify new field prefix format is searchable
+      const fieldReviewerResults = await service.searchMemories({
+        query: "field:reviewer",
+        limit: 10,
+      });
+      expect(fieldReviewerResults.results.length).toBeGreaterThan(0);
+      expect(fieldReviewerResults.results[0].id).toBe(memory.id);
+
+      // Verify reviewer value is searchable
       const reviewerResults = await service.searchMemories({
         query: "Reviewer Name",
         limit: 10,

@@ -6,6 +6,7 @@ export * from "./memory/search-service.js";
 export * from "./memory/link-service.js";
 
 // Utilities
+export * from "./utils/constants.js";
 export * from "./utils/flexsearch.js";
 export * from "./utils/flexsearch-config.js";
 export * from "./utils/yaml.js";
