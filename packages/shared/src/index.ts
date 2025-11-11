@@ -10,6 +10,7 @@ export * from "./utils/flexsearch.js";
 export * from "./utils/flexsearch-config.js";
 export * from "./utils/yaml.js";
 export * from "./utils/file-system.js";
+export * from "./utils/frontmatter-config.js";
 
 // Memory tools
 export * from "./tools/index.js";

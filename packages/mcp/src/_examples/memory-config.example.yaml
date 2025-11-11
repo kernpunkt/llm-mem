@@ -1,0 +1,72 @@
+# Memory Configuration File
+# 
+# This configuration file allows you to define category-based templates
+# that add custom frontmatter fields to memories when they are created or updated.
+#
+# Set the MEMORY_CONFIG_PATH environment variable to point to this file:
+#   MEMORY_CONFIG_PATH=./config/memory-config.yaml
+#
+# The templates object maps category names to additional frontmatter fields
+# that will be merged into the memory's frontmatter when created or updated.
+#
+# Template fields are merged with base frontmatter, allowing you to:
+# - Add custom metadata fields specific to each category
+# - Set default values for category-specific fields
+# - Override values via the template parameter in write_mem/edit_mem
+#
+# Note: Template fields cannot override required fields (id, title, category, 
+# created_at, updated_at, last_reviewed, links). They can override optional
+# fields like tags, sources, and abstract.
+
+templates:
+  # Example: DOC category template for documentation
+  # All memories in the DOC category will automatically include these fields
+  DOC:
+    author: "default"
+    status: "draft"
+    version: "1.0"
+    review_date: null
+    doc_type: "article"
+    department: "engineering"
+  
+  # Example: CTX category template for context/background information
+  CTX:
+    context_type: "background"
+    priority: "medium"
+    related_projects: []
+    context_scope: "project"
+    expires_at: null
+  
+  # Example: ADR category template for Architecture Decision Records
+  ADR:
+    decision_status: "proposed"
+    stakeholders: []
+    superseded_by: null
+    supersedes: null
+    decision_date: null
+    alternatives_considered: []
+  
+  # Example: general category template
+  # Applied to all memories in the "general" category
+  general:
+    notes: ""
+    custom_field: "default_value"
+  
+  # Example: Meeting notes category
+  MEETING:
+    meeting_date: null
+    attendees: []
+    action_items: []
+    next_meeting: null
+    meeting_type: "standup"
+  
+  # Example: Project category
+  PROJECT:
+    project_status: "active"
+    start_date: null
+    end_date: null
+    team_members: []
+    project_manager: ""
+    budget: null
+
+

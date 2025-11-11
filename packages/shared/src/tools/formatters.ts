@@ -11,7 +11,7 @@ import type { GetMemStatsResult } from "./types.js";
 /**
  * Formats a memory for display based on the specified format type
  */
-export function formatMemory(memory: Memory, format: "markdown" | "plain" | "json"): string {
+export function formatMemory(memory: Memory | (Memory & Record<string, unknown>), format: "markdown" | "plain" | "json"): string {
   if (format === "plain") {
     return memory.content;
   }
@@ -20,8 +20,10 @@ export function formatMemory(memory: Memory, format: "markdown" | "plain" | "jso
     return JSON.stringify(memory, null, 2);
   }
 
-  // markdown format (default)
-  const frontmatter = {
+  // markdown format (default) - include all fields (known + custom)
+  // Extract known fields and preserve all custom fields
+  const knownFields = new Set(['id', 'title', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'content', 'file_path']);
+  const frontmatter: Record<string, unknown> = {
     id: memory.id,
     title: memory.title,
     tags: memory.tags,
@@ -33,6 +35,14 @@ export function formatMemory(memory: Memory, format: "markdown" | "plain" | "jso
     sources: memory.sources,
     abstract: memory.abstract,
   };
+  
+  // Add all custom fields to frontmatter
+  for (const key in memory) {
+    if (!knownFields.has(key)) {
+      frontmatter[key] = (memory as any)[key];
+    }
+  }
+  
   return serializeFrontmatter(frontmatter as any, memory.content);
 }
 

@@ -86,6 +86,11 @@ Create a `.env` file in your project root to configure the server:
 MEMORY_STORE_PATH=./memories
 MEMORY_INDEX_PATH=./memories/index
 
+# Memory Configuration File (Optional)
+# Path to a YAML or JSON file containing category-based frontmatter templates
+# See /src/_examples/memory-config.example.yaml for format
+MEMORY_CONFIG_PATH=./config/memory-config.yaml
+
 # Category and Tag Restrictions (Optional)
 # If not set, any categories and tags are allowed
 # If set, only the specified values are allowed (comma-separated)
@@ -103,6 +108,66 @@ ALLOWED_TAGS=important,urgent,review,archive
 - Values are comma-separated and whitespace is automatically trimmed
 - If not set, any categories and tags are allowed (default behavior)
 - Use the `get_allowed_values` tool to see current restrictions
+
+### Memory Configuration File
+
+The memory configuration file allows you to define category-based frontmatter templates that automatically add custom fields to memories when they are created or updated.
+
+**Setup:**
+1. Create a YAML or JSON configuration file (see `src/_examples/memory-config.example.yaml`)
+2. Set the `MEMORY_CONFIG_PATH` environment variable to point to your config file
+3. Templates will automatically be applied based on the memory's category
+
+**How Templates Work:**
+- Templates are merged with base frontmatter when creating or updating memories
+- Template fields are added to the memory's frontmatter automatically
+- You can override template values by providing a `template` parameter to `write_mem` or `edit_mem`
+- Template fields cannot override required fields (id, title, category, timestamps, links)
+- Template fields can override optional fields (tags, sources, abstract)
+
+**Example Configuration:**
+
+```yaml
+templates:
+  # DOC category template
+  DOC:
+    author: "default"
+    status: "draft"
+    version: "1.0"
+    review_date: null
+  
+  # ADR category template
+  ADR:
+    decision_status: "proposed"
+    stakeholders: []
+    superseded_by: null
+```
+
+**Using Templates:**
+- Templates are automatically applied based on the memory's category
+- Custom fields from templates are preserved when reading memories
+- Custom fields appear in the frontmatter when formatting as markdown or JSON
+- You can override template values by passing a `template` parameter:
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "write_mem",
+    "arguments": {
+      "title": "My Document",
+      "content": "Content here",
+      "category": "DOC",
+      "template": {
+        "author": "John Doe",
+        "status": "published"
+      }
+    }
+  }
+}
+```
+
+See `src/_examples/memory-config.example.yaml` for a complete example with multiple category templates.
 
 ### FlexSearch Configuration
 
@@ -199,6 +264,10 @@ abstract: "Short summary of the memory content (optional)"
 created_at: "2024-01-15T10:00:00Z"
 updated_at: "2024-01-15T10:00:00Z"
 last_reviewed: "2024-01-15T10:00:00Z"
+# Custom fields from templates are also included here
+author: "John Doe"
+status: "draft"
+version: "1.0"
 ---
 
 Memory content in markdown format.
@@ -210,6 +279,37 @@ Can include:
 - Code blocks
 - Lists
 - And more...
+```
+
+### Custom Frontmatter Fields
+
+Memories can include custom frontmatter fields beyond the standard ones:
+
+- **From Templates**: Category-based templates automatically add custom fields (see Memory Configuration File section)
+- **From Parameters**: You can provide custom fields via the `template` parameter in `write_mem` and `edit_mem`
+- **Preserved on Read**: All custom fields are preserved when reading memories and appear in formatted output
+
+**Example with Custom Fields:**
+
+```markdown
+---
+id: "uuid-here"
+title: "Architecture Decision"
+category: "ADR"
+tags: ["architecture", "backend"]
+sources: []
+abstract: "Decision to use microservices architecture"
+created_at: "2024-01-15T10:00:00Z"
+updated_at: "2024-01-15T10:00:00Z"
+last_reviewed: "2024-01-15T10:00:00Z"
+# Custom fields from ADR template
+decision_status: "accepted"
+stakeholders: ["team-lead", "architect"]
+superseded_by: null
+supersedes: null
+---
+
+Decision content here...
 ```
 
 ### Abstract Field

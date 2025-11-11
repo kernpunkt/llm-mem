@@ -33,6 +33,7 @@ export class MemoryService {
     category?: string;
     sources?: string[];
     abstract?: string;
+    template?: Record<string, unknown>;
   }): Promise<Memory> {
     await this.initialize();
     const id = uuidv4();
@@ -49,6 +50,7 @@ export class MemoryService {
       category,
       sources,
       abstract,
+      template: params.template,
     });
 
     // Parse frontmatter back to construct Memory object
@@ -89,7 +91,7 @@ export class MemoryService {
     return memory;
   }
 
-  async readMemory(identifier: { id?: string; title?: string }): Promise<Memory | null> {
+  async readMemory(identifier: { id?: string; title?: string }): Promise<Memory & Record<string, unknown> | null> {
     await this.initialize();
     const { id, title } = identifier;
     let parsed: any = null;
@@ -97,7 +99,8 @@ export class MemoryService {
     if (!parsed && title) parsed = await this.fileService.readMemoryFileByTitle(title);
     if (!parsed) return null;
 
-    return {
+    // Extract known Memory fields
+    const memory: Memory = {
       id: parsed.id,
       title: parsed.title,
       content: parsed.content,
@@ -111,6 +114,17 @@ export class MemoryService {
       abstract: parsed.abstract,
       file_path: parsed.file_path,
     };
+
+    // Preserve all custom fields that aren't in the Memory interface
+    const knownFields = new Set(['id', 'title', 'content', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract', 'file_path']);
+    const result: Memory & Record<string, unknown> = { ...memory };
+    for (const key in parsed) {
+      if (!knownFields.has(key)) {
+        result[key] = parsed[key];
+      }
+    }
+
+    return result;
   }
 
   async getAllMemories(): Promise<Memory[]> {
@@ -497,7 +511,10 @@ export class MemoryService {
     };
   }
 
-  async updateMemory(params: MemoryUpdateRequest): Promise<Memory> {
+  async updateMemory(
+    params: MemoryUpdateRequest,
+    template?: Record<string, unknown>
+  ): Promise<Memory> {
     await this.initialize();
     const { id, ...updates } = params;
     
@@ -516,11 +533,12 @@ export class MemoryService {
     frontmatterUpdates.updated_at = new Date().toISOString();
 
     // Update the file with potential renaming and wiki-style link updates
-    const { newFilePath, updatedLinkedMemories } = await this.fileService.updateMemoryFileWithRename(
+    const { newFilePath: _newFilePath, updatedLinkedMemories } = await this.fileService.updateMemoryFileWithRename(
       existing.file_path,
       frontmatterUpdates,
       id,
-      updates.content
+      updates.content,
+      template
     );
 
     // Log information about wiki-style link updates if any occurred
