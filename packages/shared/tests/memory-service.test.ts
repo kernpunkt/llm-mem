@@ -517,6 +517,156 @@ End of content`;
       ).rejects.toThrow("Template cannot override protected frontmatter fields: id");
     });
 
+    it("should index template fields and make them searchable", async () => {
+      const template = {
+        author: "Jane Smith",
+        status: "published",
+        version: "2.0",
+        department: "Engineering",
+      };
+
+      const memory = await service.createMemory({
+        title: "Technical Documentation",
+        content: "# Documentation\n\nThis is the main content.",
+        tags: ["docs"],
+        category: "DOC",
+        template,
+      });
+
+      // Search for template field values
+      const resultsByAuthor = await service.searchMemories({
+        query: "Jane Smith",
+        limit: 10,
+      });
+      expect(resultsByAuthor.results.length).toBeGreaterThan(0);
+      expect(resultsByAuthor.results[0].id).toBe(memory.id);
+
+      const resultsByStatus = await service.searchMemories({
+        query: "published",
+        limit: 10,
+      });
+      expect(resultsByStatus.results.length).toBeGreaterThan(0);
+      expect(resultsByStatus.results[0].id).toBe(memory.id);
+
+      const resultsByDepartment = await service.searchMemories({
+        query: "Engineering",
+        limit: 10,
+      });
+      expect(resultsByDepartment.results.length).toBeGreaterThan(0);
+      expect(resultsByDepartment.results[0].id).toBe(memory.id);
+    }, 15000);
+
+    it("should index template fields with arrays and objects", async () => {
+      const template = {
+        author: "John Doe",
+        tags_custom: ["important", "review"],
+        metadata: { priority: "high", project: "Alpha" },
+      };
+
+      const memory = await service.createMemory({
+        title: "Project Alpha Notes",
+        content: "# Notes\n\nProject notes here.",
+        tags: ["project"],
+        category: "NOTES",
+        template,
+      });
+
+      // Search for array values
+      const resultsByTag = await service.searchMemories({
+        query: "important",
+        limit: 10,
+      });
+      expect(resultsByTag.results.length).toBeGreaterThan(0);
+      expect(resultsByTag.results[0].id).toBe(memory.id);
+
+      // Search for object values (JSON stringified)
+      const resultsByProject = await service.searchMemories({
+        query: "Alpha",
+        limit: 10,
+      });
+      expect(resultsByProject.results.length).toBeGreaterThan(0);
+      expect(resultsByProject.results[0].id).toBe(memory.id);
+    }, 15000);
+
+    it("should update indexed template fields when memory is updated", async () => {
+      const initialTemplate = {
+        author: "Original Author",
+        status: "draft",
+      };
+
+      const memory = await service.createMemory({
+        title: "Update Test",
+        content: "# Content",
+        tags: ["test"],
+        category: "test",
+        template: initialTemplate,
+      });
+
+      // Verify initial template is searchable
+      const initialResults = await service.searchMemories({
+        query: "Original Author",
+        limit: 10,
+      });
+      expect(initialResults.results.length).toBeGreaterThan(0);
+
+      // Update with new template
+      const updatedTemplate = {
+        author: "Updated Author",
+        status: "published",
+        reviewer: "Reviewer Name",
+      };
+
+      await service.updateMemory(
+        {
+          id: memory.id,
+        },
+        updatedTemplate
+      );
+
+      // Verify new template fields are searchable
+      const updatedResults = await service.searchMemories({
+        query: "Updated Author",
+        limit: 10,
+      });
+      expect(updatedResults.results.length).toBeGreaterThan(0);
+      expect(updatedResults.results[0].id).toBe(memory.id);
+
+      const reviewerResults = await service.searchMemories({
+        query: "Reviewer Name",
+        limit: 10,
+      });
+      expect(reviewerResults.results.length).toBeGreaterThan(0);
+      expect(reviewerResults.results[0].id).toBe(memory.id);
+    }, 15000);
+
+    it("should reindex template fields when reindexing memories", async () => {
+      const template = {
+        author: "Reindex Author",
+        status: "archived",
+      };
+
+      const memory = await service.createMemory({
+        title: "Reindex Test",
+        content: "# Content",
+        tags: ["test"],
+        category: "test",
+        template,
+      });
+
+      // Reindex all memories
+      const reindexResult = await service.reindexMemories();
+      expect(reindexResult.success).toBe(true);
+      expect(reindexResult.indexedCount).toBeGreaterThan(0);
+
+      // Verify template fields are still searchable after reindex
+      const results = await service.searchMemories({
+        query: "Reindex Author",
+        limit: 10,
+      });
+      expect(results.results.length).toBeGreaterThan(0);
+      expect(results.results[0].id).toBe(memory.id);
+    }, 15000);
+
     it("should update memory abstract when memory initially has no abstract", async () => {
       const memory = await service.createMemory({
         title: "Memory without Abstract",

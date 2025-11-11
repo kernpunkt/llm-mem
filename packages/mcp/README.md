@@ -121,6 +121,7 @@ The memory configuration file allows you to define category-based frontmatter te
 **How Templates Work:**
 - Templates are merged with base frontmatter when creating or updating memories
 - Template fields are added to the memory's frontmatter automatically
+- Template fields are indexed and searchable through the search index
 - You can override template values by providing a `template` parameter to `write_mem` or `edit_mem`
 - Template fields cannot override required fields (id, title, category, timestamps, links)
 - Template fields can override optional fields (tags, sources, abstract)
@@ -146,6 +147,7 @@ templates:
 **Using Templates:**
 - Templates are automatically applied based on the memory's category
 - Custom fields from templates are preserved when reading memories
+- Template fields are indexed and searchable (e.g., search for "author: John Doe" or "status: published")
 - Custom fields appear in the frontmatter when formatting as markdown or JSON
 - You can override template values by passing a `template` parameter:
 
