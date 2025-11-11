@@ -597,7 +597,7 @@ export class MemoryService {
     frontmatterUpdates.updated_at = new Date().toISOString();
 
     // Update the file with potential renaming and wiki-style link updates
-    const { newFilePath: _newFilePath, updatedLinkedMemories } = await this.fileService.updateMemoryFileWithRename(
+    const { updatedLinkedMemories } = await this.fileService.updateMemoryFileWithRename(
       existing.file_path,
       frontmatterUpdates,
       id,
