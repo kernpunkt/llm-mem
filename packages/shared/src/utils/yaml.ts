@@ -31,7 +31,7 @@ export interface MemoryFrontmatter {
  * ```
  */
 export function parseFrontmatter(content: string): {
-  frontmatter: MemoryFrontmatter;
+  frontmatter: MemoryFrontmatter & Record<string, unknown>;
   content: string;
 } {
   try {
@@ -50,28 +50,38 @@ export function parseFrontmatter(content: string): {
     const frontmatterText = content.substring(4, frontmatterEnd);
     const markdownContent = content.substring(frontmatterEnd + 5);
 
-    // Parse YAML frontmatter
-    const frontmatter = load(frontmatterText) as any;
+    // Parse YAML frontmatter - preserve ALL fields including custom ones
+    const rawFrontmatter = load(frontmatterText) as any;
 
     // Validate required fields
-    if (!frontmatter.id || !frontmatter.title || !frontmatter.category) {
+    if (!rawFrontmatter.id || !rawFrontmatter.title || !rawFrontmatter.category) {
       throw new Error("Missing required frontmatter fields: id, title, category");
     }
 
-    // Ensure optional fields have default values and convert dates to strings
+    // Normalize known fields and preserve all other fields
+    const normalizedFrontmatter: MemoryFrontmatter & Record<string, unknown> = {
+      id: String(rawFrontmatter.id),
+      title: String(rawFrontmatter.title),
+      tags: Array.isArray(rawFrontmatter.tags) ? rawFrontmatter.tags : [],
+      category: String(rawFrontmatter.category),
+      created_at: rawFrontmatter.created_at ? new Date(rawFrontmatter.created_at).toISOString() : new Date().toISOString(),
+      updated_at: rawFrontmatter.updated_at ? new Date(rawFrontmatter.updated_at).toISOString() : new Date().toISOString(),
+      last_reviewed: rawFrontmatter.last_reviewed ? new Date(rawFrontmatter.last_reviewed).toISOString() : new Date().toISOString(),
+      links: Array.isArray(rawFrontmatter.links) ? rawFrontmatter.links : [],
+      sources: Array.isArray(rawFrontmatter.sources) ? rawFrontmatter.sources : [],
+      abstract: rawFrontmatter.abstract ? String(rawFrontmatter.abstract) : undefined,
+    };
+
+    // Preserve all custom fields that aren't in the known fields
+    const knownFields = new Set(['id', 'title', 'tags', 'category', 'created_at', 'updated_at', 'last_reviewed', 'links', 'sources', 'abstract']);
+    for (const key in rawFrontmatter) {
+      if (!knownFields.has(key)) {
+        normalizedFrontmatter[key] = rawFrontmatter[key];
+      }
+    }
+
     return {
-      frontmatter: {
-        id: String(frontmatter.id),
-        title: String(frontmatter.title),
-        tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
-        category: String(frontmatter.category),
-        created_at: frontmatter.created_at ? new Date(frontmatter.created_at).toISOString() : new Date().toISOString(),
-        updated_at: frontmatter.updated_at ? new Date(frontmatter.updated_at).toISOString() : new Date().toISOString(),
-        last_reviewed: frontmatter.last_reviewed ? new Date(frontmatter.last_reviewed).toISOString() : new Date().toISOString(),
-        links: Array.isArray(frontmatter.links) ? frontmatter.links : [],
-        sources: Array.isArray(frontmatter.sources) ? frontmatter.sources : [],
-        abstract: frontmatter.abstract ? String(frontmatter.abstract) : undefined
-      },
+      frontmatter: normalizedFrontmatter,
       content: markdownContent.trim()
     };
   } catch (error) {
@@ -94,7 +104,7 @@ export function parseFrontmatter(content: string): {
  * ```
  */
 export function serializeFrontmatter(
-  frontmatter: MemoryFrontmatter,
+  frontmatter: MemoryFrontmatter | (MemoryFrontmatter & Record<string, unknown>),
   content: string
 ): string {
   try {
@@ -103,7 +113,7 @@ export function serializeFrontmatter(
       throw new Error("Missing required frontmatter fields: id, title, category");
     }
 
-    // Serialize YAML frontmatter
+    // Serialize YAML frontmatter - includes all fields (known + custom)
     const yamlContent = dump(frontmatter, {
       indent: 2,
       lineWidth: 80,
@@ -136,12 +146,12 @@ export function serializeFrontmatter(
  */
 export function updateFrontmatter(
   content: string,
-  updates: Partial<MemoryFrontmatter>
+  updates: Partial<MemoryFrontmatter> | (Partial<MemoryFrontmatter> & Record<string, unknown>)
 ): string {
   try {
     const { frontmatter, content: markdownContent } = parseFrontmatter(content);
     
-    // Merge updates with existing frontmatter
+    // Merge updates with existing frontmatter (preserves custom fields and adds new ones)
     const updatedFrontmatter = {
       ...frontmatter,
       ...updates,
@@ -210,18 +220,20 @@ export function validateFrontmatter(frontmatter: any): frontmatter is MemoryFron
  * @param category - Memory category
  * @param tags - Memory tags (optional)
  * @param abstract - Short abstract/summary (optional)
- * @returns New frontmatter object
+ * @param template - Optional template object with additional frontmatter fields to merge
+ * @returns New frontmatter object with template fields merged
  */
 export function createFrontmatter(
   id: string,
   title: string,
   category: string,
   tags: string[] = [],
-  abstract?: string
+  abstract?: string,
+  template?: Record<string, unknown>
 ): MemoryFrontmatter {
   const now = new Date().toISOString();
   
-  return {
+  const base: MemoryFrontmatter = {
     id,
     title,
     tags,
@@ -233,4 +245,27 @@ export function createFrontmatter(
     sources: [],
     abstract
   };
+  
+  // Merge template if provided
+  if (template) {
+    // Merge template, but preserve base fields (template can't override required fields)
+    return {
+      ...base,
+      ...template,
+      // Ensure required fields are not overridden
+      id: base.id,
+      title: base.title,
+      category: base.category,
+      created_at: base.created_at,
+      updated_at: base.updated_at,
+      last_reviewed: base.last_reviewed,
+      links: base.links,
+      // Allow template to override tags, sources, abstract
+      tags: (template.tags as string[]) ?? base.tags,
+      sources: (template.sources as string[]) ?? base.sources,
+      abstract: (template.abstract as string) ?? base.abstract,
+    };
+  }
+  
+  return base;
 } 

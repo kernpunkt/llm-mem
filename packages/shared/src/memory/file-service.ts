@@ -26,13 +26,15 @@ export class FileService {
     category: string;
     sources?: string[];
     abstract?: string;
+    template?: Record<string, unknown>;
   }): Promise<{ filePath: string; markdown: string }> {
-    const { id, title, content, tags, category, sources = [], abstract } = params;
+    const { id, title, content, tags, category, sources = [], abstract, template } = params;
     await this.initialize();
 
-    const frontmatter = createFrontmatter(id, title, category, tags, abstract);
-    // include sources if provided
-    const fmWithSources = { ...frontmatter, sources };
+    // Merge template with base frontmatter
+    const frontmatter = createFrontmatter(id, title, category, tags, abstract, template);
+    // include sources if provided (template may have already included them)
+    const fmWithSources = { ...frontmatter, sources: sources.length > 0 ? sources : frontmatter.sources };
     const markdown = serializeFrontmatter(fmWithSources, content);
     const filePath = generateMemoryFilePath(this.notestorePath, category, title, id);
     await fs.writeFile(filePath, markdown, "utf-8");
@@ -52,13 +54,14 @@ export class FileService {
     sources: string[];
     abstract?: string;
     file_path: string;
-  } | null> {
+  } & Record<string, unknown> | null> {
     const files = await listMemoryFiles(this.notestorePath);
     const match = files.find((path) => parseMemoryFilePath(path)?.id === id);
     if (!match) return null;
     const fileContent = await fs.readFile(match, "utf-8");
     const { frontmatter, content } = parseFrontmatter(fileContent);
-    return { ...frontmatter, content, file_path: match } as any;
+    // Preserve all frontmatter fields including custom ones
+    return { ...frontmatter, content, file_path: match };
   }
 
   async readMemoryFileByTitle(title: string): Promise<{
@@ -74,7 +77,7 @@ export class FileService {
     sources: string[];
     abstract?: string;
     file_path: string;
-  } | null> {
+  } & Record<string, unknown> | null> {
     const targetSlug = slugify(title);
     const files = await listMemoryFiles(this.notestorePath);
     const match = files.find((path) => {
@@ -84,7 +87,8 @@ export class FileService {
     if (!match) return null;
     const fileContent = await fs.readFile(match, "utf-8");
     const { frontmatter, content } = parseFrontmatter(fileContent);
-    return { ...frontmatter, content, file_path: match } as any;
+    // Preserve all frontmatter fields including custom ones
+    return { ...frontmatter, content, file_path: match };
   }
 
   /**
@@ -104,7 +108,8 @@ export class FileService {
       abstract?: string;
     }>,
     memoryId: string,
-    newContent?: string
+    newContent?: string,
+    template?: Record<string, unknown>
   ): Promise<{ newFilePath: string; markdown: string; updatedLinkedMemories: string[] }> {
     // Read current file to get existing metadata
     const existing = await fs.readFile(currentFilePath, "utf-8");
@@ -119,7 +124,11 @@ export class FileService {
     
     if (!needsRename) {
       // No rename needed, just update content
-      const updatedMarkdown = updateFrontmatter(existing, updates as any);
+      // Merge template with updates if template is provided
+      const updatesWithTemplate = template 
+        ? { ...template, ...updates }
+        : updates;
+      const updatedMarkdown = updateFrontmatter(existing, updatesWithTemplate as any);
       const finalMarkdown = typeof newContent === "string"
         ? (() => {
             const { frontmatter } = parseFrontmatter(updatedMarkdown);
@@ -168,7 +177,7 @@ export class FileService {
               // Update the wiki-style links in the content
               const updatedContent = updateWikiLinks(linkedMemory.content, oldTitle, newTitleValue);
               
-              // Update the linked memory file
+              // Update the linked memory file (no template needed for linked memory updates)
               await this.updateMemoryFile(linkedMemory.file_path, {}, updatedContent);
               updatedLinkedMemories.push(linkedMemoryId);
             }
@@ -181,7 +190,11 @@ export class FileService {
     }
     
     // Create updated content
-    const updatedMarkdown = updateFrontmatter(existing, updates as any);
+    // Merge template with updates if template is provided
+    const updatesWithTemplate = template 
+      ? { ...template, ...updates }
+      : updates;
+    const updatedMarkdown = updateFrontmatter(existing, updatesWithTemplate as any);
     const finalMarkdown = typeof newContent === "string"
       ? (() => {
           const { frontmatter } = parseFrontmatter(updatedMarkdown);
@@ -198,17 +211,29 @@ export class FileService {
     return { newFilePath, markdown: finalMarkdown, updatedLinkedMemories };
   }
 
-  async updateMemoryFile(filePath: string, updates: Partial<{
-    title: string;
-    tags: string[];
-    category: string;
-    sources: string[];
-    last_reviewed: string;
-    links: string[];
-    abstract?: string;
-  }>, newContent?: string): Promise<string> {
+  async updateMemoryFile(
+    filePath: string, 
+    updates: Partial<{
+      title: string;
+      tags: string[];
+      category: string;
+      sources: string[];
+      last_reviewed: string;
+      links: string[];
+      abstract?: string;
+    }>, 
+    newContent?: string,
+    template?: Record<string, unknown>
+  ): Promise<string> {
     const existing = await fs.readFile(filePath, "utf-8");
-    const updatedMarkdown = updateFrontmatter(existing, updates as any);
+    const { frontmatter: existingFrontmatter } = parseFrontmatter(existing);
+    
+    // Merge template with updates if template is provided
+    const updatesWithTemplate = template 
+      ? { ...template, ...updates }
+      : updates;
+    
+    const updatedMarkdown = updateFrontmatter(existing, updatesWithTemplate as any);
     const finalMarkdown = typeof newContent === "string"
       ? (() => {
           const { frontmatter } = parseFrontmatter(updatedMarkdown);

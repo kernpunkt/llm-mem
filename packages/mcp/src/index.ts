@@ -23,6 +23,7 @@ import { promises as fs } from "fs";
 import { join } from "path";
 import { fileURLToPath } from "url";
 import { memoryServiceManager } from "./memory-service-manager.js";
+import { loadMemoryConfig, type MemoryConfig, getCategoryTemplate } from "@llm-mem/shared";
 
 // Load environment variables from .env file (quiet mode to avoid stdout interference)
 config({ quiet: true });
@@ -119,12 +120,13 @@ export function createServer(): McpServer {
     {
       title: z.string().min(1).describe("Title of the memory"),
       content: z.string().min(1).describe("Content in markdown format"),
-      tags: z.array(z.string()).optional().describe("Tags for categorization"),
-      category: z.string().optional().describe("Category for organization"),
-      sources: z.array(z.string()).optional().describe("References/sources for the memory"),
-      abstract: z.string().optional().describe("Short abstract/summary of the memory content (recommended: 1-2 sentences)")
+      tags: z.array(z.string()).default([]).describe("Tags for categorization (default: empty array)"),
+      category: z.string().default("general").describe("Category for organization (default: 'general')"),
+      sources: z.array(z.string()).default([]).describe("References/sources for the memory (default: empty array)"),
+      abstract: z.string().optional().describe("Short abstract/summary of the memory content (recommended: 1-2 sentences)"),
+      template: z.record(z.unknown()).optional().describe("Additional frontmatter fields as key-value pairs to merge into the memory's frontmatter")
     },
-    async ({ title, content, tags = [], category = "general", sources = [], abstract }) => {
+    async ({ title, content, tags, category, sources, abstract, template }) => {
       try {
         // Note: Validation is now handled within the shared tool functions
         // For write_mem, we validate manually since it's not yet extracted
@@ -134,7 +136,14 @@ export function createServer(): McpServer {
         
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
-        const mem = await memoryService.createMemory({ title, content, tags, category, sources, abstract });
+        
+        // Get template for this category if config is available, then merge with user-provided template
+        const categoryTemplate = getCategoryTemplate(cfg.memoryConfig, category);
+        const finalTemplate = template 
+          ? { ...categoryTemplate, ...template } 
+          : categoryTemplate;
+        
+        const mem = await memoryService.createMemory({ title, content, tags, category, sources, abstract, template: finalTemplate });
         // Refresh tracked DB mtime after index-modifying operation
         await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         return {
@@ -208,9 +217,10 @@ export function createServer(): McpServer {
       tags: z.array(z.string()).optional().describe("New tags for categorization"),
       category: z.string().optional().describe("New category for organization"),
       sources: z.array(z.string()).optional().describe("Updated references/sources for the memory"),
-      abstract: z.string().optional().describe("Updated short abstract/summary of the memory content (recommended: 1-2 sentences)")
+      abstract: z.string().optional().describe("Updated short abstract/summary of the memory content (recommended: 1-2 sentences)"),
+      template: z.record(z.unknown()).optional().describe("Additional frontmatter fields as key-value pairs to merge into the memory's frontmatter")
     },
-    async ({ id, title, content, tags, category, sources, abstract }) => {
+    async ({ id, title, content, tags, category, sources, abstract, template }) => {
       try {
         // Note: Validation is now handled within the shared tool functions
         // For edit_mem, we validate manually since it's not yet extracted
@@ -221,6 +231,21 @@ export function createServer(): McpServer {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
+        // Get the current memory to determine category for template lookup
+        const existing = await memoryService.readMemory({ id });
+        if (!existing) {
+          throw new Error(`Memory with ID ${id} not found`);
+        }
+        
+        // Use the new category if provided, otherwise use existing category
+        const targetCategory = category !== undefined ? category : existing.category;
+        
+        // Get template for the target category if config is available, then merge with user-provided template
+        const categoryTemplate = getCategoryTemplate(cfg.memoryConfig, targetCategory);
+        const finalTemplate = template 
+          ? { ...categoryTemplate, ...template } 
+          : categoryTemplate;
+        
         const updates: any = { id };
         if (title !== undefined) updates.title = title;
         if (content !== undefined) updates.content = content;
@@ -229,7 +254,7 @@ export function createServer(): McpServer {
         if (sources !== undefined) updates.sources = sources;
         if (abstract !== undefined) updates.abstract = abstract;
 
-        const updated = await memoryService.updateMemory(updates);
+        const updated = await memoryService.updateMemory(updates, finalTemplate);
         // Refresh tracked DB mtime after index-modifying operation
         await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
@@ -1056,10 +1081,11 @@ export async function runHttp(port: number = 3000): Promise<void> {
               case 'write_mem': {
                 const title = toolArgs.title as string;
                 const content = toolArgs.content as string;
-                const tags = toolArgs.tags as string[] || [];
-                const category = toolArgs.category as string || 'general';
-                const sources = toolArgs.sources as string[] || [];
-                const abstract = toolArgs.abstract as string;
+                const tags = (toolArgs.tags as string[]) ?? [];
+                const category = (toolArgs.category as string) ?? 'general';
+                const sources = (toolArgs.sources as string[]) ?? [];
+                const abstract = toolArgs.abstract as string | undefined;
+                const template = toolArgs.template as Record<string, unknown> | undefined;
                 
                 if (!title || !content) {
                   throw new Error('Missing required parameters: title and content');
@@ -1067,7 +1093,14 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
                 const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
-                const mem = await memoryService.createMemory({ title, content, tags, category, sources, abstract });
+                
+                // Get template for this category if config is available, then merge with user-provided template
+                const categoryTemplate = getCategoryTemplate(cfg.memoryConfig, category);
+                const finalTemplate = template 
+                  ? { ...categoryTemplate, ...template } 
+                  : categoryTemplate;
+                
+                const mem = await memoryService.createMemory({ title, content, tags, category, sources, abstract, template: finalTemplate });
                 // Refresh tracked DB mtime after index-modifying operation
                 await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 
@@ -1141,12 +1174,13 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 
               case 'edit_mem': {
                 const id = toolArgs.id as string;
-                const title = toolArgs.title as string;
-                const content = toolArgs.content as string;
-                const tags = toolArgs.tags as string[] || [];
-                const category = toolArgs.category as string || 'general';
-                const sources = toolArgs.sources as string[] || [];
-                const abstract = toolArgs.abstract as string;
+                const title = toolArgs.title as string | undefined;
+                const content = toolArgs.content as string | undefined;
+                const tags = toolArgs.tags as string[] | undefined;
+                const category = toolArgs.category as string | undefined;
+                const sources = toolArgs.sources as string[] | undefined;
+                const abstract = toolArgs.abstract as string | undefined;
+                const template = toolArgs.template as Record<string, unknown> | undefined;
 
                 if (!id) {
                   throw new Error('Missing required parameter: id');
@@ -1154,7 +1188,31 @@ export async function runHttp(port: number = 3000): Promise<void> {
 
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
                 const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
-                const updated = await memoryService.updateMemory({ id, title, content, tags, category, sources, abstract });
+                
+                // Get the current memory to determine category for template lookup
+                const existing = await memoryService.readMemory({ id });
+                if (!existing) {
+                  throw new Error(`Memory with ID ${id} not found`);
+                }
+                
+                // Use the new category if provided, otherwise use existing category
+                const targetCategory = category !== undefined ? category : existing.category;
+                
+                // Get template for the target category if config is available, then merge with user-provided template
+                const categoryTemplate = getCategoryTemplate(cfg.memoryConfig, targetCategory);
+                const finalTemplate = template 
+                  ? { ...categoryTemplate, ...template } 
+                  : categoryTemplate;
+                
+                const updates: any = { id };
+                if (title !== undefined) updates.title = title;
+                if (content !== undefined) updates.content = content;
+                if (tags !== undefined) updates.tags = tags;
+                if (category !== undefined) updates.category = category;
+                if (sources !== undefined) updates.sources = sources;
+                if (abstract !== undefined) updates.abstract = abstract;
+                
+                const updated = await memoryService.updateMemory(updates, finalTemplate);
                 // Refresh tracked DB mtime after index-modifying operation
                 await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
 
@@ -1488,7 +1546,7 @@ ${stats.recommendations.join('\n')}`;
                 cleanedContent = cleanedContent.replace(/\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g, '');
                 
                 // Remove all simple markdown links: [[title|display_text]] or [[title]] (except HTTP links)
-                cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g, (match, linkText, displayText) => {
+                cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g, (match, linkText) => {
                   // Check if this is an external HTTP link
                   if (linkText.startsWith('http://') || linkText.startsWith('https://')) {
                     return match; // Keep external links
@@ -1760,10 +1818,25 @@ export async function main(): Promise<void> {
   const notestorePath = args.find(arg => arg.startsWith('--memoryStorePath='))?.split('=')[1] || './memories';
   const indexPath = args.find(arg => arg.startsWith('--indexPath='))?.split('=')[1] || './memories/index';
 
+  // Load memory configuration if provided
+  let memoryConfig: MemoryConfig | null = null;
+  const memoryConfigPath = process.env.MEMORY_CONFIG_PATH;
+  if (memoryConfigPath) {
+    try {
+      memoryConfig = await loadMemoryConfig(memoryConfigPath);
+      console.error(`[MCP] Loaded memory configuration from ${memoryConfigPath}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`[MCP] Warning: Failed to load memory configuration: ${errorMessage}`);
+      // Continue without memory config - it's optional
+    }
+  }
+
   // Store configuration globally for memory tools
   (global as any).MEMORY_CONFIG = {
     notestorePath,
-    indexPath
+    indexPath,
+    memoryConfig
   };
 
   // Ensure usage.md exists in notestore_path
