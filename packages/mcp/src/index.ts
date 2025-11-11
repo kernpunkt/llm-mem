@@ -23,7 +23,7 @@ import { promises as fs } from "fs";
 import { join, resolve } from "path";
 import { fileURLToPath } from "url";
 import { memoryServiceManager } from "./memory-service-manager.js";
-import { loadMemoryConfig, type MemoryConfig, getCategoryTemplate } from "@llm-mem/shared";
+import { loadMemoryConfig, type MemoryConfig, mergeTemplates } from "@llm-mem/shared";
 
 // Load environment variables from .env file (quiet mode to avoid stdout interference)
 config({ quiet: true });
@@ -137,13 +137,8 @@ export function createServer(): McpServer {
         const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
         const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
         
-        // Get final template by merging in order of precedence (later sources override earlier ones):
-        // 1. Category template (from config file) - base defaults for the category
-        // 2. User-provided template (from tool parameter) - overrides category template
-        const categoryTemplate = getCategoryTemplate(cfg.memoryConfig, category);
-        const finalTemplate = template 
-          ? { ...categoryTemplate, ...template } 
-          : categoryTemplate;
+        // Get final template by merging category template and user-provided template
+        const finalTemplate = mergeTemplates(cfg.memoryConfig, category, template);
         
         const mem = await memoryService.createMemory({ title, content, tags, category, sources, abstract, template: finalTemplate });
         // Refresh tracked DB mtime after index-modifying operation
@@ -242,13 +237,8 @@ export function createServer(): McpServer {
         // Use the new category if provided, otherwise use existing category
         const targetCategory = category !== undefined ? category : existing.category;
         
-        // Get final template by merging in order of precedence (later sources override earlier ones):
-        // 1. Category template (from config file) - base defaults for the category
-        // 2. User-provided template (from tool parameter) - overrides category template
-        const categoryTemplate = getCategoryTemplate(cfg.memoryConfig, targetCategory);
-        const finalTemplate = template 
-          ? { ...categoryTemplate, ...template } 
-          : categoryTemplate;
+        // Get final template by merging category template and user-provided template
+        const finalTemplate = mergeTemplates(cfg.memoryConfig, targetCategory, template);
         
         const updates: any = { id };
         if (title !== undefined) updates.title = title;
@@ -1098,13 +1088,8 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
                 const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 
-                // Get final template by merging in order of precedence (later sources override earlier ones):
-                // 1. Category template (from config file) - base defaults for the category
-                // 2. User-provided template (from tool parameter) - overrides category template
-                const categoryTemplate = getCategoryTemplate(cfg.memoryConfig, category);
-                const finalTemplate = template 
-                  ? { ...categoryTemplate, ...template } 
-                  : categoryTemplate;
+                // Get final template by merging category template and user-provided template
+                const finalTemplate = mergeTemplates(cfg.memoryConfig, category, template);
                 
                 const mem = await memoryService.createMemory({ title, content, tags, category, sources, abstract, template: finalTemplate });
                 // Refresh tracked DB mtime after index-modifying operation
@@ -1204,13 +1189,8 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 // Use the new category if provided, otherwise use existing category
                 const targetCategory = category !== undefined ? category : existing.category;
                 
-                // Get final template by merging in order of precedence (later sources override earlier ones):
-                // 1. Category template (from config file) - base defaults for the category
-                // 2. User-provided template (from tool parameter) - overrides category template
-                const categoryTemplate = getCategoryTemplate(cfg.memoryConfig, targetCategory);
-                const finalTemplate = template 
-                  ? { ...categoryTemplate, ...template } 
-                  : categoryTemplate;
+                // Get final template by merging category template and user-provided template
+                const finalTemplate = mergeTemplates(cfg.memoryConfig, targetCategory, template);
                 
                 const updates: any = { id };
                 if (title !== undefined) updates.title = title;

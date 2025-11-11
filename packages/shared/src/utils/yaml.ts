@@ -76,7 +76,7 @@ export function parseFrontmatter(content: string): {
 
     // Preserve all custom fields that aren't in the known fields
     for (const key in rawFrontmatter) {
-      if (!KNOWN_FRONTMATTER_FIELDS_WITHOUT_CONTENT.has(key)) {
+      if (!KNOWN_FRONTMATTER_FIELDS_WITHOUT_CONTENT.has(key as any)) {
         normalizedFrontmatter[key] = rawFrontmatter[key];
       }
     }
