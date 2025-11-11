@@ -278,6 +278,8 @@ describe("CI/CD integration", () => {
   });
 
   it("parses vitest config thresholds", async () => {
+    // Ensure directory exists before writing
+    await fs.mkdir(tmpDir, { recursive: true });
     const configPath = join(tmpDir, "vitest.config.js");
     await fs.writeFile(configPath, `
       export default {

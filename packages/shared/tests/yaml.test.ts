@@ -7,6 +7,7 @@ import {
   createFrontmatter,
   MemoryFrontmatter
 } from "../src/utils/yaml.js";
+import { PROTECTED_FRONTMATTER_FIELDS } from "../src/utils/frontmatter-config.js";
 
 describe("YAML Frontmatter Utilities", () => {
   const sampleFrontmatter: MemoryFrontmatter = {
@@ -165,6 +166,66 @@ sources: []
       expect(result.frontmatter.title).toBe("Test Memory");
     });
 
+    it("should preserve custom frontmatter fields when parsing", () => {
+      const markdownWithCustomFields = `---
+id: 550e8400-e29b-41d4-a716-446655440000
+title: Test Memory
+category: test
+tags: []
+links: []
+sources: []
+author: John Doe
+status: draft
+version: "1.0"
+metadata:
+  department: engineering
+  priority: high
+---
+
+# Test Content`;
+
+      const result = parseFrontmatter(markdownWithCustomFields);
+      
+      // Standard fields
+      expect(result.frontmatter.id).toBe("550e8400-e29b-41d4-a716-446655440000");
+      expect(result.frontmatter.title).toBe("Test Memory");
+      
+      // Custom fields should be preserved
+      expect((result.frontmatter as any).author).toBe("John Doe");
+      expect((result.frontmatter as any).status).toBe("draft");
+      expect((result.frontmatter as any).version).toBe("1.0");
+      expect((result.frontmatter as any).metadata).toEqual({
+        department: "engineering",
+        priority: "high",
+      });
+    });
+
+    it("should preserve custom fields with various data types", () => {
+      const markdownWithVariousTypes = `---
+id: 550e8400-e29b-41d4-a716-446655440000
+title: Test Memory
+category: test
+tags: []
+links: []
+sources: []
+string_field: "text"
+number_field: 123
+boolean_field: true
+null_field: null
+array_field: [item1, item2]
+---
+
+# Test Content`;
+
+      const result = parseFrontmatter(markdownWithVariousTypes);
+      
+      expect((result.frontmatter as any).string_field).toBe("text");
+      expect((result.frontmatter as any).number_field).toBe(123);
+      expect((result.frontmatter as any).boolean_field).toBe(true);
+      expect((result.frontmatter as any).null_field).toBeNull();
+      expect((result.frontmatter as any).array_field).toEqual(["item1", "item2"]);
+    });
+
     it("should handle frontmatter without abstract field (backward compatibility)", () => {
       const markdownWithoutAbstract = `---
 id: 550e8400-e29b-41d4-a716-446655440000
@@ -243,6 +304,26 @@ sources: []
       const hasAbstract = result.match(/^abstract:/m);
       expect(hasAbstract).toBeNull();
       expect(result).toContain("id: 550e8400-e29b-41d4-a716-446655440000");
+    });
+
+    it("should serialize frontmatter with custom fields", () => {
+      const frontmatterWithCustom = {
+        ...sampleFrontmatter,
+        author: "John Doe",
+        status: "draft",
+        version: "1.0",
+        metadata: {
+          department: "engineering",
+        },
+      } as any;
+
+      const result = serializeFrontmatter(frontmatterWithCustom, sampleContent);
+      
+      expect(result).toContain("author: John Doe");
+      expect(result).toContain("status: draft");
+      expect(result).toContain("version: '1.0'");
+      expect(result).toContain("metadata:");
+      expect(result).toContain("department: engineering");
     });
 
     it("should handle content with special characters", () => {
@@ -335,6 +416,50 @@ With special characters: $2M, 100%, & symbols
       expect(() => updateFrontmatter(invalidMarkdown, { title: "New Title" })).toThrow(
         "No YAML frontmatter found in content"
       );
+    });
+
+    it("should preserve custom fields when updating frontmatter", () => {
+      const markdownWithCustom = `---
+id: 550e8400-e29b-41d4-a716-446655440000
+title: Test Memory
+category: test
+tags: []
+links: []
+sources: []
+author: John Doe
+status: draft
+---
+
+# Test Content`;
+
+      const updates = {
+        title: "Updated Title",
+      };
+
+      const result = updateFrontmatter(markdownWithCustom, updates);
+      const parsed = parseFrontmatter(result);
+
+      // Updated field
+      expect(parsed.frontmatter.title).toBe("Updated Title");
+      
+      // Custom fields should be preserved
+      expect((parsed.frontmatter as any).author).toBe("John Doe");
+      expect((parsed.frontmatter as any).status).toBe("draft");
+    });
+
+    it("should add new custom fields when updating", () => {
+      const updates = {
+        title: "Updated Title",
+        new_field: "new value",
+        version: "2.0",
+      } as any;
+
+      const result = updateFrontmatter(sampleMarkdown, updates);
+      const parsed = parseFrontmatter(result);
+
+      expect(parsed.frontmatter.title).toBe("Updated Title");
+      expect((parsed.frontmatter as any).new_field).toBe("new value");
+      expect((parsed.frontmatter as any).version).toBe("2.0");
     });
   });
 
@@ -468,6 +593,245 @@ With special characters: $2M, 100%, & symbols
       );
       
       expect(validateFrontmatter(result)).toBe(true);
+    });
+
+    it("should merge template fields into frontmatter", () => {
+      const template = {
+        author: "John Doe",
+        status: "draft",
+        version: "1.0",
+      };
+
+      const result = createFrontmatter(
+        "550e8400-e29b-41d4-a716-446655440000",
+        "Test Memory",
+        "test",
+        [],
+        undefined,
+        template
+      );
+
+      expect(result.id).toBe("550e8400-e29b-41d4-a716-446655440000");
+      expect(result.title).toBe("Test Memory");
+      expect(result.category).toBe("test");
+      expect((result as any).author).toBe("John Doe");
+      expect((result as any).status).toBe("draft");
+      expect((result as any).version).toBe("1.0");
+    });
+
+    it("should throw error when template attempts to override required fields", () => {
+      const template = {
+        id: "should-not-override",
+        title: "should-not-override",
+        category: "should-not-override",
+        created_at: "should-not-override",
+        updated_at: "should-not-override",
+        last_reviewed: "should-not-override",
+        links: ["should-not-override"],
+        author: "John Doe",
+      };
+
+      // Should throw error because template contains protected fields
+      expect(() => createFrontmatter(
+        "550e8400-e29b-41d4-a716-446655440000",
+        "Test Memory",
+        "test",
+        [],
+        undefined,
+        template
+      )).toThrow("Template cannot override protected frontmatter fields: id, title, category, created_at, updated_at, last_reviewed, links");
+    });
+
+    it("should allow template to override optional fields", () => {
+      const template = {
+        tags: ["template-tag"],
+        sources: ["template-source"],
+        abstract: "Template abstract",
+      };
+
+      const result = createFrontmatter(
+        "550e8400-e29b-41d4-a716-446655440000",
+        "Test Memory",
+        "test",
+        ["base-tag"],
+        "Base abstract",
+        template
+      );
+
+      // Template should override optional fields
+      expect(result.tags).toEqual(["template-tag"]);
+      expect(result.sources).toEqual(["template-source"]);
+      expect(result.abstract).toBe("Template abstract");
+    });
+
+    it("should handle template with null values", () => {
+      const template = {
+        review_date: null,
+        superseded_by: null,
+        author: "John Doe",
+      };
+
+      const result = createFrontmatter(
+        "550e8400-e29b-41d4-a716-446655440000",
+        "Test Memory",
+        "test",
+        [],
+        undefined,
+        template
+      );
+
+      expect((result as any).review_date).toBeNull();
+      expect((result as any).superseded_by).toBeNull();
+      expect((result as any).author).toBe("John Doe");
+    });
+
+    it("should handle template with arrays and nested objects", () => {
+      const template = {
+        stakeholders: ["person1", "person2"],
+        metadata: {
+          version: "1.0",
+          department: "engineering",
+        },
+      };
+
+      const result = createFrontmatter(
+        "550e8400-e29b-41d4-a716-446655440000",
+        "Test Memory",
+        "test",
+        [],
+        undefined,
+        template
+      );
+
+      expect((result as any).stakeholders).toEqual(["person1", "person2"]);
+      expect((result as any).metadata).toEqual({
+        version: "1.0",
+        department: "engineering",
+      });
+    });
+
+    it("should throw error when template contains protected 'id' field", () => {
+      const template = {
+        id: "should-not-be-allowed",
+        author: "John Doe",
+      };
+
+      expect(() => createFrontmatter(
+        "550e8400-e29b-41d4-a716-446655440000",
+        "Test Memory",
+        "test",
+        [],
+        undefined,
+        template
+      )).toThrow("Template cannot override protected frontmatter fields: id");
+    });
+
+    it("should throw error when template contains protected 'title' field", () => {
+      const template = {
+        title: "should-not-be-allowed",
+        author: "John Doe",
+      };
+
+      expect(() => createFrontmatter(
+        "550e8400-e29b-41d4-a716-446655440000",
+        "Test Memory",
+        "test",
+        [],
+        undefined,
+        template
+      )).toThrow("Template cannot override protected frontmatter fields: title");
+    });
+
+    it("should throw error when template contains protected 'category' field", () => {
+      const template = {
+        category: "should-not-be-allowed",
+        author: "John Doe",
+      };
+
+      expect(() => createFrontmatter(
+        "550e8400-e29b-41d4-a716-446655440000",
+        "Test Memory",
+        "test",
+        [],
+        undefined,
+        template
+      )).toThrow("Template cannot override protected frontmatter fields: category");
+    });
+
+    it("should throw error when template contains protected timestamp fields", () => {
+      for (const field of ["created_at", "updated_at", "last_reviewed"] as const) {
+        const template = {
+          [field]: "2024-01-01T00:00:00Z",
+          author: "John Doe",
+        };
+
+        expect(() => createFrontmatter(
+          "550e8400-e29b-41d4-a716-446655440000",
+          "Test Memory",
+          "test",
+          [],
+          undefined,
+          template
+        )).toThrow(`Template cannot override protected frontmatter fields: ${field}`);
+      }
+    });
+
+    it("should throw error when template contains protected 'links' field", () => {
+      const template = {
+        links: ["should-not-be-allowed"],
+        author: "John Doe",
+      };
+
+      expect(() => createFrontmatter(
+        "550e8400-e29b-41d4-a716-446655440000",
+        "Test Memory",
+        "test",
+        [],
+        undefined,
+        template
+      )).toThrow("Template cannot override protected frontmatter fields: links");
+    });
+
+    it("should throw error when template contains multiple protected fields", () => {
+      const template = {
+        id: "should-not-be-allowed",
+        title: "should-not-be-allowed",
+        category: "should-not-be-allowed",
+        author: "John Doe",
+      };
+
+      expect(() => createFrontmatter(
+        "550e8400-e29b-41d4-a716-446655440000",
+        "Test Memory",
+        "test",
+        [],
+        undefined,
+        template
+      )).toThrow("Template cannot override protected frontmatter fields: id, title, category");
+    });
+
+    it("should list all protected fields in error message", () => {
+      const template = {
+        id: "should-not-be-allowed",
+      };
+
+      try {
+        createFrontmatter(
+          "550e8400-e29b-41d4-a716-446655440000",
+          "Test Memory",
+          "test",
+          [],
+          undefined,
+          template
+        );
+        expect.fail("Should have thrown an error");
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        expect(errorMessage).toContain("Protected fields are:");
+        for (const field of PROTECTED_FRONTMATTER_FIELDS) {
+          expect(errorMessage).toContain(field);
+        }
+      }
     });
   });
 
