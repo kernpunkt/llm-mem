@@ -533,6 +533,9 @@ End of content`;
         template,
       });
 
+      // Small delay to ensure index is fully ready for searching
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Search for template field values
       const resultsByAuthor = await service.searchMemories({
         query: "Jane Smith",
@@ -570,6 +573,9 @@ End of content`;
         category: "NOTES",
         template,
       });
+
+      // Small delay to ensure index is fully ready for searching
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Search for array values
       const resultsByTag = await service.searchMemories({
@@ -633,6 +639,9 @@ End of content`;
         updatedTemplate
       );
 
+      // Small delay to ensure index is fully ready for searching after update
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Verify new template field values are searchable (new format: "field:author Updated Author")
       const updatedResults = await service.searchMemories({
         query: "Updated Author",
@@ -676,6 +685,9 @@ End of content`;
       const reindexResult = await service.reindexMemories();
       expect(reindexResult.success).toBe(true);
       expect(reindexResult.indexedCount).toBeGreaterThan(0);
+
+      // Small delay to ensure index is fully ready for searching after reindex
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Verify template fields are still searchable after reindex
       const results = await service.searchMemories({

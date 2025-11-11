@@ -11,6 +11,14 @@ import { FileScanner } from "./file-scanner.js";
 export class CoverageService {
   constructor(private readonly memoryService: MemoryService) {}
 
+  /**
+   * Resolves a file path to an absolute path.
+   * Handles cases where filePath is relative (e.g., from memory sources).
+   */
+  private resolveFilePath(filePath: string): string {
+    return path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
+  }
+
   async buildCoverageMap(): Promise<Map<string, ParsedSource[]>> {
     const memories = await this.memoryService.getAllMemories();
     const coverageMap = new Map<string, ParsedSource[]>();
@@ -58,9 +66,7 @@ export class CoverageService {
 
     // Granular analysis via AST scan - ALWAYS performed
     try {
-      // Resolve file path to absolute path for scanning
-      // This handles cases where filePath is relative (e.g., from memory sources)
-      const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
+      const resolvedPath = this.resolveFilePath(filePath);
       const scan = await scanTypescriptOrJavascriptFile(resolvedPath);
       const functions: FunctionCoverage[] = [];
       const classes: ClassCoverage[] = [];
@@ -290,16 +296,13 @@ export class CoverageService {
   private async populateTotals(filePaths: string[]): Promise<void> {
     for (const filePath of filePaths) {
       try {
-        // Resolve file path to absolute path for reading
-        // This handles cases where filePath is relative (e.g., from memory sources)
-        const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
+        const resolvedPath = this.resolveFilePath(filePath);
         const total = await countLinesStream(resolvedPath);
         this.cachedTotals.set(filePath, total);
       } catch {
         // Fallback to buffered read so tests that mock fs.readFile still work
         try {
-          // Resolve file path to absolute path for reading
-          const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
+          const resolvedPath = this.resolveFilePath(filePath);
           const content = await fs.readFile(resolvedPath, "utf8");
           const total = content.split(/\r?\n/).length;
           this.cachedTotals.set(filePath, total);
