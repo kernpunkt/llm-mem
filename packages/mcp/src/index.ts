@@ -1534,7 +1534,7 @@ ${stats.recommendations.join('\n')}`;
                 cleanedContent = cleanedContent.replace(/\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g, '');
                 
                 // Remove all simple markdown links: [[title|display_text]] or [[title]] (except HTTP links).
-                // Note: The display text (if present) is ignored; only the link target is checked for HTTP(S).
+                // Note: The display text (if present) is not captured by the regex and thus not passed to the replacement function; only the link target is checked for HTTP(S).
                 cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|[^\]]+)?\]\]/g, (match, linkText) => {
                   // Check if this is an external HTTP link
                   if (linkText.startsWith('http://') || linkText.startsWith('https://')) {
