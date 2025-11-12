@@ -1533,7 +1533,8 @@ ${stats.recommendations.join('\n')}`;
                 // Remove all Obsidian-style links: [[(CATEGORY)(title)(id)|display_text]]
                 cleanedContent = cleanedContent.replace(/\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g, '');
                 
-                // Remove all simple markdown links: [[title|display_text]] or [[title]] (except HTTP links)
+                // Remove all simple markdown links: [[title|display_text]] or [[title]] (except HTTP links).
+                // Note: The display text (if present) is ignored; only the link target is checked for HTTP(S).
                 cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|[^\]]+)?\]\]/g, (match, linkText) => {
                   // Check if this is an external HTTP link
                   if (linkText.startsWith('http://') || linkText.startsWith('https://')) {

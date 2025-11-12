@@ -12,8 +12,11 @@ export class CoverageService {
   constructor(private readonly memoryService: MemoryService) {}
 
   /**
-   * Resolves a file path to an absolute path.
-   * Handles cases where filePath is relative (e.g., from memory sources).
+   * Resolves relative file paths (e.g., from memory sources) to absolute paths
+   * to ensure consistent file system access.
+   * 
+   * @param filePath - The file path to resolve (may be relative or absolute)
+   * @returns The absolute file path
    */
   private resolveFilePath(filePath: string): string {
     return path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
