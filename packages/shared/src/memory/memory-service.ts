@@ -63,8 +63,11 @@ export class MemoryService {
           } else {
             valueStr = String(value);
           }
-          // Include field name with prefix and value for better searchability
-          // Format: "field:keyname value" allows searching by value and field name prefix
+          // Format: "field:keyname value" - This specific format was chosen to enable multiple search patterns:
+          // 1. Value-only search: Users can search for "John Doe" and find memories with author="John Doe"
+          // 2. Field-prefixed search: Users can search for "field:author" to find all memories with an author field
+          // 3. Combined search: The format ensures both field names and values are tokenized and searchable
+          // The "field:" prefix prevents collisions with actual content values while maintaining searchability
           customFields.push(`field:${key} ${valueStr}`);
         }
       }
