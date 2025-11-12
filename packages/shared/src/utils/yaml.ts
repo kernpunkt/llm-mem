@@ -214,6 +214,26 @@ export function validateFrontmatter(frontmatter: any): frontmatter is MemoryFron
 }
 
 /**
+ * Helper function to validate and merge template field with base value.
+ * Returns the template value if it's defined and passes type validation,
+ * otherwise returns the base value.
+ * 
+ * @param templateValue - Value from template
+ * @param baseValue - Base/default value
+ * @param validator - Type validation function that returns true if value is valid
+ * @returns Template value if valid, otherwise base value
+ */
+function validateAndMergeField<T>(
+  templateValue: unknown,
+  baseValue: T,
+  validator: (value: unknown) => value is T
+): T {
+  return templateValue !== undefined && validator(templateValue)
+    ? templateValue
+    : baseValue;
+}
+
+/**
  * Creates a new frontmatter object with default values.
  * 
  * @param id - Memory ID
@@ -267,15 +287,13 @@ export function createFrontmatter(
       links: base.links,
       // Allow template to override tags, sources, abstract, but only if explicitly provided
       // Validate types before using to prevent unsafe type assertions
-      tags: template.tags !== undefined 
-        ? (Array.isArray(template.tags) ? template.tags : base.tags)
-        : base.tags,
-      sources: template.sources !== undefined
-        ? (Array.isArray(template.sources) ? template.sources : base.sources)
-        : base.sources,
-      abstract: template.abstract !== undefined
-        ? (typeof template.abstract === 'string' ? template.abstract : base.abstract)
-        : base.abstract,
+      tags: validateAndMergeField(template.tags, base.tags, Array.isArray),
+      sources: validateAndMergeField(template.sources, base.sources, Array.isArray),
+      abstract: validateAndMergeField(
+        template.abstract, 
+        base.abstract, 
+        (value): value is string | undefined => typeof value === 'string' || value === undefined
+      ),
     };
   }
   
