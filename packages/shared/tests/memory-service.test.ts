@@ -533,8 +533,9 @@ End of content`;
         template,
       });
 
-      // Small delay to ensure index is fully ready for searching
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Delay to ensure index is fully ready for searching
+      // FlexSearch commit is async, so we need to wait for it to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Search for template field values
       const resultsByAuthor = await service.searchMemories({
@@ -575,7 +576,9 @@ End of content`;
       });
 
       // Small delay to ensure index is fully ready for searching
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Delay to ensure index is fully ready for searching
+      // FlexSearch commit is async, so we need to wait for it to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Search for array values
       const resultsByTag = await service.searchMemories({
@@ -639,8 +642,9 @@ End of content`;
         updatedTemplate
       );
 
-      // Small delay to ensure index is fully ready for searching after update
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Delay to ensure index is fully ready for searching after update
+      // FlexSearch commit is async, so we need to wait for it to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Verify new template field values are searchable (new format: "field:author Updated Author")
       const updatedResults = await service.searchMemories({
@@ -687,7 +691,9 @@ End of content`;
       expect(reindexResult.indexedCount).toBeGreaterThan(0);
 
       // Small delay to ensure index is fully ready for searching after reindex
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Delay to ensure index is fully ready for searching
+      // FlexSearch commit is async, so we need to wait for it to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Verify template fields are still searchable after reindex
       const results = await service.searchMemories({

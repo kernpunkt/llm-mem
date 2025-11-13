@@ -30,11 +30,13 @@ config({ quiet: true });
 
 /**
  * Gets the name prefix from environment variable if set
+ * Trims whitespace and treats whitespace-only values as empty to avoid invalid tool names
  * @returns The prefix with underscore separator, or empty string if not set
  */
 export function getNamePrefix(): string {
   const prefix = process.env.NAME_PREFIX;
-  return prefix ? `${prefix}_` : '';
+  const trimmed = prefix?.trim();
+  return trimmed ? `${trimmed}_` : '';
 }
 
 /**
@@ -729,9 +731,6 @@ function getPrefixedToolNames() {
   );
 }
 
-// Cache prefixed tool names at module initialization
-const prefixedToolNames = getPrefixedToolNames();
-
 /**
  * Runs the MCP server using HTTP transport with H3 framework for debugging and standalone operation.
  * 
@@ -1103,7 +1102,8 @@ export async function runHttp(port: number = 3000): Promise<void> {
           const toolName = body.params.name;
           const toolArgs = body.params.arguments || {};
           
-          // Use cached prefixed tool names (computed at module initialization)
+          // Get current prefixed tool names (computed dynamically to reflect runtime NAME_PREFIX changes)
+          const prefixedToolNames = getPrefixedToolNames();
           let toolResult: { content: Array<{ type: string; text: string }>; isError: boolean };
           
           try {
