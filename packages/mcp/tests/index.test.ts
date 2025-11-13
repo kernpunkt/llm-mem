@@ -1634,8 +1634,8 @@ describe('MCP Template Server', () => {
       it('should handle NAME_PREFIX with only whitespace', () => {
         process.env.NAME_PREFIX = '   ';
         
-        // Whitespace-only string is truthy, so it will be used
-        expect(prefixName('tool')).toBe('   _tool');
+        // Whitespace-only string should be treated as empty, so no prefix is applied
+        expect(prefixName('tool')).toBe('tool');
       });
 
       it('should handle NAME_PREFIX with unicode characters', () => {
