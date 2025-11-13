@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createServer, runStdio, runHttp, main } from '../src/index.js';
+import { createServer, runStdio, runHttp, main, getNamePrefix, prefixName } from '../src/index.js';
 import { createApp, createRouter, eventHandler } from 'h3';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -1377,15 +1377,6 @@ describe('MCP Template Server', () => {
 
   describe('NAME_PREFIX Environment Variable', () => {
     let originalEnv: NodeJS.ProcessEnv;
-
-    // Shared helper functions for prefixing names
-    const getNamePrefix = (): string => {
-      const prefix = process.env.NAME_PREFIX;
-      return prefix ? `${prefix}_` : '';
-    };
-    const prefixName = (name: string): string => {
-      return getNamePrefix() + name;
-    };
 
     beforeEach(() => {
       originalEnv = { ...process.env };

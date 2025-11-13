@@ -224,6 +224,7 @@ describe("CI/CD integration", () => {
   });
 
   it("exits with code 1 when global threshold not met", async () => {
+    await fs.mkdir(tmpDir, { recursive: true });
     const configPath = join(tmpDir, "coverage.fail.json");
     await fs.writeFile(configPath, JSON.stringify({
       thresholds: { overall: 99 },
@@ -236,6 +237,7 @@ describe("CI/CD integration", () => {
   });
 
   it("exits with code 0 when global threshold met", async () => {
+    await fs.mkdir(tmpDir, { recursive: true });
     const configPath = join(tmpDir, "coverage.pass.json");
     await fs.writeFile(configPath, JSON.stringify({
       thresholds: { overall: 0 },
@@ -248,6 +250,7 @@ describe("CI/CD integration", () => {
   });
 
   it("exits with code 1 when scoped threshold not met", async () => {
+    await fs.mkdir(tmpDir, { recursive: true });
     const configPath = join(tmpDir, "coverage.scoped.fail.json");
     await fs.writeFile(configPath, JSON.stringify({
       thresholds: { overall: 0, src: 95, tests: 0 },
@@ -263,6 +266,7 @@ describe("CI/CD integration", () => {
   });
 
   it("emits progress lines to stderr when verbose", async () => {
+    await fs.mkdir(tmpDir, { recursive: true });
     const configPath = join(tmpDir, "coverage.verbose.json");
     await fs.writeFile(configPath, JSON.stringify({
       thresholds: { overall: 0 },

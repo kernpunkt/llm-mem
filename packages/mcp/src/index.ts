@@ -32,7 +32,7 @@ config({ quiet: true });
  * Gets the name prefix from environment variable if set
  * @returns The prefix with underscore separator, or empty string if not set
  */
-function getNamePrefix(): string {
+export function getNamePrefix(): string {
   const prefix = process.env.NAME_PREFIX;
   return prefix ? `${prefix}_` : '';
 }
@@ -42,7 +42,7 @@ function getNamePrefix(): string {
  * @param name The base name to prefix
  * @returns The prefixed name or original name if no prefix is set
  */
-function prefixName(name: string): string {
+export function prefixName(name: string): string {
   return getNamePrefix() + name;
 }
 

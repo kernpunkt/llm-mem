@@ -458,6 +458,9 @@ describe("FlexSearch Integration", () => {
       // Index only one specific memory that contains special characters
       await flexSearchManager.indexMemory(testMemories[0]);
       
+      // Small delay to ensure index is fully ready for searching
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Test with a search term that includes the dollar sign from "Revenue target: $2M"
       // The search should handle the special character gracefully
       const results = await flexSearchManager.searchMemories("Revenue target");
