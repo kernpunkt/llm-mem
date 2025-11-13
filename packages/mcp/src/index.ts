@@ -704,24 +704,29 @@ export async function runStdio(): Promise<void> {
  * Gets the prefixed tool names object for HTTP transport tool execution.
  * Computed once at module initialization for performance.
  */
+// Single source of truth for tool names
+const TOOL_NAMES = [
+  'get_current_date',
+  'write_mem',
+  'read_mem',
+  'get_usage_info',
+  'edit_mem',
+  'search_mem',
+  'link_mem',
+  'unlink_mem',
+  'reindex_mems',
+  'needs_review',
+  'list_mems',
+  'get_mem_stats',
+  'get_flexsearch_config',
+  'get_allowed_values',
+  'fix_links'
+];
+
 function getPrefixedToolNames() {
-  return {
-    get_current_date: prefixName('get_current_date'),
-    write_mem: prefixName('write_mem'),
-    read_mem: prefixName('read_mem'),
-    get_usage_info: prefixName('get_usage_info'),
-    edit_mem: prefixName('edit_mem'),
-    search_mem: prefixName('search_mem'),
-    link_mem: prefixName('link_mem'),
-    unlink_mem: prefixName('unlink_mem'),
-    reindex_mems: prefixName('reindex_mems'),
-    needs_review: prefixName('needs_review'),
-    list_mems: prefixName('list_mems'),
-    get_mem_stats: prefixName('get_mem_stats'),
-    get_flexsearch_config: prefixName('get_flexsearch_config'),
-    get_allowed_values: prefixName('get_allowed_values'),
-    fix_links: prefixName('fix_links')
-  };
+  return Object.fromEntries(
+    TOOL_NAMES.map(name => [name, prefixName(name)])
+  );
 }
 
 // Cache prefixed tool names at module initialization
