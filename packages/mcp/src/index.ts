@@ -701,6 +701,33 @@ export async function runStdio(): Promise<void> {
 }
 
 /**
+ * Gets the prefixed tool names object for HTTP transport tool execution.
+ * Computed once at module initialization for performance.
+ */
+function getPrefixedToolNames() {
+  return {
+    get_current_date: prefixName('get_current_date'),
+    write_mem: prefixName('write_mem'),
+    read_mem: prefixName('read_mem'),
+    get_usage_info: prefixName('get_usage_info'),
+    edit_mem: prefixName('edit_mem'),
+    search_mem: prefixName('search_mem'),
+    link_mem: prefixName('link_mem'),
+    unlink_mem: prefixName('unlink_mem'),
+    reindex_mems: prefixName('reindex_mems'),
+    needs_review: prefixName('needs_review'),
+    list_mems: prefixName('list_mems'),
+    get_mem_stats: prefixName('get_mem_stats'),
+    get_flexsearch_config: prefixName('get_flexsearch_config'),
+    get_allowed_values: prefixName('get_allowed_values'),
+    fix_links: prefixName('fix_links')
+  };
+}
+
+// Cache prefixed tool names at module initialization
+const prefixedToolNames = getPrefixedToolNames();
+
+/**
  * Runs the MCP server using HTTP transport with H3 framework for debugging and standalone operation.
  * 
  * This transport provides HTTP endpoints for MCP protocol communication, useful for:
@@ -1071,25 +1098,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
           const toolName = body.params.name;
           const toolArgs = body.params.arguments || {};
           
-          // Compute prefixed tool names once for comparison
-          const prefixedToolNames = {
-            get_current_date: prefixName('get_current_date'),
-            write_mem: prefixName('write_mem'),
-            read_mem: prefixName('read_mem'),
-            get_usage_info: prefixName('get_usage_info'),
-            edit_mem: prefixName('edit_mem'),
-            search_mem: prefixName('search_mem'),
-            link_mem: prefixName('link_mem'),
-            unlink_mem: prefixName('unlink_mem'),
-            reindex_mems: prefixName('reindex_mems'),
-            needs_review: prefixName('needs_review'),
-            list_mems: prefixName('list_mems'),
-            get_mem_stats: prefixName('get_mem_stats'),
-            get_flexsearch_config: prefixName('get_flexsearch_config'),
-            get_allowed_values: prefixName('get_allowed_values'),
-            fix_links: prefixName('fix_links')
-          };
-          
+          // Use cached prefixed tool names (computed at module initialization)
           let toolResult: { content: Array<{ type: string; text: string }>; isError: boolean };
           
           try {
