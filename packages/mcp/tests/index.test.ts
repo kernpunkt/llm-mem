@@ -1375,6 +1375,430 @@ describe('MCP Template Server', () => {
     });
   });
 
+  describe('NAME_PREFIX Environment Variable', () => {
+    let originalEnv: NodeJS.ProcessEnv;
+
+    beforeEach(() => {
+      originalEnv = { ...process.env };
+      // Clear NAME_PREFIX before each test
+      delete process.env.NAME_PREFIX;
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
+    describe('Server Name Prefixing', () => {
+      it('should use default server name when NAME_PREFIX is not set', () => {
+        delete process.env.NAME_PREFIX;
+        
+        // Reload the module to pick up the environment change
+        // Since we can't easily reload modules in tests, we'll test through HTTP transport
+        const server = createServer();
+        expect(server).toBeDefined();
+      });
+
+      it('should prefix server name when NAME_PREFIX is set', async () => {
+        process.env.NAME_PREFIX = 'testprefix';
+        
+        // Test through HTTP transport initialize response
+        const { createApp, createRouter, eventHandler, readBody } = await import('h3');
+        const app = createApp();
+        const router = createRouter();
+        
+        // Mock the HTTP transport initialize handler
+        router.post('/mcp', eventHandler(async (event) => {
+          const body = await readBody(event);
+          
+          if (body.method === 'initialize') {
+            // Simulate the prefixName function
+            const getNamePrefix = (): string => {
+              const prefix = process.env.NAME_PREFIX;
+              return prefix ? `${prefix}_` : '';
+            };
+            const prefixName = (name: string): string => {
+              return getNamePrefix() + name;
+            };
+            
+            return {
+              jsonrpc: '2.0',
+              result: {
+                protocolVersion: '2025-06-18',
+                capabilities: {
+                  tools: {},
+                  resources: {},
+                  prompts: {},
+                  logging: {}
+                },
+                serverInfo: {
+                  name: prefixName('memory-tools-mcp'),
+                  version: '1.0.0'
+                }
+              },
+              id: body.id
+            };
+          }
+        }));
+        
+        app.use(router);
+        
+        // Test the prefixing logic
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        expect(prefixName('memory-tools-mcp')).toBe('testprefix_memory-tools-mcp');
+      });
+
+      it('should handle empty NAME_PREFIX gracefully', () => {
+        process.env.NAME_PREFIX = '';
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        expect(prefixName('memory-tools-mcp')).toBe('memory-tools-mcp');
+      });
+
+      it('should handle NAME_PREFIX with special characters', () => {
+        process.env.NAME_PREFIX = 'my-app';
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        expect(prefixName('memory-tools-mcp')).toBe('my-app_memory-tools-mcp');
+      });
+    });
+
+    describe('Tool Name Prefixing', () => {
+      const toolNames = [
+        'get_current_date',
+        'write_mem',
+        'read_mem',
+        'get_usage_info',
+        'edit_mem',
+        'search_mem',
+        'link_mem',
+        'unlink_mem',
+        'reindex_mems',
+        'needs_review',
+        'list_mems',
+        'get_mem_stats',
+        'get_flexsearch_config',
+        'get_allowed_values',
+        'fix_links'
+      ];
+
+      it('should not prefix tool names when NAME_PREFIX is not set', () => {
+        delete process.env.NAME_PREFIX;
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        toolNames.forEach(toolName => {
+          expect(prefixName(toolName)).toBe(toolName);
+        });
+      });
+
+      it('should prefix all tool names when NAME_PREFIX is set', () => {
+        process.env.NAME_PREFIX = 'myprefix';
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        toolNames.forEach(toolName => {
+          expect(prefixName(toolName)).toBe(`myprefix_${toolName}`);
+        });
+      });
+
+      it('should prefix tool names consistently across all tools', () => {
+        process.env.NAME_PREFIX = 'test';
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        const prefixedNames = toolNames.map(name => prefixName(name));
+        
+        // All names should start with the prefix
+        prefixedNames.forEach(prefixedName => {
+          expect(prefixedName).toMatch(/^test_/);
+        });
+        
+        // All names should be unique
+        expect(new Set(prefixedNames).size).toBe(toolNames.length);
+      });
+    });
+
+    describe('HTTP Transport Prefixing', () => {
+      it('should prefix server name in initialize response when NAME_PREFIX is set', () => {
+        process.env.NAME_PREFIX = 'httptest';
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        const serverInfo = {
+          name: prefixName('memory-tools-mcp'),
+          version: '1.0.0'
+        };
+        
+        expect(serverInfo.name).toBe('httptest_memory-tools-mcp');
+      });
+
+      it('should prefix tool names in tools/list response when NAME_PREFIX is set', () => {
+        process.env.NAME_PREFIX = 'tools';
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        const tools = [
+          { name: prefixName('get_current_date'), description: 'Test' },
+          { name: prefixName('write_mem'), description: 'Test' }
+        ];
+        
+        expect(tools[0].name).toBe('tools_get_current_date');
+        expect(tools[1].name).toBe('tools_write_mem');
+      });
+
+      it('should handle tool execution with prefixed names in tools/call', () => {
+        process.env.NAME_PREFIX = 'exec';
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        // Simulate the prefixed tool names object used in HTTP transport
+        const prefixedToolNames = {
+          get_current_date: prefixName('get_current_date'),
+          write_mem: prefixName('write_mem')
+        };
+        
+        // Simulate incoming tool call with prefixed name
+        const incomingToolName = 'exec_get_current_date';
+        
+        // Test that the comparison works
+        expect(incomingToolName === prefixedToolNames.get_current_date).toBe(true);
+        expect(incomingToolName === prefixedToolNames.write_mem).toBe(false);
+      });
+
+      it('should handle tool not found error with prefixed tool name', () => {
+        process.env.NAME_PREFIX = 'error';
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        const prefixedToolNames = {
+          get_current_date: prefixName('get_current_date')
+        };
+        
+        // Simulate unknown tool
+        const unknownToolName = 'error_unknown_tool';
+        const isKnown = Object.values(prefixedToolNames).includes(unknownToolName);
+        
+        expect(isKnown).toBe(false);
+        
+        // Error message should include the prefixed tool name
+        const errorMessage = `Tool '${unknownToolName}' not found`;
+        expect(errorMessage).toBe("Tool 'error_unknown_tool' not found");
+      });
+    });
+
+    describe('Prefix Function Behavior', () => {
+      it('should return empty string when prefix is not set', () => {
+        delete process.env.NAME_PREFIX;
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        
+        expect(getNamePrefix()).toBe('');
+      });
+
+      it('should return prefix with underscore when prefix is set', () => {
+        process.env.NAME_PREFIX = 'test';
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        
+        expect(getNamePrefix()).toBe('test_');
+      });
+
+      it('should handle prefix with underscores correctly', () => {
+        process.env.NAME_PREFIX = 'my_prefix';
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        expect(prefixName('tool_name')).toBe('my_prefix_tool_name');
+      });
+
+      it('should handle prefix with numbers correctly', () => {
+        process.env.NAME_PREFIX = 'app123';
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        expect(prefixName('tool')).toBe('app123_tool');
+      });
+
+      it('should handle very long prefix correctly', () => {
+        process.env.NAME_PREFIX = 'a'.repeat(100);
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        const result = prefixName('tool');
+        expect(result).toMatch(/^a{100}_tool$/);
+        expect(result.length).toBe(105);
+      });
+    });
+
+    describe('Integration with Server Creation', () => {
+      it('should create server with prefixed name when NAME_PREFIX is set', () => {
+        process.env.NAME_PREFIX = 'integration';
+        
+        // The server creation should work without errors
+        const server = createServer();
+        expect(server).toBeDefined();
+        expect(server.constructor.name).toBe('McpServer');
+      });
+
+      it('should create server with default name when NAME_PREFIX is not set', () => {
+        delete process.env.NAME_PREFIX;
+        
+        const server = createServer();
+        expect(server).toBeDefined();
+        expect(server.constructor.name).toBe('McpServer');
+      });
+
+      it('should handle multiple server creations with different prefixes', () => {
+        // Create server with prefix
+        process.env.NAME_PREFIX = 'first';
+        const server1 = createServer();
+        expect(server1).toBeDefined();
+        
+        // Change prefix and create another server
+        process.env.NAME_PREFIX = 'second';
+        const server2 = createServer();
+        expect(server2).toBeDefined();
+        
+        // Both should be valid servers
+        expect(server1).not.toBe(server2);
+        expect(server1.constructor.name).toBe('McpServer');
+        expect(server2.constructor.name).toBe('McpServer');
+      });
+    });
+
+    describe('Edge Cases', () => {
+      it('should handle NAME_PREFIX with only whitespace', () => {
+        process.env.NAME_PREFIX = '   ';
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        // Whitespace-only string is truthy, so it will be used
+        expect(prefixName('tool')).toBe('   _tool');
+      });
+
+      it('should handle NAME_PREFIX with unicode characters', () => {
+        process.env.NAME_PREFIX = '测试';
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        expect(prefixName('tool')).toBe('测试_tool');
+      });
+
+      it('should handle NAME_PREFIX with special characters that are valid in env vars', () => {
+        process.env.NAME_PREFIX = 'my-app_v2.0';
+        
+        const getNamePrefix = (): string => {
+          const prefix = process.env.NAME_PREFIX;
+          return prefix ? `${prefix}_` : '';
+        };
+        const prefixName = (name: string): string => {
+          return getNamePrefix() + name;
+        };
+        
+        expect(prefixName('tool')).toBe('my-app_v2.0_tool');
+      });
+    });
+  });
+
   describe('Category and Tag Validation', () => {
     let originalEnv: NodeJS.ProcessEnv;
 

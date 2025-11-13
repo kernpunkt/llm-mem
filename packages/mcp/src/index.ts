@@ -29,6 +29,24 @@ import { loadMemoryConfig, type MemoryConfig, mergeTemplates } from "@llm-mem/sh
 config({ quiet: true });
 
 /**
+ * Gets the name prefix from environment variable if set
+ * @returns The prefix with underscore separator, or empty string if not set
+ */
+function getNamePrefix(): string {
+  const prefix = process.env.NAME_PREFIX;
+  return prefix ? `${prefix}_` : '';
+}
+
+/**
+ * Prefixes a name with NAME_PREFIX if set
+ * @param name The base name to prefix
+ * @returns The prefixed name or original name if no prefix is set
+ */
+function prefixName(name: string): string {
+  return getNamePrefix() + name;
+}
+
+/**
  * Validation utilities for categories and tags
  * 
  * Note: Validation functions are now imported from @llm-mem/shared
@@ -67,7 +85,7 @@ config({ quiet: true });
 export function createServer(): McpServer {
   // Enhanced capabilities per MCP 2025-06-18 specification
   const server = new McpServer({
-    name: "memory-tools-mcp",
+    name: prefixName("memory-tools-mcp"),
     version: "1.0.0",
     capabilities: {
       tools: {},      // Core tool execution capability
@@ -79,7 +97,7 @@ export function createServer(): McpServer {
 
   // Memory Tools - Phase 2
   server.tool(
-    "get_current_date",
+    prefixName("get_current_date"),
     "Returns the current date/time in the requested format",
     {
       format: z.enum(["iso", "locale", "timestamp", "date_only"]).optional().describe("Date format (default: iso)")
@@ -115,7 +133,7 @@ export function createServer(): McpServer {
   );
 
   server.tool(
-    "write_mem",
+    prefixName("write_mem"),
     "Creates a new memory as a markdown file and indexes it",
     {
       title: z.string().min(1).describe("Title of the memory"),
@@ -155,7 +173,7 @@ export function createServer(): McpServer {
   );
 
   server.tool(
-    "read_mem",
+    prefixName("read_mem"),
     "Retrieves a memory by ID or title with optional formatting",
     {
       identifier: z.string().min(1).describe("Memory ID or title"),
@@ -181,7 +199,7 @@ export function createServer(): McpServer {
 
 
   server.tool(
-    "get_usage_info",
+    prefixName("get_usage_info"),
     "Returns usage documentation and examples for all memory tools",
     {},
     async () => {
@@ -205,7 +223,7 @@ export function createServer(): McpServer {
 
   // Phase 3 Memory Tools
   server.tool(
-    "edit_mem",
+    prefixName("edit_mem"),
     "Updates an existing memory's content, title, tags, category, sources, or abstract",
     {
       id: z.string().uuid().describe("Memory ID to edit"),
@@ -267,7 +285,7 @@ export function createServer(): McpServer {
   );
 
   server.tool(
-    "search_mem",
+    prefixName("search_mem"),
     "Searches through memories using full-text search with optional filters",
     {
       query: z.string().min(1).describe("Search terms"),
@@ -304,7 +322,7 @@ export function createServer(): McpServer {
   );
 
   server.tool(
-    "link_mem",
+    prefixName("link_mem"),
     "Creates bidirectional links between two memories",
     {
       source_id: z.string().uuid().describe("ID of the source memory"),
@@ -334,7 +352,7 @@ export function createServer(): McpServer {
 
 
   server.tool(
-    "unlink_mem",
+    prefixName("unlink_mem"),
     "Removes bidirectional links between two memories",
     {
       source_id: z.string().uuid().describe("ID of the source memory"),
@@ -361,7 +379,7 @@ export function createServer(): McpServer {
   );
 
   server.tool(
-    "reindex_mems",
+    prefixName("reindex_mems"),
     "Clears the FlexSearch indexes and reindexes all documents in notestore_path",
     {},
     async () => {
@@ -385,7 +403,7 @@ export function createServer(): McpServer {
   );
 
   server.tool(
-    "needs_review",
+    prefixName("needs_review"),
     "Returns all memories that have a last_reviewed date before the given date",
     {
       date: z.string().describe("Cutoff date in ISO format (e.g., '2024-01-15T00:00:00Z')")
@@ -419,7 +437,7 @@ export function createServer(): McpServer {
   );
 
   server.tool(
-    "list_mems",
+    prefixName("list_mems"),
     "Returns a JSON array of all memories with optional filtering by category, tags, and limit",
     {
       category: z.string().optional().describe("Filter memories by category"),
@@ -455,7 +473,7 @@ export function createServer(): McpServer {
   );
 
   server.tool(
-    "get_mem_stats",
+    prefixName("get_mem_stats"),
     "Returns comprehensive statistics about the memory store including counts, averages, and analysis of memory health",
     {},
     async () => {
@@ -480,7 +498,7 @@ export function createServer(): McpServer {
   );
 
   server.tool(
-    "get_flexsearch_config",
+    prefixName("get_flexsearch_config"),
     "Returns the current FlexSearch configuration including stopwords and environment settings",
     {},
     async () => {
@@ -522,7 +540,7 @@ export function createServer(): McpServer {
   );
 
   server.tool(
-    "get_allowed_values",
+    prefixName("get_allowed_values"),
     "Returns the currently allowed categories and tags based on environment configuration",
     {},
     async () => {
@@ -558,7 +576,7 @@ export function createServer(): McpServer {
   );
 
   server.tool(
-    "fix_links",
+    prefixName("fix_links"),
     "Fixes and recreates proper link structure for a memory by cleaning up broken links and recreating valid ones",
     {
       memory_id: z.string().uuid().describe("ID of the memory to fix links for")
@@ -762,7 +780,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                 logging: {}
               },
               serverInfo: {
-                name: 'memory-tools-mcp',
+                name: prefixName('memory-tools-mcp'),
                 version: '1.0.0'
               }
             },
@@ -781,7 +799,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
               tools: [
 
                 {
-                  name: 'get_current_date',
+                  name: prefixName('get_current_date'),
                   description: 'Returns the current date/time in the requested format',
                   inputSchema: {
                     type: 'object',
@@ -795,7 +813,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }
                 },
                 {
-                  name: 'write_mem',
+                  name: prefixName('write_mem'),
                   description: 'Creates a new memory as a markdown file and indexes it',
                   inputSchema: {
                     type: 'object',
@@ -827,7 +845,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }
                 },
                 {
-                  name: 'read_mem',
+                  name: prefixName('read_mem'),
                   description: 'Retrieves a memory by ID or title with optional formatting',
                   inputSchema: {
                     type: 'object',
@@ -846,7 +864,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }
                 },
                 {
-                  name: 'get_usage_info',
+                  name: prefixName('get_usage_info'),
                   description: 'Returns usage documentation and examples for all memory tools',
                   inputSchema: {
                     type: 'object',
@@ -854,7 +872,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }
                 },
                 {
-                  name: 'edit_mem',
+                  name: prefixName('edit_mem'),
                   description: 'Updates an existing memory\'s content, title, tags, category, or sources',
                   inputSchema: {
                     type: 'object',
@@ -890,7 +908,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }
                 },
                 {
-                  name: 'search_mem',
+                  name: prefixName('search_mem'),
                   description: 'Searches through memories using full-text search with optional filters',
                   inputSchema: {
                     type: 'object',
@@ -917,7 +935,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }
                 },
                 {
-                  name: 'link_mem',
+                  name: prefixName('link_mem'),
                   description: 'Creates bidirectional links between two memories',
                   inputSchema: {
                     type: 'object',
@@ -939,7 +957,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }
                 },
                 {
-                  name: 'unlink_mem',
+                  name: prefixName('unlink_mem'),
                   description: 'Removes bidirectional links between two memories',
                   inputSchema: {
                     type: 'object',
@@ -957,7 +975,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }
                 },
                 {
-                  name: 'reindex_mems',
+                  name: prefixName('reindex_mems'),
                   description: 'Clears the FlexSearch indexes and reindexes all documents in notestore_path',
                   inputSchema: {
                     type: 'object',
@@ -965,7 +983,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }
                 },
                 {
-                  name: 'needs_review',
+                  name: prefixName('needs_review'),
                   description: 'Returns all memories that have a last_reviewed date before the given date',
                   inputSchema: {
                     type: 'object',
@@ -979,7 +997,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }
                 },
                 {
-                  name: 'list_mems',
+                  name: prefixName('list_mems'),
                   description: 'Returns a JSON array of all memories with optional filtering by category, tags, and limit',
                   inputSchema: {
                     type: 'object',
@@ -1001,7 +1019,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }
                 },
                 {
-                  name: 'get_mem_stats',
+                  name: prefixName('get_mem_stats'),
                   description: 'Returns comprehensive statistics about the memory store including counts, averages, and analysis of memory health',
                   inputSchema: {
                     type: 'object',
@@ -1009,7 +1027,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }
                 },
                 {
-                  name: 'get_flexsearch_config',
+                  name: prefixName('get_flexsearch_config'),
                   description: 'Returns the current FlexSearch configuration including stopwords and environment settings',
                   inputSchema: {
                     type: 'object',
@@ -1017,7 +1035,15 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }
                 },
                 {
-                  name: 'fix_links',
+                  name: prefixName('get_allowed_values'),
+                  description: 'Returns the currently allowed categories and tags based on environment configuration',
+                  inputSchema: {
+                    type: 'object',
+                    properties: {}
+                  }
+                },
+                {
+                  name: prefixName('fix_links'),
                   description: 'Fixes and recreates proper link structure for a memory by cleaning up broken links and recreating valid ones',
                   inputSchema: {
                     type: 'object',
@@ -1045,13 +1071,29 @@ export async function runHttp(port: number = 3000): Promise<void> {
           const toolName = body.params.name;
           const toolArgs = body.params.arguments || {};
           
+          // Compute prefixed tool names once for comparison
+          const prefixedToolNames = {
+            get_current_date: prefixName('get_current_date'),
+            write_mem: prefixName('write_mem'),
+            read_mem: prefixName('read_mem'),
+            get_usage_info: prefixName('get_usage_info'),
+            edit_mem: prefixName('edit_mem'),
+            search_mem: prefixName('search_mem'),
+            link_mem: prefixName('link_mem'),
+            unlink_mem: prefixName('unlink_mem'),
+            reindex_mems: prefixName('reindex_mems'),
+            needs_review: prefixName('needs_review'),
+            list_mems: prefixName('list_mems'),
+            get_mem_stats: prefixName('get_mem_stats'),
+            get_flexsearch_config: prefixName('get_flexsearch_config'),
+            get_allowed_values: prefixName('get_allowed_values'),
+            fix_links: prefixName('fix_links')
+          };
+          
           let toolResult: { content: Array<{ type: string; text: string }>; isError: boolean };
           
           try {
-            switch (toolName) {
-
-                
-              case 'get_current_date': {
+            if (toolName === prefixedToolNames.get_current_date) {
                 const format = (toolArgs.format as string) || 'iso';
                 const now = new Date();
                 let timeString: string;
@@ -1069,10 +1111,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   content: [{ type: 'text', text: `${timeString} (${tz})` }],
                   isError: false
                 };
-                break;
-              }
-                
-              case 'write_mem': {
+            } else if (toolName === prefixedToolNames.write_mem) {
                 const title = toolArgs.title as string;
                 const content = toolArgs.content as string;
                 const tags = (toolArgs.tags as string[]) ?? [];
@@ -1099,10 +1138,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   content: [{ type: 'text', text: `id: ${mem.id}\nfile: ${mem.file_path}\ncreated_at: ${mem.created_at}` }],
                   isError: false
                 };
-                break;
-              }
-                
-              case 'read_mem': {
+            } else if (toolName === prefixedToolNames.read_mem) {
                 const identifier = toolArgs.identifier as string;
                 const format = (toolArgs.format as string) || 'markdown';
                 
@@ -1141,10 +1177,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   const markdown = serializeFrontmatter(frontmatter as any, memory.content);
                   toolResult = { content: [{ type: 'text', text: markdown }], isError: false };
                 }
-                break;
-              }
-                
-              case 'get_usage_info': {
+            } else if (toolName === prefixedToolNames.get_usage_info) {
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories" };
                 const usageFilePath = join(cfg.notestorePath, "usage.md");
                 
@@ -1160,10 +1193,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                     isError: true
                   };
                 }
-                break;
-              }
-                
-              case 'edit_mem': {
+            } else if (toolName === prefixedToolNames.edit_mem) {
                 const id = toolArgs.id as string;
                 const title = toolArgs.title as string | undefined;
                 const content = toolArgs.content as string | undefined;
@@ -1211,10 +1241,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   }],
                   isError: false
                 };
-                break;
-              }
-
-              case 'search_mem': {
+            } else if (toolName === prefixedToolNames.search_mem) {
                 const query = toolArgs.query as string;
                 const limit = toolArgs.limit as number || 10;
                 const category = toolArgs.category as string;
@@ -1248,10 +1275,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                     isError: false
                   };
                 }
-                break;
-              }
-
-              case 'link_mem': {
+            } else if (toolName === prefixedToolNames.link_mem) {
                 const source_id = toolArgs.source_id as string;
                 const target_id = toolArgs.target_id as string;
                 const link_text = toolArgs.link_text as string;
@@ -1270,10 +1294,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   content: [{ type: 'text', text: result.message }],
                   isError: false
                 };
-                break;
-              }
-
-              case 'unlink_mem': {
+            } else if (toolName === prefixedToolNames.unlink_mem) {
                 const source_id = toolArgs.source_id as string;
                 const target_id = toolArgs.target_id as string;
 
@@ -1291,10 +1312,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   content: [{ type: 'text', text: result.message }],
                   isError: false
                 };
-                break;
-              }
-
-              case 'reindex_mems': {
+            } else if (toolName === prefixedToolNames.reindex_mems) {
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
                 const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 const result = await memoryService.reindexMemories();
@@ -1305,10 +1323,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                   content: [{ type: 'text', text: result.message }],
                   isError: false
                 };
-                break;
-              }
-
-              case 'needs_review': {
+            } else if (toolName === prefixedToolNames.needs_review) {
                 const date = toolArgs.date as string;
                 if (!date) {
                   throw new Error('Missing required parameter: date');
@@ -1338,10 +1353,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                     isError: false
                   };
                 }
-                break;
-              }
-
-              case 'list_mems': {
+            } else if (toolName === prefixedToolNames.list_mems) {
                 const category = toolArgs.category as string;
                 const tags = toolArgs.tags as string[];
                 const limit = toolArgs.limit as number || 100;
@@ -1371,10 +1383,7 @@ export async function runHttp(port: number = 3000): Promise<void> {
                     isError: false
                   };
                 }
-                break;
-              }
-
-              case 'get_mem_stats': {
+            } else if (toolName === prefixedToolNames.get_mem_stats) {
                 const cfg = (global as any).MEMORY_CONFIG || { notestorePath: "./memories", indexPath: "./memories/index" };
                 const memoryService = await memoryServiceManager.getService({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
                 const stats = await memoryService.getMemoryStatistics();
@@ -1452,10 +1461,7 @@ ${stats.recommendations.join('\n')}`;
                   }],
                   isError: false
                 };
-                break;
-              }
-
-              case 'get_flexsearch_config': {
+            } else if (toolName === prefixedToolNames.get_flexsearch_config) {
                 const { parseFlexSearchConfig } = await import('@llm-mem/shared');
                 const config = parseFlexSearchConfig();
                 
@@ -1485,10 +1491,31 @@ ${stats.recommendations.join('\n')}`;
                   }],
                   isError: false
                 };
-                break;
-              }
-
-              case 'fix_links': {
+            } else if (toolName === prefixedToolNames.get_allowed_values) {
+                const allowedCategories = parseAllowedValues(process.env.ALLOWED_CATEGORIES);
+                const allowedTags = parseAllowedValues(process.env.ALLOWED_TAGS);
+                
+                let message = "Category and Tag Restrictions:\n\n";
+                
+                if (allowedCategories) {
+                  message += `**Allowed Categories:** ${allowedCategories.join(", ")}\n`;
+                } else {
+                  message += "**Categories:** No restrictions (any category allowed)\n";
+                }
+                
+                if (allowedTags) {
+                  message += `**Allowed Tags:** ${allowedTags.join(", ")}\n`;
+                } else {
+                  message += "**Tags:** No restrictions (any tags allowed)\n";
+                }
+                
+                message += "\nTo set restrictions, configure ALLOWED_CATEGORIES and/or ALLOWED_TAGS environment variables with comma-separated values.";
+                
+                toolResult = {
+                  content: [{ type: 'text', text: message }],
+                  isError: false
+                };
+            } else if (toolName === prefixedToolNames.fix_links) {
                 const memory_id = toolArgs.memory_id as string;
                 
                 if (!memory_id) {
@@ -1505,89 +1532,87 @@ ${stats.recommendations.join('\n')}`;
                     content: [{ type: 'text', text: `Memory not found: ${memory_id}` }],
                     isError: true
                   };
-                  break;
-                }
-
-                // Store the current link IDs for later processing
-                const currentLinkIds = [...memory.links];
-                
-                // Step 1: Unlink all current links
-                for (const linkId of currentLinkIds) {
-                  try {
-                    await memoryService.unlinkMemories({ source_id: memory_id, target_id: linkId });
-                  } catch (error) {
-                    // Log but continue with other links
-                    console.error(`Failed to unlink ${linkId}: ${error}`);
-                  }
-                }
-
-                // Step 2: Remove ALL markdown links from content (keep only HTTP links)
-                let cleanedContent = memory.content;
-                
-                // Remove everything after "## Related" section (including the section itself)
-                const relatedSectionIndex = cleanedContent.indexOf('## Related');
-                if (relatedSectionIndex !== -1) {
-                  cleanedContent = cleanedContent.substring(0, relatedSectionIndex).trim();
-                }
-                
-                // Remove all Obsidian-style links: [[(CATEGORY)(title)(id)|display_text]]
-                cleanedContent = cleanedContent.replace(/\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g, '');
-                
-                // Remove all simple markdown links: [[title|display_text]] or [[title]] (except HTTP links).
-                // Note: The display text (if present) is not captured by the regex and thus not passed to the replacement function; only the link target is checked for HTTP(S).
-                cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|[^\]]+)?\]\]/g, (match, linkText) => {
-                  // Check if this is an external HTTP link
-                  if (linkText.startsWith('http://') || linkText.startsWith('https://')) {
-                    return match; // Keep external links
-                  }
-                  // Remove internal links completely
-                  return '';
-                });
-                
-                // Clean up excessive empty lines and whitespace
-                cleanedContent = cleanedContent
-                  .replace(/\n\s*\n\s*\n+/g, '\n\n')  // Remove triple+ newlines
-                  .replace(/[ \t]+$/gm, '')           // Remove trailing whitespace
-                  .replace(/^\s+$/gm, '')             // Remove lines with only whitespace
-                  .replace(/\n{3,}/g, '\n\n')         // Limit to max 2 consecutive newlines
-                  .trim();                            // Remove leading/trailing whitespace
-
-                // Step 3: Update the memory with cleaned content
-                if (cleanedContent !== memory.content) {
-                  await memoryService.updateMemory({
-                    id: memory_id,
-                    content: cleanedContent
-                  });
-                }
-
-                // Step 4: Recreate links using IDs from YAML frontmatter (as if link_mem was called for each)
-                let successfulLinks = 0;
-                let failedLinks = 0;
-                
-                // Recreate links for all IDs in the YAML frontmatter
-                for (const linkId of currentLinkIds) {
-                  try {
-                    // Verify the target memory still exists
-                    const targetMemory = await memoryService.readMemory({ id: linkId });
-                    if (targetMemory) {
-                      // Use link_mem to create proper bidirectional links and Obsidian-style content
-                      await memoryService.linkMemories({ 
-                        source_id: memory_id, 
-                        target_id: linkId,
-                        link_text: targetMemory.title
-                      });
-                      successfulLinks++;
-                    } else {
-                      failedLinks++;
+                } else {
+                  // Store the current link IDs for later processing
+                  const currentLinkIds = [...memory.links];
+                  
+                  // Step 1: Unlink all current links
+                  for (const linkId of currentLinkIds) {
+                    try {
+                      await memoryService.unlinkMemories({ source_id: memory_id, target_id: linkId });
+                    } catch (error) {
+                      // Log but continue with other links
+                      console.error(`Failed to unlink ${linkId}: ${error}`);
                     }
-                  } catch (error) {
-                    failedLinks++;
-                    console.error(`Failed to recreate link to ${linkId}: ${error}`);
                   }
-                }
 
-                // Generate summary message
-                const summary = `Link structure fixed for memory "${memory.title}" (ID: ${memory_id}):
+                  // Step 2: Remove ALL markdown links from content (keep only HTTP links)
+                  let cleanedContent = memory.content;
+                  
+                  // Remove everything after "## Related" section (including the section itself)
+                  const relatedSectionIndex = cleanedContent.indexOf('## Related');
+                  if (relatedSectionIndex !== -1) {
+                    cleanedContent = cleanedContent.substring(0, relatedSectionIndex).trim();
+                  }
+                  
+                  // Remove all Obsidian-style links: [[(CATEGORY)(title)(id)|display_text]]
+                  cleanedContent = cleanedContent.replace(/\[\[\(([^)]+)\)\(([^)]+)\)\(([^)]+)\)(?:\|([^\]]+))?\]\]/g, '');
+                  
+                  // Remove all simple markdown links: [[title|display_text]] or [[title]] (except HTTP links).
+                  // Note: The display text (if present) is not captured by the regex and thus not passed to the replacement function; only the link target is checked for HTTP(S).
+                  cleanedContent = cleanedContent.replace(/\[\[([^|\]]+)(?:\|[^\]]+)?\]\]/g, (match, linkText) => {
+                    // Check if this is an external HTTP link
+                    if (linkText.startsWith('http://') || linkText.startsWith('https://')) {
+                      return match; // Keep external links
+                    }
+                    // Remove internal links completely
+                    return '';
+                  });
+                  
+                  // Clean up excessive empty lines and whitespace
+                  cleanedContent = cleanedContent
+                    .replace(/\n\s*\n\s*\n+/g, '\n\n')  // Remove triple+ newlines
+                    .replace(/[ \t]+$/gm, '')           // Remove trailing whitespace
+                    .replace(/^\s+$/gm, '')             // Remove lines with only whitespace
+                    .replace(/\n{3,}/g, '\n\n')         // Limit to max 2 consecutive newlines
+                    .trim();                            // Remove leading/trailing whitespace
+
+                  // Step 3: Update the memory with cleaned content
+                  if (cleanedContent !== memory.content) {
+                    await memoryService.updateMemory({
+                      id: memory_id,
+                      content: cleanedContent
+                    });
+                  }
+
+                  // Step 4: Recreate links using IDs from YAML frontmatter (as if link_mem was called for each)
+                  let successfulLinks = 0;
+                  let failedLinks = 0;
+                  
+                  // Recreate links for all IDs in the YAML frontmatter
+                  for (const linkId of currentLinkIds) {
+                    try {
+                      // Verify the target memory still exists
+                      const targetMemory = await memoryService.readMemory({ id: linkId });
+                      if (targetMemory) {
+                        // Use link_mem to create proper bidirectional links and Obsidian-style content
+                        await memoryService.linkMemories({ 
+                          source_id: memory_id, 
+                          target_id: linkId,
+                          link_text: targetMemory.title
+                        });
+                        successfulLinks++;
+                      } else {
+                        failedLinks++;
+                      }
+                    } catch (error) {
+                      failedLinks++;
+                      console.error(`Failed to recreate link to ${linkId}: ${error}`);
+                    }
+                  }
+
+                  // Generate summary message
+                  const summary = `Link structure fixed for memory "${memory.title}" (ID: ${memory_id}):
 
 ✅ **Cleanup completed:**
 - Removed ${currentLinkIds.length} existing links
@@ -1603,29 +1628,26 @@ ${failedLinks > 0 ? `\n⚠️ **Note:** ${failedLinks} links could not be recrea
 
 The memory now has a clean link structure with ${successfulLinks} valid bidirectional links.`;
 
-                // Refresh tracked DB mtime after all index-modifying operations
-                await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
+                  // Refresh tracked DB mtime after all index-modifying operations
+                  await memoryServiceManager.refreshDbMtime({ notestorePath: cfg.notestorePath, indexPath: cfg.indexPath });
 
-                toolResult = {
-                  content: [{ type: 'text', text: summary }],
-                  isError: false
-                };
-                break;
-              }
-
-              default: {
-                 const errorResponse = {
-                   jsonrpc: '2.0',
-                   error: {
-                     code: -32601,
-                     message: `Tool '${toolName}' not found`
-                   },
-                   id: body.id
-                 };
-                 event.node.res.write(`data: ${JSON.stringify(errorResponse)}\n\n`);
-                 event.node.res.end();
-                 return;
-               }
+                  toolResult = {
+                    content: [{ type: 'text', text: summary }],
+                    isError: false
+                  };
+                }
+            } else {
+              const errorResponse = {
+                jsonrpc: '2.0',
+                error: {
+                  code: -32601,
+                  message: `Tool '${toolName}' not found`
+                },
+                id: body.id
+              };
+              event.node.res.write(`data: ${JSON.stringify(errorResponse)}\n\n`);
+              event.node.res.end();
+              return;
             }
             
             const result = {
