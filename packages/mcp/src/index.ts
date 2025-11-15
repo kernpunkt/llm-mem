@@ -88,13 +88,7 @@ export function createServer(): McpServer {
   // Enhanced capabilities per MCP 2025-06-18 specification
   const server = new McpServer({
     name: prefixName("memory-tools-mcp"),
-    version: "1.0.0",
-    capabilities: {
-      tools: {},      // Core tool execution capability
-      resources: {},  // Resource access capability (future use)
-      prompts: {},    // Prompt template capability (future use)
-      logging: {},    // Structured logging capability (future use)
-    },
+    version: "1.0.0"
   });
 
   // Memory Tools - Phase 2
