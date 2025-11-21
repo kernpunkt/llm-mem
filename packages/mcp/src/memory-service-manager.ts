@@ -16,6 +16,7 @@ class MemoryServiceManager {
   private instances: Map<string, MemoryService> = new Map();
   private dbFileMtimes: Map<string, number> = new Map();
   private indexCheckTimes: Map<string, number> = new Map();
+  private reindexPromises: Map<string, Promise<void>> = new Map();
   
   /**
    * Tolerance threshold for timestamp comparisons (in milliseconds).
@@ -225,9 +226,43 @@ class MemoryServiceManager {
    * Ensures the index is rebuilt from memory files.
    * This is called automatically when sync is detected, but can be called manually.
    * 
+   * Prevents concurrent reindex operations by tracking in-progress reindex promises.
+   * If a reindex is already in progress for this config, waits for it to complete.
+   * 
    * @param config - MemoryService configuration
    */
   async ensureIndexSync(config: MemoryServiceConfig): Promise<void> {
+    const key = this.getConfigKey(config);
+    
+    // Check if a reindex is already in progress for this config
+    const existingPromise = this.reindexPromises.get(key);
+    if (existingPromise) {
+      // Wait for the existing reindex to complete
+      console.error(`[MemoryServiceManager] Reindex already in progress for ${key}, waiting for completion...`);
+      await existingPromise;
+      // Instance is already cached by the in-progress reindex
+      return;
+    }
+    
+    // Create a new reindex promise and store it
+    const reindexPromise = this.doReindex(config);
+    this.reindexPromises.set(key, reindexPromise);
+    
+    try {
+      await reindexPromise;
+    } finally {
+      // Clean up the promise from the map when done (success or failure)
+      this.reindexPromises.delete(key);
+    }
+  }
+
+  /**
+   * Performs the actual reindex operation.
+   * This is separated from ensureIndexSync to enable promise tracking for concurrent operations.
+   * 
+   * @param config - MemoryService configuration
+   */
+  private async doReindex(config: MemoryServiceConfig): Promise<void> {
     const key = this.getConfigKey(config);
     
     // Count memory files before reindexing
@@ -280,6 +315,13 @@ class MemoryServiceManager {
    * Should be called on server shutdown.
    */
   async destroyAll(): Promise<void> {
+    // Wait for any in-progress reindex operations to complete
+    const reindexPromises = Array.from(this.reindexPromises.values());
+    if (reindexPromises.length > 0) {
+      console.error(`[MemoryServiceManager] Waiting for ${reindexPromises.length} in-progress reindex operation(s) to complete...`);
+      await Promise.allSettled(reindexPromises);
+    }
+    
     const destroyPromises = Array.from(this.instances.values()).map(service =>
       service.destroy().catch(error => {
         console.error(`Failed to destroy MemoryService: ${error}`);
@@ -290,6 +332,7 @@ class MemoryServiceManager {
     this.instances.clear();
     this.dbFileMtimes.clear();
     this.indexCheckTimes.clear();
+    this.reindexPromises.clear();
   }
 
   /**
