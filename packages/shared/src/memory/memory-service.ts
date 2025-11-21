@@ -729,6 +729,77 @@ export class MemoryService {
     // Create bidirectional links
     await this.linkService.linkMemories({ id: source_id }, { id: target_id }, link_text);
 
+    // Update search index for both memories after linking
+    // Re-read the updated memories to get the latest state including new links
+    const updatedSource = await this.readMemory({ id: source_id });
+    const updatedTarget = await this.readMemory({ id: target_id });
+
+    if (!updatedSource || !updatedTarget) {
+      throw new Error("Failed to read updated memories after linking");
+    }
+
+    // Read the raw parsed files to get all frontmatter fields including custom template fields
+    const parsedSource = await this.fileService.readMemoryFileById(source_id);
+    const parsedTarget = await this.fileService.readMemoryFileById(target_id);
+
+    if (!parsedSource || !parsedTarget) {
+      throw new Error("Failed to read memory files after linking");
+    }
+
+    // Create searchable text from custom template fields for both memories
+    const sourceCustomFieldsText = this.createSearchableCustomFieldsText(parsedSource);
+    const targetCustomFieldsText = this.createSearchableCustomFieldsText(parsedTarget);
+
+    // Prepare index data for source memory
+    const sourceIndexData: MemoryIndexDocument = {
+      id: updatedSource.id,
+      title: updatedSource.title,
+      content: updatedSource.content + sourceCustomFieldsText,
+      tags: updatedSource.tags,
+      category: updatedSource.category,
+      created_at: updatedSource.created_at,
+      updated_at: updatedSource.updated_at,
+      last_reviewed: updatedSource.last_reviewed,
+      links: updatedSource.links,
+      sources: updatedSource.sources,
+      abstract: updatedSource.abstract,
+    };
+
+    // Prepare index data for target memory
+    const targetIndexData: MemoryIndexDocument = {
+      id: updatedTarget.id,
+      title: updatedTarget.title,
+      content: updatedTarget.content + targetCustomFieldsText,
+      tags: updatedTarget.tags,
+      category: updatedTarget.category,
+      created_at: updatedTarget.created_at,
+      updated_at: updatedTarget.updated_at,
+      last_reviewed: updatedTarget.last_reviewed,
+      links: updatedTarget.links,
+      sources: updatedTarget.sources,
+      abstract: updatedTarget.abstract,
+    };
+
+    // Add any custom fields that might be present
+    const sourceCustomFields: Record<string, unknown> = {};
+    const targetCustomFields: Record<string, unknown> = {};
+    for (const key in parsedSource) {
+      if (!KNOWN_FRONTMATTER_FIELDS.has(key as any)) {
+        sourceCustomFields[key] = parsedSource[key];
+      }
+    }
+    for (const key in parsedTarget) {
+      if (!KNOWN_FRONTMATTER_FIELDS.has(key as any)) {
+        targetCustomFields[key] = parsedTarget[key];
+      }
+    }
+    Object.assign(sourceIndexData, sourceCustomFields);
+    Object.assign(targetIndexData, targetCustomFields);
+
+    // Update search index for both memories
+    await this.searchService.indexMemory(sourceIndexData);
+    await this.searchService.indexMemory(targetIndexData);
+
     return {
       source_id,
       target_id,
@@ -759,6 +830,77 @@ export class MemoryService {
 
     // Remove bidirectional links
     await this.linkService.unlinkMemories({ id: source_id }, { id: target_id });
+
+    // Update search index for both memories after unlinking
+    // Re-read the updated memories to get the latest state with links removed
+    const updatedSource = await this.readMemory({ id: source_id });
+    const updatedTarget = await this.readMemory({ id: target_id });
+
+    if (!updatedSource || !updatedTarget) {
+      throw new Error("Failed to read updated memories after unlinking");
+    }
+
+    // Read the raw parsed files to get all frontmatter fields including custom template fields
+    const parsedSource = await this.fileService.readMemoryFileById(source_id);
+    const parsedTarget = await this.fileService.readMemoryFileById(target_id);
+
+    if (!parsedSource || !parsedTarget) {
+      throw new Error("Failed to read memory files after unlinking");
+    }
+
+    // Create searchable text from custom template fields for both memories
+    const sourceCustomFieldsText = this.createSearchableCustomFieldsText(parsedSource);
+    const targetCustomFieldsText = this.createSearchableCustomFieldsText(parsedTarget);
+
+    // Prepare index data for source memory
+    const sourceIndexData: MemoryIndexDocument = {
+      id: updatedSource.id,
+      title: updatedSource.title,
+      content: updatedSource.content + sourceCustomFieldsText,
+      tags: updatedSource.tags,
+      category: updatedSource.category,
+      created_at: updatedSource.created_at,
+      updated_at: updatedSource.updated_at,
+      last_reviewed: updatedSource.last_reviewed,
+      links: updatedSource.links,
+      sources: updatedSource.sources,
+      abstract: updatedSource.abstract,
+    };
+
+    // Prepare index data for target memory
+    const targetIndexData: MemoryIndexDocument = {
+      id: updatedTarget.id,
+      title: updatedTarget.title,
+      content: updatedTarget.content + targetCustomFieldsText,
+      tags: updatedTarget.tags,
+      category: updatedTarget.category,
+      created_at: updatedTarget.created_at,
+      updated_at: updatedTarget.updated_at,
+      last_reviewed: updatedTarget.last_reviewed,
+      links: updatedTarget.links,
+      sources: updatedTarget.sources,
+      abstract: updatedTarget.abstract,
+    };
+
+    // Add any custom fields that might be present
+    const sourceCustomFields: Record<string, unknown> = {};
+    const targetCustomFields: Record<string, unknown> = {};
+    for (const key in parsedSource) {
+      if (!KNOWN_FRONTMATTER_FIELDS.has(key as any)) {
+        sourceCustomFields[key] = parsedSource[key];
+      }
+    }
+    for (const key in parsedTarget) {
+      if (!KNOWN_FRONTMATTER_FIELDS.has(key as any)) {
+        targetCustomFields[key] = parsedTarget[key];
+      }
+    }
+    Object.assign(sourceIndexData, sourceCustomFields);
+    Object.assign(targetIndexData, targetCustomFields);
+
+    // Update search index for both memories
+    await this.searchService.indexMemory(sourceIndexData);
+    await this.searchService.indexMemory(targetIndexData);
 
     return {
       source_id,
